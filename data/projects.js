@@ -44,6 +44,7 @@ window.PSI_PROJECTS = [
   { name: "417 Warren Avenue",   city: "Kingston, PA", lat: 41.26234, lng: -75.88709, img: "assets/photos/PSI_Bathroom_FreestandingTub_Marble_01.jpg", caption: "Freestanding tub in marble bath" },
   { name: "505 Warren Avenue",   city: "Kingston, PA", lat: 41.2635724, lng: -75.885076, img: "assets/photos/PSI_Kitchen_Island_Greige_01.jpg", caption: "Greige kitchen island" },
   { name: "192 James Street",    city: "Kingston, PA", lat: 41.2645332, lng: -75.885262, img: "assets/photos/PSI_Staircase_OakAndWhite_01.jpg", caption: "Oak and white staircase" },
+  { name: "194 James Street",    city: "Kingston, PA", lat: 41.2644226, lng: -75.8851439, img: "assets/photos/PSI_Exterior_Twilight_FrontCorner_01.jpg", caption: "Twilight exterior — front corner" },
   { name: "145 James Street",    city: "Kingston, PA", lat: 41.2653089, lng: -75.8867047, img: "assets/photos/PSI_Bathroom_GreenTile_WalkInShower_01.jpg", caption: "Green-tile walk-in shower" },
   { name: "225 James Street",    city: "Kingston, PA", lat: 41.263393, lng: -75.8848405, img: "assets/photos/PSI_Exterior_Daytime_FrontFacade_01.jpg", caption: "Front facade, daytime" },
   { name: "378 Rutter Avenue",   city: "Kingston, PA", lat: 41.2641819, lng: -75.8913887, img: "assets/photos/PSI_GreatRoom_Staircase_Evening_01.jpg", caption: "Great room staircase, evening" },
