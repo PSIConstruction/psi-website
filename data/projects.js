@@ -2,8 +2,13 @@
    PSI Previous Projects — source data
    Addresses & municipalities: "Kingston-PA-Construction-Property-List"
    (Kingston, PA Construction · submitted by Sadya Liberov, June 9 2026).
-   424-426 Rutter Avenue: filed permit set (TGL Engineering) in
-   "3D WALKTHROUGH/424-426 Rutter (filed plans).pdf".
+   55 Reynolds Street: filed permit set (TGL Engineering) in
+   "3D WALKTHROUGH/424-426 Rutter (filed plans).pdf" — filed under the
+   property's former address, 424-426 Rutter Avenue, before rezoning.
+   Its map pin keeps the Esri PointAddress returned for the Rutter
+   address: that is the authoritative rooftop point for this building,
+   whereas "55 Reynolds St" resolves only to an interpolated
+   StreetAddress.
 
    Coordinates (Aug 2026) come from the Esri World Geocoder, which
    returned Addr_type=PointAddress — an authoritative parcel/rooftop
@@ -23,13 +28,13 @@
    ============================================================ */
 window.PSI_PROJECTS = [
   {
-    name: "424–426 Rutter Avenue",
+    name: "55 Reynolds Street",
     city: "Kingston, PA 18704",
     lat: 41.265253, lng: -75.889529,
     type: "New Construction — 3-Story Residence",
-    desc: "New three-story residence at the corner of Rutter Avenue and Reynolds Street — 4,752 sq ft, Residential (R-1), built to the 2018 IRC/IBC. Previously addressed 55 Reynolds Street; re-addressed to 424–426 Rutter Avenue on rezoning. Featured in the aerial opener on this page.",
+    desc: "New three-story residence at the corner of Rutter Avenue and Reynolds Street — 4,752 sq ft, Residential (R-1), built to the 2018 IRC/IBC. Originally addressed 424–426 Rutter Avenue; re-addressed to 55 Reynolds Street on rezoning. Featured in the aerial opener on this page.",
     img: "assets/keyframe-final-hero.png",
-    caption: "424–426 Rutter Avenue (formerly 55 Reynolds Street) — the residence from the homepage opener",
+    caption: "55 Reynolds Street (formerly 424–426 Rutter Avenue) — the residence from the homepage opener",
     plans: "assets/plans/424-426-Rutter-filed-plans.pdf"
   },
   { name: "50 Reynolds Street",  city: "Kingston, PA", lat: 41.2657563, lng: -75.8895245, img: "assets/photos/PSI_Kitchen_OpenPlan_Island_01.jpg", caption: "Open-plan kitchen with island" },
