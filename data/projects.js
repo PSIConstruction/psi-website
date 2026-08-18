@@ -74,6 +74,6 @@ window.PSI_PROJECTS = [
 
 window.PSI_OFFICE = {
   name: "PSI Construction — Office",
-  address: "107 E Vaughn St, Kingston, PA 18704",
-  lat: 41.2710261, lng: -75.8832628
+  address: "190 Wyoming St, Wilkes-Barre, PA 18705",
+  lat: 41.2509280, lng: -75.8684020
 };
