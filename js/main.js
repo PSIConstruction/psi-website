@@ -167,15 +167,38 @@
       slide.className = "carousel__slide";
       slide.dataset.project = sh.p.id || "";
       slide.innerHTML = slideHTML(sh);
+      const im = slide.querySelector("img");
+      if (im) im.addEventListener("load", () => { if (track.children[pos] === slide) fitHeight(); });
       track.appendChild(slide);
     });
   }
+
+  // The stage height follows the photo on screen: a wide shot gets a short
+  // stage, a tall shot a tall one. Without this, one shape or the other sits
+  // in a band of empty background.
+  const wrap = track.parentElement;
+  function fitHeight() {
+    const slide = track.children[pos];
+    if (!slide) return;
+    const img = slide.querySelector("img");
+    const media = slide.querySelector(".carousel__media");
+    if (!img || !media) return;
+    const cap = Math.min(window.innerHeight * 0.82, 900);
+    const w = media.clientWidth || track.clientWidth;
+    let h = cap;
+    if (img.naturalWidth && img.naturalHeight) {
+      h = Math.min(cap, (w * img.naturalHeight) / img.naturalWidth);
+    }
+    wrap.style.height = Math.max(300, Math.round(h)) + "px";
+  }
+  window.addEventListener("resize", fitHeight, { passive: true });
 
   let syncing = false;
   function showPos(p2, sync) {
     if (!order.length) return;
     pos = (p2 + order.length) % order.length;
     track.style.transform = `translateX(-${pos * 100}%)`;
+    fitHeight();
     const sh = shots[order[pos]];
     counter.textContent = projectMode >= 0
       ? `${pos + 1} / ${order.length} — ${sh.p.type || sh.p.city}`
