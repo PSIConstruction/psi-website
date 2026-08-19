@@ -264,25 +264,13 @@
     <div class="section__inner">
       <p class="eyebrow eyebrow--accent">Previous Projects</p>
       <h2 class="section__title">Where We&rsquo;ve Built</h2>
-      <p class="lede">34 projects across Kingston, Wilkes-Barre, West Pittston, and Exeter, PA. Click a pin, a row, or step through the carousel&mdash;all three stay in sync.</p>
+      <p class="lede">34 projects across Kingston, Wilkes-Barre, West Pittston, and Exeter, PA. Click a pin on the map, or any photograph, to open that job.</p>
 
       <div class="projects__layout">
         <div id="projectMap" aria-label="Interactive map of PSI project locations"></div>
-        <div class="project-list" id="projectList" role="listbox" aria-label="Project list"></div>
+        <div class="shots" id="shotWall" aria-label="Project photographs"></div>
       </div>
-
-      <div class="carousel" id="projectCarousel">
-        <div class="carousel__track-wrap">
-          <div class="carousel__track" id="carouselTrack"></div>
-        </div>
-        <div class="carousel__nav">
-          <div class="carousel__btns">
-            <button class="carousel__btn" id="carouselPrev" aria-label="Previous project">&larr;</button>
-            <button class="carousel__btn" id="carouselNext" aria-label="Next project">&rarr;</button>
-          </div>
-          <span class="carousel__counter" id="carouselCounter"></span>
-        </div>
-      </div>
+      <p class="shots__hint" id="shotHint"></p>
     </div>
   </section>
 

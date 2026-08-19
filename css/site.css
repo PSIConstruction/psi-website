@@ -353,35 +353,21 @@ details[open] .svc__summary::after { content: "\2212"; }
   z-index: 1;
 }
 
-.project-list {
+/* Photographs sit beside the map, in place of the old address list.
+   Uniform height, width by shape, wrapping into rows and scrolling. */
+.shots {
   height: clamp(380px, 56vh, 560px);
   overflow-y: auto;
+  overflow-x: hidden;
   border: 1px solid var(--hairline);
   background: #fff;
+  display: flex;
+  flex-wrap: wrap;
+  align-content: flex-start;
+  gap: 6px;
+  padding: 6px;
 }
-.project-list__row {
-  display: grid;
-  grid-template-columns: 34px 1fr auto;
-  align-items: baseline;
-  gap: 10px;
-  width: 100%;
-  text-align: left;
-  padding: 13px 16px;
-  border: 0;
-  border-bottom: 1px solid var(--hairline);
-  background: transparent;
-  font: inherit;
-  cursor: pointer;
-  color: inherit;
-}
-.project-list__row:hover { background: #f4f1ea; }
-.project-list__row.is-active { background: var(--navy); color: #fff; }
-.project-list__row.is-active .project-list__city { color: rgba(255,255,255,0.65); }
-.project-list__idx { font-size: 11.5px; color: var(--accent); font-weight: 600; letter-spacing: 0.06em; }
-.project-list__name { font-weight: 600; font-size: 14.5px; }
-.project-list__type { grid-column: 2; font-size: 12px; color: var(--accent); font-weight: 600; }
-.project-list__row.is-active .project-list__type { color: #d9a45f; }
-.project-list__city { font-size: 12.5px; color: var(--muted); white-space: nowrap; }
+.shots__hint { margin: 12px 0 0; font-size: 12.5px; color: var(--muted); }
 
 .pin {
   width: 16px; height: 16px;
@@ -417,14 +403,10 @@ details[open] .svc__summary::after { content: "\2212"; }
 /* ---- strip along the bottom ----
    Every photo the same HEIGHT; width follows its own shape, so a landscape
    shot runs about twice as wide as a portrait one. Scrolls sideways. */
-.carousel__track { gap: 10px; overflow-x: auto; overflow-y: hidden; scroll-behavior: smooth; padding: 10px; scrollbar-width: thin; }
-.carousel__track::-webkit-scrollbar { height: 8px; }
-.carousel__track::-webkit-scrollbar-thumb { background: rgba(16,18,20,0.22); border-radius: 4px; }
-
 .strip__item {
   flex: 0 0 auto;
   position: relative;
-  height: clamp(210px, 27vh, 320px);
+  height: 116px;
   padding: 0; border: 0; background: #e8e6e1;
   cursor: pointer; overflow: hidden;
   transition: transform 180ms ease, box-shadow 180ms ease;
@@ -460,7 +442,9 @@ body.viewer-lock { overflow: hidden; }
 .viewer__fig { flex: 0 0 auto; margin: 0; scroll-snap-align: center; }
 .viewer__imgwrap { position: relative; display: block; }
 /* Uniform height: two portrait shots sit side by side, one landscape fills. */
-.viewer__fig img { display: block; height: min(72vh, 900px); width: auto; max-width: 92vw; object-fit: contain; }
+/* Height is the constant. A landscape shot simply runs wider — never
+   capped, or its height would drop below the portrait ones. */
+.viewer__fig img { display: block; height: min(72vh, 900px); width: auto; max-width: none; }
 .viewer__phase {
   position: absolute; top: 12px; left: 12px;
   font-size: 9.5px; letter-spacing: 0.2em; text-transform: uppercase; font-weight: 700;
@@ -493,7 +477,7 @@ body.viewer-lock { overflow: hidden; }
 .viewer__arrow--next { right: 14px; }
 
 @media (max-width: 860px) {
-  .viewer__fig img { height: min(62vh, 620px); max-width: 88vw; }
+  .viewer__fig img { height: min(62vh, 620px); }
   .viewer__arrow { width: 40px; height: 40px; }
 }
 }

@@ -83,27 +83,8 @@
     ro.observe(mapEl);
   }
 
-  // List
-  const listEl = document.getElementById("projectList");
-  const rows = projects.map((p, i) => {
-    const row = document.createElement("button");
-    row.type = "button";
-    row.className = "project-list__row";
-    row.setAttribute("role", "option");
-    row.innerHTML = `
-      <span class="project-list__idx">${String(i + 1).padStart(2, "0")}</span>
-      <span class="project-list__name">${p.name}</span>
-      <span class="project-list__city">${p.city}</span>
-      ${p.type ? `<span class="project-list__type">${p.type}</span>` : ""}`;
-    row.addEventListener("click", () => select(i, "list"));
-    listEl.appendChild(row);
-    return row;
-  });
-
-  // Carousel — only projects that actually have photography appear here.
-  // Every project still gets a map pin and a list row.
-  const track = document.getElementById("carouselTrack");
-  const counter = document.getElementById("carouselCounter");
+  const wall = document.getElementById("shotWall");
+  const hint = document.getElementById("shotHint");
 
   // One entry per PHOTOGRAPH. A project with a gallery contributes all of its
   // shots; anything else contributes its single image.
@@ -130,7 +111,7 @@
   // so a landscape shot is about twice as wide as a portrait one. The strip
   // scrolls sideways.
   function renderStrip() {
-    track.innerHTML = "";
+    wall.innerHTML = "";
     shuffled(shots.map((_, k) => k)).forEach((k) => {
       const sh = shots[k];
       const b2 = document.createElement("button");
@@ -142,19 +123,17 @@
       b2.innerHTML = `
         <img loading="lazy" src="${sh.src}" alt="${sh.cap || sh.p.type || "PSI project"}">
         ${sh.phase ? `<span class="strip__phase strip__phase--${sh.phase}">${sh.phase}</span>` : ""}`;
-      track.appendChild(b2);
+      wall.appendChild(b2);
     });
   }
 
-  track.addEventListener("click", (e) => {
+  wall.addEventListener("click", (e) => {
     const item = e.target.closest(".strip__item");
     if (!item) return;
     const sh = shots[+item.dataset.shot];
     select(sh.i, "strip");
     openViewer(sh.i, sh.n);
   });
-
-  const scrollStrip = (dir) => track.scrollBy({ left: dir * track.clientWidth * 0.85, behavior: "smooth" });
 
   // ---- the full-screen viewer ----
   const viewer = document.createElement("div");
@@ -243,14 +222,11 @@
     if (i === current) {
       // Re-clicking the job that happens to be selected must still open its
       // photo set — otherwise the row goes dead once the shuffle lands on it.
-      if (source === "list" || source === "map") openViewer(i, 0);
-      if (source === "list" || source === "carousel") focusPin(i);
+      if (source === "map") openViewer(i, 0);
+      focusPin(i);
       return;
     }
-    if (current >= 0) {
-      markers[current].setIcon(pinIcon(false, hasCase(projects[current])));
-      rows[current].classList.remove("is-active");
-    }
+    if (current >= 0) markers[current].setIcon(pinIcon(false, hasCase(projects[current])));
     current = i;
     const p = projects[i];
 
@@ -259,12 +235,8 @@
     if (source !== "map" && source !== "init") focusPin(i);
     if (source !== "init") markers[i].openPopup();
 
-    // List row
-    rows[i].classList.add("is-active");
-    rows[i].scrollIntoView({ block: "nearest", behavior: "smooth" });
-
-    // Clicking a pin or a row opens that job's photographs full screen.
-    if (source === "map" || source === "list") openViewer(i, 0);
+    // Clicking a pin opens that job's photographs full screen.
+    if (source === "map") openViewer(i, 0);
   }
 
   function focusPin(i) {
@@ -272,11 +244,8 @@
     map.flyTo([p.lat, p.lng], Math.max(map.getZoom(), 16), { duration: 0.7 });
   }
 
-  document.getElementById("carouselPrev").addEventListener("click", () => scrollStrip(-1));
-  document.getElementById("carouselNext").addEventListener("click", () => scrollStrip(1));
-
   renderStrip();
-  counter.textContent = `${shots.length} photographs — click any to open the project`;
+  hint.textContent = `${shots.length} photographs across ${new Set(shots.map((x) => x.i)).size} documented jobs — click any photograph, or a pin, to open that job.`;
   select(0, "init");
 
   // ---------------- Google Reviews carousel ----------------
