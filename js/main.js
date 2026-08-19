@@ -29,9 +29,14 @@
     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
   }).addTo(map);
 
-  const pinIcon = (active) => L.divIcon({
+  // A project is a "case study" once it has a photo gallery attached.
+  // Those pins are styled differently and open a detail view.
+  const hasCase = (p) => Array.isArray(p.gallery) && p.gallery.length > 0;
+  const label = (p) => p.title || p.name;
+
+  const pinIcon = (active, isCase) => L.divIcon({
     className: "",
-    html: `<div class="pin${active ? " pin--active" : ""}"></div>`,
+    html: `<div class="pin${active ? " pin--active" : ""}${isCase ? " pin--case" : ""}"></div>`,
     iconSize: [16, 16],
     iconAnchor: [8, 16]
   });
@@ -44,10 +49,20 @@
   }
 
   const markers = projects.map((p, i) => {
-    const m = L.marker([p.lat, p.lng], { icon: pinIcon(false) }).addTo(map);
-    m.bindPopup(`<strong>${p.name}</strong><br>${p.city}`);
+    const m = L.marker([p.lat, p.lng], { icon: pinIcon(false, hasCase(p)) }).addTo(map);
+    m.bindPopup(hasCase(p)
+      ? `<strong>${label(p)}</strong><br>${p.city}` +
+        (p.story ? `<br><span style="display:block;margin-top:6px;max-width:230px">${p.story}</span>` : "") +
+        `<button class="case__open" data-case="${i}">View photos &rarr;</button>`
+      : `<strong>${label(p)}</strong><br>${p.city}`);
     m.on("click", () => select(i, "map"));
     return m;
+  });
+
+  // Popups are re-created by Leaflet, so delegate instead of binding per popup.
+  document.addEventListener("click", (e) => {
+    const btn = e.target.closest("[data-case]");
+    if (btn) openCase(+btn.dataset.case);
   });
   const allBounds = L.latLngBounds(projects.map(p => [p.lat, p.lng])).pad(0.08);
   map.fitBounds(allBounds);
@@ -75,7 +90,7 @@
     row.setAttribute("role", "option");
     row.innerHTML = `
       <span class="project-list__idx">${String(i + 1).padStart(2, "0")}</span>
-      <span class="project-list__name">${p.name}</span>
+      <span class="project-list__name">${label(p)}</span>
       <span class="project-list__city">${p.city}</span>
       ${p.type ? `<span class="project-list__type">${p.type}</span>` : ""}`;
     row.addEventListener("click", () => select(i, "list"));
@@ -90,15 +105,16 @@
     const slide = document.createElement("div");
     slide.className = "carousel__slide";
     slide.innerHTML = `
-      <div class="carousel__img"><img loading="lazy" src="${p.img}" alt="${p.caption || p.name}"></div>
+      <div class="carousel__img"><img loading="lazy" src="${p.img}" alt="${p.caption || label(p)}"></div>
       <div class="carousel__info">
         <p class="eyebrow eyebrow--accent">Previous Project</p>
-        <h3>${p.name}</h3>
+        <h3>${label(p)}</h3>
         <p class="carousel__loc">${p.city}</p>
         ${p.type ? `<p class="carousel__type">${p.type}</p>` : ""}
         ${p.desc ? `<p class="carousel__desc">${p.desc}</p>` : ""}
         <p class="carousel__caption">${p.caption || ""}${p.desc ? "" : " &mdash; PSI portfolio photography"}</p>
         ${p.plans ? `<a class="carousel__plans" href="${p.plans}" target="_blank" rel="noopener">View filed plans (PDF) &rarr;</a>` : ""}
+        ${hasCase(p) ? `<button class="case__open" data-case="${projects.indexOf(p)}">View photos &rarr;</button>` : ""}
       </div>`;
     track.appendChild(slide);
   });
@@ -111,14 +127,14 @@
       return;
     }
     if (current >= 0) {
-      markers[current].setIcon(pinIcon(false));
+      markers[current].setIcon(pinIcon(false, hasCase(projects[current])));
       rows[current].classList.remove("is-active");
     }
     current = i;
     const p = projects[i];
 
     // Pin
-    markers[i].setIcon(pinIcon(true));
+    markers[i].setIcon(pinIcon(true, hasCase(p)));
     if (source !== "map" && source !== "init") focusPin(i);
     if (source !== "init") markers[i].openPopup();
 
@@ -128,7 +144,7 @@
 
     // Carousel
     track.style.transform = `translateX(-${i * 100}%)`;
-    counter.textContent = `${i + 1} / ${projects.length} — ${p.name}`;
+    counter.textContent = `${i + 1} / ${projects.length} — ${label(p)}`;
   }
 
   function focusPin(i) {
@@ -140,6 +156,59 @@
     select((current - 1 + projects.length) % projects.length, "carousel"));
   document.getElementById("carouselNext").addEventListener("click", () =>
     select((current + 1) % projects.length, "carousel"));
+
+  // ---------------- Case-study modal ----------------
+
+  const caseEl = document.createElement("div");
+  caseEl.className = "case";
+  caseEl.setAttribute("role", "dialog");
+  caseEl.setAttribute("aria-modal", "true");
+  caseEl.setAttribute("aria-hidden", "true");
+  caseEl.innerHTML = `
+    <div class="case__backdrop" data-close></div>
+    <div class="case__panel">
+      <button class="case__close" data-close aria-label="Close">&times;</button>
+      <div class="case__head">
+        <p class="case__eyebrow">Project</p>
+        <h2 class="case__title"></h2>
+        <p class="case__story"></p>
+      </div>
+      <div class="case__grid"></div>
+    </div>`;
+  document.body.appendChild(caseEl);
+
+  let lastFocus = null;
+
+  function openCase(i) {
+    const p = projects[i];
+    if (!hasCase(p)) return;
+    lastFocus = document.activeElement;
+    caseEl.querySelector(".case__title").textContent = label(p);
+    caseEl.querySelector(".case__story").textContent = p.story || "";
+    caseEl.querySelector(".case__grid").innerHTML = p.gallery.map((g) => `
+      <figure class="case__fig">
+        ${g.phase ? `<span class="case__phase case__phase--${g.phase}">${g.phase}</span>` : ""}
+        <img loading="lazy" src="${g.src}" alt="${g.cap || label(p)}">
+        ${g.cap ? `<figcaption class="case__cap">${g.cap}</figcaption>` : ""}
+      </figure>`).join("");
+    caseEl.classList.add("is-open");
+    caseEl.setAttribute("aria-hidden", "false");
+    document.body.classList.add("case-lock");
+    caseEl.querySelector(".case__close").focus();
+  }
+
+  function closeCase() {
+    caseEl.classList.remove("is-open");
+    caseEl.setAttribute("aria-hidden", "true");
+    document.body.classList.remove("case-lock");
+    caseEl.querySelector(".case__panel").scrollTop = 0;
+    if (lastFocus) lastFocus.focus();
+  }
+
+  caseEl.addEventListener("click", (e) => { if (e.target.closest("[data-close]")) closeCase(); });
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && caseEl.classList.contains("is-open")) closeCase();
+  });
 
   select(0, "init");
 
