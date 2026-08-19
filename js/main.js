@@ -32,7 +32,6 @@
   // A project is a "case study" once it has a photo gallery attached.
   // Those pins are styled differently and open a detail view.
   const hasCase = (p) => Array.isArray(p.gallery) && p.gallery.length > 0;
-  const label = (p) => p.title || p.name;
 
   const pinIcon = (active, isCase) => L.divIcon({
     className: "",
@@ -51,10 +50,12 @@
   const markers = projects.map((p, i) => {
     const m = L.marker([p.lat, p.lng], { icon: pinIcon(false, hasCase(p)) }).addTo(map);
     m.bindPopup(hasCase(p)
-      ? `<strong>${label(p)}</strong><br>${p.city}` +
-        (p.story ? `<br><span style="display:block;margin-top:6px;max-width:230px">${p.story}</span>` : "") +
+      ? `<strong>${p.name}</strong><br>` +
+        (p.type ? `<em style="color:#d60000;font-style:normal;font-weight:600">${p.type}</em><br>` : "") +
+        `${p.city}` +
+        (p.desc ? `<span style="display:block;margin-top:6px;max-width:240px">${p.desc}</span>` : "") +
         `<button class="case__open" data-case="${i}">View photos &rarr;</button>`
-      : `<strong>${label(p)}</strong><br>${p.city}`);
+      : `<strong>${p.name}</strong><br>${p.city}`);
     m.on("click", () => select(i, "map"));
     return m;
   });
@@ -90,7 +91,7 @@
     row.setAttribute("role", "option");
     row.innerHTML = `
       <span class="project-list__idx">${String(i + 1).padStart(2, "0")}</span>
-      <span class="project-list__name">${label(p)}</span>
+      <span class="project-list__name">${p.name}</span>
       <span class="project-list__city">${p.city}</span>
       ${p.type ? `<span class="project-list__type">${p.type}</span>` : ""}`;
     row.addEventListener("click", () => select(i, "list"));
@@ -105,10 +106,10 @@
     const slide = document.createElement("div");
     slide.className = "carousel__slide";
     slide.innerHTML = `
-      <div class="carousel__img"><img loading="lazy" src="${p.img}" alt="${p.caption || label(p)}"></div>
+      <div class="carousel__img"><img loading="lazy" src="${p.img}" alt="${p.caption || p.name}"></div>
       <div class="carousel__info">
         <p class="eyebrow eyebrow--accent">Previous Project</p>
-        <h3>${label(p)}</h3>
+        <h3>${p.name}</h3>
         <p class="carousel__loc">${p.city}</p>
         ${p.type ? `<p class="carousel__type">${p.type}</p>` : ""}
         ${p.desc ? `<p class="carousel__desc">${p.desc}</p>` : ""}
@@ -144,7 +145,7 @@
 
     // Carousel
     track.style.transform = `translateX(-${i * 100}%)`;
-    counter.textContent = `${i + 1} / ${projects.length} — ${label(p)}`;
+    counter.textContent = `${i + 1} / ${projects.length} — ${p.name}`;
   }
 
   function focusPin(i) {
@@ -183,12 +184,13 @@
     const p = projects[i];
     if (!hasCase(p)) return;
     lastFocus = document.activeElement;
-    caseEl.querySelector(".case__title").textContent = label(p);
-    caseEl.querySelector(".case__story").textContent = p.story || "";
+    caseEl.querySelector(".case__eyebrow").textContent = p.type || "Project";
+    caseEl.querySelector(".case__title").textContent = p.name;
+    caseEl.querySelector(".case__story").textContent = p.desc || "";
     caseEl.querySelector(".case__grid").innerHTML = p.gallery.map((g) => `
       <figure class="case__fig">
         ${g.phase ? `<span class="case__phase case__phase--${g.phase}">${g.phase}</span>` : ""}
-        <img loading="lazy" src="${g.src}" alt="${g.cap || label(p)}">
+        <img loading="lazy" src="${g.src}" alt="${g.cap || p.name}">
         ${g.cap ? `<figcaption class="case__cap">${g.cap}</figcaption>` : ""}
       </figure>`).join("");
     caseEl.classList.add("is-open");
