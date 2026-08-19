@@ -61,8 +61,8 @@ window.PSI_PROJECTS = [
     img: "assets/photos/417-warren/417warren-27.jpg",
     caption: "The addition sided and trimmed",
     gallery: [
-      { src: "assets/photos/417-warren/417warren-01.jpg", phase: "framing", cap: "Second-floor deck down, walls starting to go up" },
-      { src: "assets/photos/417-warren/417warren-02.jpg", phase: "framing", cap: "Exterior walls framed on the new deck" },
+      { src: "assets/photos/417-warren/417warren-01.jpg", phase: "framing", cap: "The second floor framed out — subfloor down, walls going up" },
+      { src: "assets/photos/417-warren/417warren-02.jpg", phase: "framing", cap: "Exterior walls framed on the new second floor" },
       { src: "assets/photos/417-warren/417warren-03.jpg", phase: "framing", cap: "Interior partitions framed out" },
       { src: "assets/photos/417-warren/417warren-04.jpg", phase: "framing", cap: "Framing run tight to the existing chimney" },
       { src: "assets/photos/417-warren/417warren-05.jpg", phase: "framing", cap: "The new second storey framed above the original house" },
