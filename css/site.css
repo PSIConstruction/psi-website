@@ -412,75 +412,90 @@ details[open] .svc__summary::after { content: "\2212"; }
 /* Carousel */
 
 .carousel { margin-top: 22px; position: relative; }
-.carousel__track-wrap { overflow: hidden; border: 1px solid var(--hairline); background: #fff;
-  height: 640px; transition: height 320ms cubic-bezier(0.4,0,0.2,1); }
-.carousel__track { display: flex; height: 100%; transition: transform 420ms cubic-bezier(0.4, 0, 0.2, 1); }
-.carousel__slide {
-  flex: 0 0 100%;
-  min-width: 0;
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 264px;   /* photo takes the room; words stay a narrow rail */
-  grid-template-rows: 100%;    /* definite row, so the photo's max-height: 100% resolves */
-  min-height: 0;
-}
+.carousel__track-wrap { overflow: hidden; border: 1px solid var(--hairline); background: #fff; }
+.carousel__track { display: flex; }
+/* ---- strip along the bottom ----
+   Every photo the same HEIGHT; width follows its own shape, so a landscape
+   shot runs about twice as wide as a portrait one. Scrolls sideways. */
+.carousel__track { gap: 10px; overflow-x: auto; overflow-y: hidden; scroll-behavior: smooth; padding: 10px; scrollbar-width: thin; }
+.carousel__track::-webkit-scrollbar { height: 8px; }
+.carousel__track::-webkit-scrollbar-thumb { background: rgba(16,18,20,0.22); border-radius: 4px; }
 
-/* A fixed stage, and each photo fitted inside it at its own shape. Portrait
-   shots fill the height, landscape shots fill the width — neither is cropped
-   or stretched into a ratio it was not taken in. */
-.carousel__media {
-  display: flex; align-items: center; justify-content: center;
-  background: var(--paper);
-  height: 100%;
-  min-height: 0;
-}
-.carousel__img {
+.strip__item {
+  flex: 0 0 auto;
   position: relative;
-  display: flex; align-items: center; justify-content: center;
-  width: 100%; height: 100%;
-  min-height: 0;              /* let it shrink inside the flex/grid chain */
-  overflow: hidden;
+  height: clamp(210px, 27vh, 320px);
+  padding: 0; border: 0; background: #e8e6e1;
+  cursor: pointer; overflow: hidden;
+  transition: transform 180ms ease, box-shadow 180ms ease;
 }
-/* Bounded rather than forced to 100% — the photo keeps its own shape and
-   never spills past the stage, whichever way round it was shot. */
-.carousel__img img {
-  display: block;
-  max-width: 100%; max-height: 100%;
-  width: auto; height: auto;
+.strip__item img { height: 100%; width: auto; display: block; }
+.strip__item:hover, .strip__item:focus-visible { transform: translateY(-3px); box-shadow: 0 8px 22px rgba(0,0,0,0.25); outline: none; }
+.strip__phase {
+  position: absolute; top: 8px; left: 8px;
+  font-size: 9px; letter-spacing: 0.18em; text-transform: uppercase; font-weight: 700;
+  padding: 3px 7px; border-radius: 2px; color: #fff;
 }
+.strip__phase--before { background: rgba(29,39,51,0.92); }
+.strip__phase--after  { background: var(--accent); }
 
-.carousel__phase {
+/* ---- full-screen viewer ---- */
+.viewer { position: fixed; inset: 0; z-index: 1000; display: none; background: #0b0c0e; }
+.viewer.is-open { display: grid; grid-template-rows: auto minmax(0, 1fr); }
+body.viewer-lock { overflow: hidden; }
+
+.viewer__head { padding: clamp(16px, 3vh, 30px) clamp(20px, 5vw, 64px) 10px; color: #fff; max-width: 900px; }
+.viewer__eyebrow { margin: 0 0 6px; color: var(--accent); font-size: 10.5px; letter-spacing: 0.22em; text-transform: uppercase; font-weight: 700; }
+.viewer__title { margin: 0 0 6px; font-size: clamp(18px, 2.4vw, 26px); line-height: 1.2; }
+.viewer__desc { margin: 0; font-size: 13.5px; line-height: 1.6; color: rgba(255,255,255,0.72); }
+
+.viewer__rail {
+  display: flex; align-items: center; gap: 24px;
+  height: 100%; overflow-x: auto; overflow-y: hidden;
+  padding: 0 clamp(20px, 5vw, 64px) 26px;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+}
+.viewer__rail::-webkit-scrollbar { display: none; }
+.viewer__fig { flex: 0 0 auto; margin: 0; scroll-snap-align: center; }
+.viewer__imgwrap { position: relative; display: block; }
+/* Uniform height: two portrait shots sit side by side, one landscape fills. */
+.viewer__fig img { display: block; height: min(72vh, 900px); width: auto; max-width: 92vw; object-fit: contain; }
+.viewer__phase {
   position: absolute; top: 12px; left: 12px;
   font-size: 9.5px; letter-spacing: 0.2em; text-transform: uppercase; font-weight: 700;
   padding: 3px 9px; border-radius: 2px; color: #fff;
 }
-.carousel__phase--before { background: rgba(29,39,51,0.92); }
-.carousel__phase--after  { background: var(--accent); }
-
-/* Words laid into the foot of the photo — mobile only. On desktop the same
-   text lives in the rail to the right. */
-.carousel__overlay {
-  display: none;
+.viewer__phase--before { background: rgba(29,39,51,0.92); }
+.viewer__phase--after  { background: var(--accent); }
+.viewer__cap {
   position: absolute; left: 0; right: 0; bottom: 0;
-  padding: 74px 16px 22px;
-  background: linear-gradient(to top, rgba(8,9,10,0.93) 0%, rgba(8,9,10,0.7) 45%, rgba(8,9,10,0) 100%);
-  color: #fff;
+  padding: 54px 16px 14px;
+  background: linear-gradient(to top, rgba(8,9,10,0.9) 0%, rgba(8,9,10,0.6) 55%, rgba(8,9,10,0) 100%);
+  color: #fff; font-size: 13px; line-height: 1.45;
 }
-.carousel__overlay-title { margin: 0 0 5px; font-size: 14px; font-weight: 700; line-height: 1.25; }
-.carousel__overlay-cap { margin: 0; font-size: 12px; line-height: 1.45; color: rgba(255,255,255,0.85); }
 
-.carousel__info { padding: clamp(16px, 1.8vw, 24px); display: flex; flex-direction: column; justify-content: center; background: #fff; }
-.carousel__info .eyebrow { margin-bottom: 7px; font-size: 9.5px; }
-.carousel__info h3 { margin: 0 0 5px; font-size: 16px; line-height: 1.25; letter-spacing: -0.01em; }
-.carousel__loc { margin: 0 0 9px; color: var(--muted); font-size: 12px; }
-.carousel__type { margin: 0 0 9px; color: var(--accent); font-weight: 600; font-size: 11.5px; letter-spacing: 0.04em; }
-.carousel__desc { margin: 0; font-size: 13px; line-height: 1.55; color: #33383d; }
-.carousel__caption { margin: 9px 0 0; font-size: 11.5px; line-height: 1.5; color: var(--muted); }
-.carousel__plans { display: inline-block; margin-top: 12px; font-size: 13px; color: var(--navy); font-weight: 600; }
+.viewer__close {
+  position: absolute; top: 16px; right: 18px; z-index: 3;
+  width: 42px; height: 42px; border-radius: 50%;
+  border: 1px solid rgba(255,255,255,0.28); background: rgba(0,0,0,0.35);
+  color: #fff; font-size: 22px; line-height: 1; cursor: pointer;
+}
+.viewer__close:hover { background: var(--accent); border-color: var(--accent); }
+.viewer__arrow {
+  position: absolute; top: 50%; transform: translateY(-50%); z-index: 3;
+  width: 48px; height: 48px; border-radius: 50%;
+  border: 1px solid rgba(255,255,255,0.28); background: rgba(0,0,0,0.35);
+  color: #fff; font-size: 18px; cursor: pointer;
+}
+.viewer__arrow:hover { background: var(--accent); border-color: var(--accent); }
+.viewer__arrow--prev { left: 14px; }
+.viewer__arrow--next { right: 14px; }
+
 @media (max-width: 860px) {
-  .carousel__slide { grid-template-columns: 1fr; }
-  .carousel__media { height: 100%; }
-  .carousel__info { display: none; }
-  .carousel__overlay { display: block; }
+  .viewer__fig img { height: min(62vh, 620px); max-width: 88vw; }
+  .viewer__arrow { width: 40px; height: 40px; }
+}
 }
 
 

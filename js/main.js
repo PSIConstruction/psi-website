@@ -54,7 +54,7 @@
         (p.type ? `<em style="color:#d60000;font-style:normal;font-weight:600">${p.type}</em><br>` : "") +
         `${p.city}` +
         (p.desc ? `<span style="display:block;margin-top:6px;max-width:240px">${p.desc}</span>` : "") +
-        `<button class="case__open" data-project="${i}">See these photos &rarr;</button>`
+        `<button class="case__open" data-project="${i}" data-open="${i}">See these photos &rarr;</button>`
       : `<strong>${p.name}</strong><br>${p.city}`);
     m.on("click", () => select(i, "map"));
     return m;
@@ -62,10 +62,9 @@
 
   // Popups are re-created by Leaflet, so delegate instead of binding per popup.
   document.addEventListener("click", (e) => {
-    const btn = e.target.closest("button[data-project]");   // slides carry the id too
-    if (!btn) return;
-    enterProject(+btn.dataset.project);
-    document.getElementById("projectCarousel").scrollIntoView({ behavior: "smooth", block: "center" });
+    const btn = e.target.closest("button[data-project]");
+    if (!btn || !btn.dataset.open) return;
+    openViewer(+btn.dataset.open, 0);
   });
   const allBounds = L.latLngBounds(projects.map(p => [p.lat, p.lng])).pad(0.08);
   map.fitBounds(allBounds);
@@ -106,128 +105,137 @@
   const track = document.getElementById("carouselTrack");
   const counter = document.getElementById("carouselCounter");
 
-  // One entry per PHOTOGRAPH, not per project. A project with a gallery
-  // contributes all of its shots; anything else contributes its single image.
+  // One entry per PHOTOGRAPH. A project with a gallery contributes all of its
+  // shots; anything else contributes its single image.
   const shots = [];
   projects.forEach((p, i) => {
     if (Array.isArray(p.gallery) && p.gallery.length) {
-      p.gallery.forEach((g) => shots.push({ i, p, src: g.src, cap: g.cap, phase: g.phase }));
+      p.gallery.forEach((g, n) => shots.push({ i, p, n, src: g.src, cap: g.cap, phase: g.phase }));
     } else if (p.img) {
-      shots.push({ i, p, src: p.img, cap: p.caption, phase: null });
+      shots.push({ i, p, n: 0, src: p.img, cap: p.caption, phase: null });
     }
   });
-  const shotsOf = new Map();
-  shots.forEach((sh, k) => {
-    if (!shotsOf.has(sh.i)) shotsOf.set(sh.i, []);
-    shotsOf.get(sh.i).push(k);
-  });
 
-  const shuffled = () => {
-    const a = shots.map((_, k) => k);
-    for (let k = a.length - 1; k > 0; k--) {
+  const shuffled = (arr) => {
+    const a2 = arr.slice();
+    for (let k = a2.length - 1; k > 0; k--) {
       const j = Math.floor(Math.random() * (k + 1));
-      [a[k], a[j]] = [a[j], a[k]];
+      [a2[k], a2[j]] = [a2[j], a2[k]];
     }
-    return a;
+    return a2;
   };
 
-  let order = shuffled();   // current running order (indices into `shots`)
-  let pos = 0;              // where we are within `order`
-  let projectMode = -1;     // project index while showing one job, else -1
-
-  const slideHTML = (sh) => {
-    const title = sh.p.type || sh.p.city;
-    const line  = sh.cap || sh.p.desc || "";
-    return `
-      <div class="carousel__media">
-        <div class="carousel__img">
-          <img loading="lazy" src="${sh.src}" alt="${line || title}">
-          ${sh.phase ? `<span class="carousel__phase carousel__phase--${sh.phase}">${sh.phase}</span>` : ""}
-          <div class="carousel__overlay">
-            <p class="carousel__overlay-title">${title}</p>
-            ${line ? `<p class="carousel__overlay-cap">${line}</p>` : ""}
-          </div>
-        </div>
-      </div>
-      <div class="carousel__info">
-        <p class="eyebrow eyebrow--accent">${sh.phase ? sh.phase : "Previous Project"}</p>
-        <h3>${title}</h3>
-        <p class="carousel__loc">${sh.p.city}</p>
-        ${line ? `<p class="carousel__desc">${line}</p>` : ""}
-        ${sh.p.desc && sh.cap ? `<p class="carousel__caption">${sh.p.desc}</p>` : ""}
-        ${sh.p.plans ? `<a class="carousel__plans" href="${sh.p.plans}" target="_blank" rel="noopener">View filed plans (PDF) &rarr;</a>` : ""}
-      </div>`;
-  };
-
-  function renderTrack() {
+  // ---- the strip along the bottom ----
+  // Every photo is rendered at the SAME HEIGHT; width follows its own shape,
+  // so a landscape shot is about twice as wide as a portrait one. The strip
+  // scrolls sideways.
+  function renderStrip() {
     track.innerHTML = "";
-    order.forEach((k) => {
+    shuffled(shots.map((_, k) => k)).forEach((k) => {
       const sh = shots[k];
-      const slide = document.createElement("div");
-      slide.className = "carousel__slide";
-      slide.dataset.project = sh.p.id || "";
-      slide.innerHTML = slideHTML(sh);
-      const im = slide.querySelector("img");
-      if (im) im.addEventListener("load", () => { if (track.children[pos] === slide) fitHeight(); });
-      track.appendChild(slide);
+      const b2 = document.createElement("button");
+      b2.type = "button";
+      b2.className = "strip__item";
+      b2.dataset.shot = k;
+      b2.dataset.project = sh.p.id || "";
+      b2.title = `${sh.p.type || sh.p.city} — ${sh.cap || ""}`;
+      b2.innerHTML = `
+        <img loading="lazy" src="${sh.src}" alt="${sh.cap || sh.p.type || "PSI project"}">
+        ${sh.phase ? `<span class="strip__phase strip__phase--${sh.phase}">${sh.phase}</span>` : ""}`;
+      track.appendChild(b2);
     });
   }
 
-  // The stage height follows the photo on screen: a wide shot gets a short
-  // stage, a tall shot a tall one. Without this, one shape or the other sits
-  // in a band of empty background.
-  const wrap = track.parentElement;
-  function fitHeight() {
-    const slide = track.children[pos];
-    if (!slide) return;
-    const img = slide.querySelector("img");
-    const media = slide.querySelector(".carousel__media");
-    if (!img || !media) return;
-    const cap = Math.min(window.innerHeight * 0.82, 900);
-    const w = media.clientWidth || track.clientWidth;
-    let h = cap;
-    if (img.naturalWidth && img.naturalHeight) {
-      h = Math.min(cap, (w * img.naturalHeight) / img.naturalWidth);
-    }
-    wrap.style.height = Math.max(300, Math.round(h)) + "px";
-  }
-  window.addEventListener("resize", fitHeight, { passive: true });
+  track.addEventListener("click", (e) => {
+    const item = e.target.closest(".strip__item");
+    if (!item) return;
+    const sh = shots[+item.dataset.shot];
+    select(sh.i, "strip");
+    openViewer(sh.i, sh.n);
+  });
 
-  let syncing = false;
-  function showPos(p2, sync) {
-    if (!order.length) return;
-    pos = (p2 + order.length) % order.length;
-    track.style.transform = `translateX(-${pos * 100}%)`;
-    fitHeight();
-    const sh = shots[order[pos]];
-    counter.textContent = projectMode >= 0
-      ? `${pos + 1} / ${order.length} — ${sh.p.type || sh.p.city}`
-      : `${sh.p.type || sh.p.city}`;
-    if (sync && sh.i !== current) {
-      syncing = true;
-      select(sh.i, "carousel");
-      syncing = false;
-    }
+  const scrollStrip = (dir) => track.scrollBy({ left: dir * track.clientWidth * 0.85, behavior: "smooth" });
+
+  // ---- the full-screen viewer ----
+  const viewer = document.createElement("div");
+  viewer.className = "viewer";
+  viewer.setAttribute("role", "dialog");
+  viewer.setAttribute("aria-modal", "true");
+  viewer.setAttribute("aria-hidden", "true");
+  viewer.innerHTML = `
+    <button class="viewer__close" data-vclose aria-label="Close">&times;</button>
+    <div class="viewer__head">
+      <p class="viewer__eyebrow"></p>
+      <h2 class="viewer__title"></h2>
+      <p class="viewer__desc"></p>
+    </div>
+    <button class="viewer__arrow viewer__arrow--prev" data-vstep="-1" aria-label="Previous photo">&larr;</button>
+    <div class="viewer__rail"></div>
+    <button class="viewer__arrow viewer__arrow--next" data-vstep="1" aria-label="Next photo">&rarr;</button>`;
+  document.body.appendChild(viewer);
+  const vRail = viewer.querySelector(".viewer__rail");
+  let vReturn = null;
+
+  function openViewer(i, startAt) {
+    const p = projects[i];
+    const list = Array.isArray(p.gallery) && p.gallery.length
+      ? p.gallery.map((g) => ({ src: g.src, cap: g.cap, phase: g.phase }))
+      : (p.img ? [{ src: p.img, cap: p.caption, phase: null }] : []);
+    if (!list.length) return;
+    vReturn = document.activeElement;
+    viewer.querySelector(".viewer__eyebrow").textContent = p.type || "Previous project";
+    viewer.querySelector(".viewer__title").textContent = p.name;
+    viewer.querySelector(".viewer__desc").textContent = p.desc || "";
+    vRail.innerHTML = list.map((g) => `
+      <figure class="viewer__fig">
+        <div class="viewer__imgwrap">
+          <img src="${g.src}" alt="${g.cap || p.name}">
+          ${g.phase ? `<span class="viewer__phase viewer__phase--${g.phase}">${g.phase}</span>` : ""}
+          ${g.cap ? `<figcaption class="viewer__cap">${g.cap}</figcaption>` : ""}
+        </div>
+      </figure>`).join("");
+    viewer.classList.add("is-open");
+    viewer.setAttribute("aria-hidden", "false");
+    document.body.classList.add("viewer-lock");
+    requestAnimationFrame(() => {
+      const fig = vRail.children[startAt || 0];
+      if (fig) vRail.scrollLeft = fig.offsetLeft - 24;
+    });
+    viewer.querySelector(".viewer__close").focus();
   }
 
-  // Show only one job's photographs, in order.
-  function enterProject(i) {
-    const ks = shotsOf.get(i);
-    if (!ks || !ks.length) return false;
-    projectMode = i;
-    order = ks.slice();
-    renderTrack();
-    showPos(0, false);
-    return true;
+  function closeViewer() {
+    viewer.classList.remove("is-open");
+    viewer.setAttribute("aria-hidden", "true");
+    document.body.classList.remove("viewer-lock");
+    if (vReturn) vReturn.focus();
   }
 
-  // Back to everything, freshly shuffled.
-  function exitToShuffle() {
-    projectMode = -1;
-    order = shuffled();
-    renderTrack();
-    showPos(0, true);
+  function stepViewer(dir) {
+    const figs = [...vRail.children];
+    if (!figs.length) return;
+    const mid = vRail.scrollLeft + vRail.clientWidth / 2;
+    let cur = 0, best = Infinity;
+    figs.forEach((f, k) => {
+      const c = f.offsetLeft + f.offsetWidth / 2;
+      if (Math.abs(c - mid) < best) { best = Math.abs(c - mid); cur = k; }
+    });
+    const next = figs[Math.min(figs.length - 1, Math.max(0, cur + dir))];
+    if (next) vRail.scrollTo({ left: next.offsetLeft - 24, behavior: "smooth" });
   }
+
+  viewer.addEventListener("click", (e) => {
+    if (e.target.closest("[data-vclose]")) return closeViewer();
+    const st = e.target.closest("[data-vstep]");
+    if (st) return stepViewer(+st.dataset.vstep);
+    if (e.target === viewer) closeViewer();
+  });
+  document.addEventListener("keydown", (e) => {
+    if (!viewer.classList.contains("is-open")) return;
+    if (e.key === "Escape") closeViewer();
+    if (e.key === "ArrowRight") stepViewer(1);
+    if (e.key === "ArrowLeft") stepViewer(-1);
+  });
 
   let current = -1;
 
@@ -235,7 +243,7 @@
     if (i === current) {
       // Re-clicking the job that happens to be selected must still open its
       // photo set — otherwise the row goes dead once the shuffle lands on it.
-      if (source === "list" || source === "map") enterProject(i);
+      if (source === "list" || source === "map") openViewer(i, 0);
       if (source === "list" || source === "carousel") focusPin(i);
       return;
     }
@@ -255,9 +263,8 @@
     rows[i].classList.add("is-active");
     rows[i].scrollIntoView({ block: "nearest", behavior: "smooth" });
 
-    // Carousel: clicking a pin or row shows just that job's photographs.
-    // Skipped when the carousel itself drove the change, or on first paint.
-    if (!syncing && source !== "init") enterProject(i);
+    // Clicking a pin or a row opens that job's photographs full screen.
+    if (source === "map" || source === "list") openViewer(i, 0);
   }
 
   function focusPin(i) {
@@ -265,18 +272,12 @@
     map.flyTo([p.lat, p.lng], Math.max(map.getZoom(), 16), { duration: 0.7 });
   }
 
-  const stepCarousel = (delta) => {
-    if (!order.length) return;
-    // Walking off the end of one job's photos returns to the shuffle.
-    if (projectMode >= 0 && delta > 0 && pos === order.length - 1) { exitToShuffle(); return; }
-    if (projectMode >= 0 && delta < 0 && pos === 0) { exitToShuffle(); return; }
-    showPos(pos + delta, true);
-  };
-  document.getElementById("carouselPrev").addEventListener("click", () => stepCarousel(-1));
-  document.getElementById("carouselNext").addEventListener("click", () => stepCarousel(1));
+  document.getElementById("carouselPrev").addEventListener("click", () => scrollStrip(-1));
+  document.getElementById("carouselNext").addEventListener("click", () => scrollStrip(1));
 
-  renderTrack();
-  if (shots.length) { showPos(0, false); select(shots[order[0]].i, "init"); }
+  renderStrip();
+  counter.textContent = `${shots.length} photographs — click any to open the project`;
+  select(0, "init");
 
   // ---------------- Google Reviews carousel ----------------
   const reviews = [
