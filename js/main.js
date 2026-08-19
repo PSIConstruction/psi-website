@@ -99,10 +99,13 @@
     return row;
   });
 
-  // Carousel
+  // Carousel — only projects that actually have photography appear here.
+  // Every project still gets a map pin and a list row.
   const track = document.getElementById("carouselTrack");
   const counter = document.getElementById("carouselCounter");
-  projects.forEach((p) => {
+  const shot = projects.map((p, i) => ({ p, i })).filter(({ p }) => !!p.img);
+  const slideOf = new Map(shot.map(({ i }, s) => [i, s]));
+  shot.forEach(({ p }) => {
     const slide = document.createElement("div");
     slide.className = "carousel__slide";
     // The carousel leads with what the photograph shows, not the street
@@ -146,9 +149,12 @@
     rows[i].classList.add("is-active");
     rows[i].scrollIntoView({ block: "nearest", behavior: "smooth" });
 
-    // Carousel
-    track.style.transform = `translateX(-${i * 100}%)`;
-    counter.textContent = `${i + 1} / ${projects.length} — ${p.type || p.caption || p.city}`;
+    // Carousel — only moves when this project has photos of its own
+    const s = slideOf.get(i);
+    if (s !== undefined) {
+      track.style.transform = `translateX(-${s * 100}%)`;
+      counter.textContent = `${s + 1} / ${shot.length} — ${p.type || p.caption || p.city}`;
+    }
   }
 
   function focusPin(i) {
@@ -156,10 +162,14 @@
     map.flyTo([p.lat, p.lng], Math.max(map.getZoom(), 16), { duration: 0.7 });
   }
 
-  document.getElementById("carouselPrev").addEventListener("click", () =>
-    select((current - 1 + projects.length) % projects.length, "carousel"));
-  document.getElementById("carouselNext").addEventListener("click", () =>
-    select((current + 1) % projects.length, "carousel"));
+  const stepCarousel = (delta) => {
+    if (!shot.length) return;
+    const here = slideOf.get(current);
+    const next = here === undefined ? 0 : (here + delta + shot.length) % shot.length;
+    select(shot[next].i, "carousel");
+  };
+  document.getElementById("carouselPrev").addEventListener("click", () => stepCarousel(-1));
+  document.getElementById("carouselNext").addEventListener("click", () => stepCarousel(1));
 
   // ---------------- Case-study modal ----------------
 
@@ -215,7 +225,7 @@
     if (e.key === "Escape" && caseEl.classList.contains("is-open")) closeCase();
   });
 
-  select(0, "init");
+  select(shot.length ? shot[0].i : 0, "init");
 
   // ---------------- Google Reviews carousel ----------------
   const reviews = [
