@@ -45,7 +45,7 @@ window.PSI_PROJECTS = [
   { name: "505 Warren Avenue",   city: "Kingston, PA", lat: 41.2635724, lng: -75.885076, img: "assets/photos/PSI_Kitchen_Island_Greige_01.jpg", caption: "Greige kitchen island" },
   { name: "192 James Street",    city: "Kingston, PA", lat: 41.2645332, lng: -75.885262,
     type: "Porch Enclosure \u2192 Master Bathroom",
-    desc: "An exterior porch off the master bedroom, enclosed and converted into the master bathroom.",
+    desc: "An exterior porch off the master bedroom, enclosed and converted into the master bathroom, with heated tile floors.",
     img: "assets/photos/192-james/192james-after-01-overview.jpg",
     caption: "The finished master bathroom",
     gallery: [
