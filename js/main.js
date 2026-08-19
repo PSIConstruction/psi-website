@@ -105,15 +105,18 @@
   projects.forEach((p) => {
     const slide = document.createElement("div");
     slide.className = "carousel__slide";
+    // The carousel leads with what the photograph shows, not the street
+    // address. The project is tracked by its internal id instead.
+    slide.dataset.project = p.id || "";
     slide.innerHTML = `
-      <div class="carousel__img"><img loading="lazy" src="${p.img}" alt="${p.caption || p.name}"></div>
+      <div class="carousel__img"><img loading="lazy" src="${p.img}" alt="${p.caption || p.type || "PSI project"}"></div>
       <div class="carousel__info">
         <p class="eyebrow eyebrow--accent">Previous Project</p>
-        <h3>${p.name}</h3>
+        <h3>${p.caption || p.type || p.city}</h3>
         <p class="carousel__loc">${p.city}</p>
         ${p.type ? `<p class="carousel__type">${p.type}</p>` : ""}
         ${p.desc ? `<p class="carousel__desc">${p.desc}</p>` : ""}
-        <p class="carousel__caption">${p.caption || ""}${p.desc ? "" : " &mdash; PSI portfolio photography"}</p>
+        ${p.desc ? "" : `<p class="carousel__caption">PSI portfolio photography</p>`}
         ${p.plans ? `<a class="carousel__plans" href="${p.plans}" target="_blank" rel="noopener">View filed plans (PDF) &rarr;</a>` : ""}
         ${hasCase(p) ? `<button class="case__open" data-case="${projects.indexOf(p)}">View photos &rarr;</button>` : ""}
       </div>`;
@@ -145,7 +148,7 @@
 
     // Carousel
     track.style.transform = `translateX(-${i * 100}%)`;
-    counter.textContent = `${i + 1} / ${projects.length} — ${p.name}`;
+    counter.textContent = `${i + 1} / ${projects.length} — ${p.type || p.caption || p.city}`;
   }
 
   function focusPin(i) {
