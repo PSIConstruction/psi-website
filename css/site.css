@@ -420,7 +420,21 @@ details[open] .svc__summary::after { content: "\2212"; }
   border: 2px solid #fff;
   box-shadow: 0 1px 6px rgba(0,0,0,0.4);
 }
-.pin--active { background: var(--accent); transform: rotate(-45deg) scale(1.35); }
+/* The job whose photograph is on screen: bigger, lit, and it stays that
+   way so it reads as "this one — click me". */
+.pin--active {
+  background: var(--accent);
+  transform: rotate(-45deg) scale(1.75);
+  box-shadow: 0 0 0 4px rgba(214,0,0,0.30), 0 0 16px 5px rgba(214,0,0,0.55), 0 2px 8px rgba(0,0,0,0.45);
+  border-color: #fff;
+  z-index: 400;
+  animation: pinGlow 1.9s ease-in-out infinite;
+}
+@keyframes pinGlow {
+  0%, 100% { box-shadow: 0 0 0 4px rgba(214,0,0,0.30), 0 0 14px 4px rgba(214,0,0,0.45), 0 2px 8px rgba(0,0,0,0.45); }
+  50%      { box-shadow: 0 0 0 6px rgba(214,0,0,0.20), 0 0 22px 8px rgba(214,0,0,0.70), 0 2px 8px rgba(0,0,0,0.45); }
+}
+@media (prefers-reduced-motion: reduce) { .pin--active { animation: none; } }
 .pin--office { background: var(--accent); border-radius: 50%; transform: none; }
 
 /* Case-study pins: projects with a photo gallery behind them. Visually

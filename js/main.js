@@ -136,6 +136,27 @@
     openViewer(sh.i, sh.n);
   });
 
+  // Whichever photograph is on screen, its job's pin grows and lights up on
+  // the map — so it is obvious where the shot was taken, and clicking that
+  // pin opens the whole job.
+  let syncFrame = 0;
+  function syncPinToShot() {
+    const mid = wall.scrollLeft + wall.clientWidth / 2;
+    let best = Infinity, hit = null;
+    [...wall.children].forEach((el) => {
+      const c = el.offsetLeft + el.offsetWidth / 2;
+      const d = Math.abs(c - mid);
+      if (d < best) { best = d; hit = el; }
+    });
+    if (!hit) return;
+    const sh = shots[+hit.dataset.shot];
+    if (sh && sh.i !== current) select(sh.i, "scroll");
+  }
+  wall.addEventListener("scroll", () => {
+    if (syncFrame) return;
+    syncFrame = requestAnimationFrame(() => { syncFrame = 0; syncPinToShot(); });
+  }, { passive: true });
+
   const stepShots = (dir) => wall.scrollBy({ left: dir * wall.clientWidth, behavior: "smooth" });
   document.getElementById("shotPrev").addEventListener("click", () => stepShots(-1));
   document.getElementById("shotNext").addEventListener("click", () => stepShots(1));
@@ -249,6 +270,7 @@
 
     // Pin
     markers[i].setIcon(pinIcon(true, hasCase(p)));
+    if (source === "scroll") return;                       // highlight only
     if (source !== "map" && source !== "init") focusPin(i);
     if (source !== "init") markers[i].openPopup();
 
@@ -262,6 +284,7 @@
   }
 
   renderShots();
+  requestAnimationFrame(syncPinToShot);
   hint.textContent = `${shots.length} photographs across ${new Set(shots.map((x) => x.i)).size} documented jobs — click any photograph, or a pin, to open that job.`;
   select(0, "init");
 
