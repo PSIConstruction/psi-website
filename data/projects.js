@@ -182,7 +182,12 @@ window.PSI_PROJECTS = [
       { src: "assets/photos/841-nandy/841nandy-27.jpg", phase: "after", cap: "The finished basement bathroom" },
       { src: "assets/photos/841-nandy/841nandy-28.jpg", phase: "after", cap: "Glass shower complete" },
       { src: "assets/photos/841-nandy/841nandy-29.jpg", phase: "after", cap: "A finished basement bedroom" },
-      { src: "assets/photos/841-nandy/841nandy-30.jpg", phase: "after", cap: "The finished basement living space" }
+      { src: "assets/photos/841-nandy/841nandy-30.jpg", phase: "after", cap: "The finished basement living space" },
+      { src: "assets/photos/841-nandy/841nandy-31.jpg", phase: "after", cap: "The second basement bathroom, vanity and tiled floor" },
+      { src: "assets/photos/841-nandy/841nandy-32.jpg", phase: "after", cap: "Tiled tub surround in the basement bath" },
+      { src: "assets/photos/841-nandy/841nandy-33.jpg", phase: "after", cap: "Vanity and mirror in the second bath" },
+      { src: "assets/photos/841-nandy/841nandy-34.jpg", phase: "after", cap: "The open basement living area, finished end to end" },
+      { src: "assets/photos/841-nandy/841nandy-35.jpg", phase: "after", cap: "Another finished bedroom, daylight from the new window" }
     ] },
   { name: "836 Nandy Drive",     city: "Kingston, PA", lat: 41.2674656, lng: -75.8771667 },
   { name: "597 Gibson Avenue",   city: "Kingston, PA", lat: 41.2657666, lng: -75.8832229 },
