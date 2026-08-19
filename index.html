@@ -268,7 +268,11 @@
 
       <div class="projects__layout">
         <div id="projectMap" aria-label="Interactive map of PSI project locations"></div>
-        <div class="shots" id="shotWall" aria-label="Project photographs"></div>
+        <div class="shots-wrap">
+          <div class="shots" id="shotWall" aria-label="Project photographs"></div>
+          <button class="shots__arrow shots__arrow--prev" id="shotPrev" aria-label="Previous photograph">&larr;</button>
+          <button class="shots__arrow shots__arrow--next" id="shotNext" aria-label="Next photograph">&rarr;</button>
+        </div>
       </div>
       <p class="shots__hint" id="shotHint"></p>
     </div>

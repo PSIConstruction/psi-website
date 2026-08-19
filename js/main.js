@@ -106,34 +106,51 @@
     return a2;
   };
 
-  // ---- the strip along the bottom ----
-  // Every photo is rendered at the SAME HEIGHT; width follows its own shape,
-  // so a landscape shot is about twice as wide as a portrait one. The strip
-  // scrolls sideways.
-  function renderStrip() {
+  // ---- one photograph at a time, beside the map ----
+  // Each slide fills the panel and is cropped to fill it (cover), so a
+  // landscape shot loses a little from each side rather than shrinking.
+  function renderShots() {
     wall.innerHTML = "";
     shuffled(shots.map((_, k) => k)).forEach((k) => {
       const sh = shots[k];
       const b2 = document.createElement("button");
       b2.type = "button";
-      b2.className = "strip__item";
+      b2.className = "shot";
       b2.dataset.shot = k;
-      b2.dataset.project = sh.p.id || "";
-      b2.title = `${sh.p.type || sh.p.city} — ${sh.cap || ""}`;
       b2.innerHTML = `
         <img loading="lazy" src="${sh.src}" alt="${sh.cap || sh.p.type || "PSI project"}">
-        ${sh.phase ? `<span class="strip__phase strip__phase--${sh.phase}">${sh.phase}</span>` : ""}`;
+        ${sh.phase ? `<span class="shot__phase shot__phase--${sh.phase}">${sh.phase}</span>` : ""}
+        <span class="shot__cap">
+          <strong>${sh.p.type || sh.p.city}</strong>
+          ${sh.cap ? `<span>${sh.cap}</span>` : ""}
+        </span>`;
       wall.appendChild(b2);
     });
   }
 
   wall.addEventListener("click", (e) => {
-    const item = e.target.closest(".strip__item");
+    const item = e.target.closest(".shot");
     if (!item) return;
     const sh = shots[+item.dataset.shot];
-    select(sh.i, "strip");
+    select(sh.i, "shots");
     openViewer(sh.i, sh.n);
   });
+
+  const stepShots = (dir) => wall.scrollBy({ left: dir * wall.clientWidth, behavior: "smooth" });
+  document.getElementById("shotPrev").addEventListener("click", () => stepShots(-1));
+  document.getElementById("shotNext").addEventListener("click", () => stepShots(1));
+
+  // Wheel over the panel moves through the photographs instead of the page.
+  let wheelLock = 0;
+  wall.addEventListener("wheel", (e) => {
+    const d = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY;
+    if (!d) return;
+    const now = Date.now();
+    if (now < wheelLock) { e.preventDefault(); return; }
+    wheelLock = now + 420;
+    e.preventDefault();
+    stepShots(d > 0 ? 1 : -1);
+  }, { passive: false });
 
   // ---- the full-screen viewer ----
   const viewer = document.createElement("div");
@@ -244,7 +261,7 @@
     map.flyTo([p.lat, p.lng], Math.max(map.getZoom(), 16), { duration: 0.7 });
   }
 
-  renderStrip();
+  renderShots();
   hint.textContent = `${shots.length} photographs across ${new Set(shots.map((x) => x.i)).size} documented jobs — click any photograph, or a pin, to open that job.`;
   select(0, "init");
 

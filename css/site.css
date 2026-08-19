@@ -353,20 +353,63 @@ details[open] .svc__summary::after { content: "\2212"; }
   z-index: 1;
 }
 
-/* Photographs sit beside the map, in place of the old address list.
-   Uniform height, width by shape, wrapping into rows and scrolling. */
+/* One photograph at a time, beside the map and the same height as it.
+   Cropped to fill the frame, so a landscape shot gives up a little from
+   each side rather than shrinking away from the map's height. */
+.shots-wrap { position: relative; }
 .shots {
   height: clamp(380px, 56vh, 560px);
-  overflow-y: auto;
-  overflow-x: hidden;
   border: 1px solid var(--hairline);
-  background: #fff;
+  background: #0f1113;
   display: flex;
-  flex-wrap: wrap;
-  align-content: flex-start;
-  gap: 6px;
-  padding: 6px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+  overscroll-behavior-x: contain;
 }
+.shots::-webkit-scrollbar { display: none; }
+
+.shot {
+  flex: 0 0 100%;
+  scroll-snap-align: center;
+  position: relative;
+  height: 100%;
+  padding: 0; border: 0; margin: 0;
+  background: #0f1113;
+  cursor: pointer;
+  overflow: hidden;
+}
+.shot img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+.shot__phase {
+  position: absolute; top: 12px; left: 12px;
+  font-size: 9.5px; letter-spacing: 0.2em; text-transform: uppercase; font-weight: 700;
+  padding: 3px 9px; border-radius: 2px; color: #fff;
+}
+.shot__phase--before { background: rgba(29,39,51,0.92); }
+.shot__phase--after  { background: var(--accent); }
+
+.shot__cap {
+  position: absolute; left: 0; right: 0; bottom: 0;
+  display: block; text-align: left;
+  padding: 74px 18px 16px;
+  background: linear-gradient(to top, rgba(8,9,10,0.93) 0%, rgba(8,9,10,0.68) 48%, rgba(8,9,10,0) 100%);
+  color: #fff;
+}
+.shot__cap strong { display: block; font-size: 14px; line-height: 1.25; margin-bottom: 4px; }
+.shot__cap span { display: block; font-size: 12.5px; line-height: 1.45; color: rgba(255,255,255,0.86); }
+
+.shots__arrow {
+  position: absolute; top: 50%; transform: translateY(-50%); z-index: 2;
+  width: 40px; height: 40px; border-radius: 50%;
+  border: 1px solid rgba(255,255,255,0.3); background: rgba(0,0,0,0.4);
+  color: #fff; font-size: 16px; cursor: pointer;
+}
+.shots__arrow:hover { background: var(--accent); border-color: var(--accent); }
+.shots__arrow--prev { left: 12px; }
+.shots__arrow--next { right: 12px; }
+
 .shots__hint { margin: 12px 0 0; font-size: 12.5px; color: var(--muted); }
 
 .pin {
@@ -403,23 +446,7 @@ details[open] .svc__summary::after { content: "\2212"; }
 /* ---- strip along the bottom ----
    Every photo the same HEIGHT; width follows its own shape, so a landscape
    shot runs about twice as wide as a portrait one. Scrolls sideways. */
-.strip__item {
-  flex: 0 0 auto;
-  position: relative;
-  height: 116px;
-  padding: 0; border: 0; background: #e8e6e1;
-  cursor: pointer; overflow: hidden;
-  transition: transform 180ms ease, box-shadow 180ms ease;
-}
-.strip__item img { height: 100%; width: auto; display: block; }
-.strip__item:hover, .strip__item:focus-visible { transform: translateY(-3px); box-shadow: 0 8px 22px rgba(0,0,0,0.25); outline: none; }
-.strip__phase {
-  position: absolute; top: 8px; left: 8px;
-  font-size: 9px; letter-spacing: 0.18em; text-transform: uppercase; font-weight: 700;
-  padding: 3px 7px; border-radius: 2px; color: #fff;
-}
-.strip__phase--before { background: rgba(29,39,51,0.92); }
-.strip__phase--after  { background: var(--accent); }
+
 
 /* ---- full-screen viewer ---- */
 .viewer { position: fixed; inset: 0; z-index: 1000; display: none; background: #0b0c0e; }
