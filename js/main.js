@@ -142,15 +142,9 @@
   let syncFrame = 0;
   let firstSync = true;
   function syncPinToShot() {
-    const mid = wall.scrollLeft + wall.clientWidth / 2;
-    let best = Infinity, hit = null;
-    [...wall.children].forEach((el) => {
-      const c = el.offsetLeft + el.offsetWidth / 2;
-      const d = Math.abs(c - mid);
-      if (d < best) { best = d; hit = el; }
-    });
-    if (!hit) return;
-    const sh = shots[+hit.dataset.shot];
+    const el = wall.children[sPos];
+    if (!el) return;
+    const sh = shots[+el.dataset.shot];
     if (sh && sh.i !== current) select(sh.i, "scroll");
   }
   wall.addEventListener("scroll", () => {
@@ -158,15 +152,27 @@
     syncFrame = requestAnimationFrame(() => { syncFrame = 0; syncPinToShot(); });
   }, { passive: true });
 
+  // Position is held explicitly and the browser does the alignment.
+  // Computing `index * clientWidth` drifted: clientWidth is a rounded
+  // integer while the real slide width is fractional, so the error
+  // compounded and clipped the caption on one side and leaked the next
+  // photograph in on the other.
+  let sPos = 0;
   const slideCount = () => wall.children.length;
-  const slideAt = () => Math.round(wall.scrollLeft / Math.max(1, wall.clientWidth));
+  // Slide width is fractional (e.g. 435.8px) while offsetLeft and clientWidth
+  // both report rounded integers, so any index-times-width or scrollIntoView
+  // approach accumulates error and clips the caption. Measure the real width
+  // and scroll to the exact fractional offset.
+  const slideWidth = () => (wall.firstElementChild
+    ? wall.firstElementChild.getBoundingClientRect().width
+    : wall.getBoundingClientRect().width);
   function goTo(idx) {
     const n = slideCount();
     if (!n) return;
-    const k = ((idx % n) + n) % n;                 // wrap both ways
-    wall.scrollTo({ left: k * wall.clientWidth, behavior: "smooth" });
+    sPos = ((idx % n) + n) % n;                    // wrap both ways
+    wall.scrollTo({ left: sPos * slideWidth(), behavior: "smooth" });
   }
-  const stepShots = (dir) => goTo(slideAt() + dir);
+  const stepShots = (dir) => goTo(sPos + dir);
 
   // Advances on its own; a click restarts the clock so it does not jump
   // straight after you have chosen a photograph yourself.
@@ -179,6 +185,7 @@
   document.getElementById("shotPrev").addEventListener("click", () => nudge(-1));
   document.getElementById("shotNext").addEventListener("click", () => nudge(1));
   document.addEventListener("visibilitychange", () => (document.hidden ? stop() : play()));
+  window.addEventListener("resize", () => { wall.scrollLeft = sPos * slideWidth(); }, { passive: true });
 
 
   // ---- the full-screen viewer ----

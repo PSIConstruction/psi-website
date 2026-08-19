@@ -52,7 +52,22 @@ window.PSI_PROJECTS = [
       { src: "assets/photos/50-reynolds/50reynolds-after-03-niche.jpg", phase: "after", cap: "Penny-round mosaic carried from the niche onto the shower floor" }
     ] },
   { name: "289 Reynolds Street", city: "Kingston, PA", lat: 41.262829, lng: -75.8873066 },
-  { name: "554 Warren Avenue",   city: "Kingston, PA", lat: 41.264622, lng: -75.8840499 },
+  { name: "554 Warren Avenue",   city: "Kingston, PA", lat: 41.2646423, lng: -75.8836466,
+    id: "basement-finish-warren",
+    type: "Basement Renovation",
+    desc: "An unfinished basement turned into finished living space \u2014 bedrooms, a full bathroom with a tiled tub surround, new flooring and lighting throughout.",
+    img: "assets/photos/554-warren/554warren-04.jpg",
+    caption: "The tiled tub surround",
+    gallery: [
+      { src: "assets/photos/554-warren/554warren-01.jpg", phase: "after", cap: "A finished basement bedroom, new flooring throughout" },
+      { src: "assets/photos/554-warren/554warren-02.jpg", phase: "after", cap: "The second bedroom, light fitting hung" },
+      { src: "assets/photos/554-warren/554warren-03.jpg", phase: "after", cap: "The new basement bathroom — dark tile and gold fittings" },
+      { src: "assets/photos/554-warren/554warren-04.jpg", phase: "after", cap: "Vertical green tile running the full tub surround" },
+      { src: "assets/photos/554-warren/554warren-05.jpg", phase: "after", cap: "The bathroom complete, arched mirror over the vanity" },
+      { src: "assets/photos/554-warren/554warren-06.jpg", phase: "after", cap: "A bedroom furnished and in use" },
+      { src: "assets/photos/554-warren/554warren-07.jpg", phase: "after", cap: "Twin beds in the finished bedroom" },
+      { src: "assets/photos/554-warren/554warren-08.jpg", phase: "after", cap: "The stair down into the finished basement" }
+    ] },
   { name: "453 Warren Avenue",   city: "Kingston, PA", lat: 41.2629624, lng: -75.8861046 },
   { name: "417 Warren Avenue",   city: "Kingston, PA", lat: 41.2625177, lng: -75.8871484,
     id: "addition-and-first-floor",
