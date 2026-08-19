@@ -158,21 +158,28 @@
     syncFrame = requestAnimationFrame(() => { syncFrame = 0; syncPinToShot(); });
   }, { passive: true });
 
-  const stepShots = (dir) => wall.scrollBy({ left: dir * wall.clientWidth, behavior: "smooth" });
-  document.getElementById("shotPrev").addEventListener("click", () => stepShots(-1));
-  document.getElementById("shotNext").addEventListener("click", () => stepShots(1));
+  const slideCount = () => wall.children.length;
+  const slideAt = () => Math.round(wall.scrollLeft / Math.max(1, wall.clientWidth));
+  function goTo(idx) {
+    const n = slideCount();
+    if (!n) return;
+    const k = ((idx % n) + n) % n;                 // wrap both ways
+    wall.scrollTo({ left: k * wall.clientWidth, behavior: "smooth" });
+  }
+  const stepShots = (dir) => goTo(slideAt() + dir);
 
-  // Wheel over the panel moves through the photographs instead of the page.
-  let wheelLock = 0;
-  wall.addEventListener("wheel", (e) => {
-    const d = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY;
-    if (!d) return;
-    const now = Date.now();
-    if (now < wheelLock) { e.preventDefault(); return; }
-    wheelLock = now + 420;
-    e.preventDefault();
-    stepShots(d > 0 ? 1 : -1);
-  }, { passive: false });
+  // Advances on its own; a click restarts the clock so it does not jump
+  // straight after you have chosen a photograph yourself.
+  let timer = null;
+  const HOLD = 3000;
+  function play() { stop(); timer = setInterval(() => stepShots(1), HOLD); }
+  function stop() { if (timer) { clearInterval(timer); timer = null; } }
+  function nudge(dir) { stepShots(dir); play(); }
+
+  document.getElementById("shotPrev").addEventListener("click", () => nudge(-1));
+  document.getElementById("shotNext").addEventListener("click", () => nudge(1));
+  document.addEventListener("visibilitychange", () => (document.hidden ? stop() : play()));
+
 
   // ---- the full-screen viewer ----
   const viewer = document.createElement("div");
@@ -212,6 +219,7 @@
           ${g.cap ? `<figcaption class="viewer__cap">${g.cap}</figcaption>` : ""}
         </div>
       </figure>`).join("");
+    stop();
     viewer.classList.add("is-open");
     viewer.setAttribute("aria-hidden", "false");
     document.body.classList.add("viewer-lock");
@@ -223,6 +231,7 @@
   }
 
   function closeViewer() {
+    play();
     viewer.classList.remove("is-open");
     viewer.setAttribute("aria-hidden", "true");
     document.body.classList.remove("viewer-lock");
@@ -289,6 +298,7 @@
 
   renderShots();
   requestAnimationFrame(syncPinToShot);
+  play();
   hint.textContent = `${shots.length} photographs across ${new Set(shots.map((x) => x.i)).size} documented jobs — click any photograph, or a pin, to open that job.`;
   select(0, "init");
 

@@ -362,17 +362,13 @@ details[open] .svc__summary::after { content: "\2212"; }
   border: 1px solid var(--hairline);
   background: #0f1113;
   display: flex;
-  overflow-x: auto;
-  overflow-y: hidden;
-  scroll-snap-type: x mandatory;
-  scrollbar-width: none;
-  overscroll-behavior-x: contain;
+  overflow: hidden;            /* no manual scrolling — arrows only, so the
+                                  page scrolls normally over the panel */
 }
 .shots::-webkit-scrollbar { display: none; }
 
 .shot {
   flex: 0 0 100%;
-  scroll-snap-align: center;
   position: relative;
   height: 100%;
   padding: 0; border: 0; margin: 0;
