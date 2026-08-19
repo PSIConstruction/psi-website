@@ -402,44 +402,12 @@ details[open] .svc__summary::after { content: "\2212"; }
 }
 .pin--case.pin--active { box-shadow: 0 1px 8px rgba(0,0,0,0.5), 0 0 0 6px rgba(214,0,0,0.22); }
 
-/* ---------------- Case-study modal ---------------- */
-
-.case { position: fixed; inset: 0; z-index: 1000; display: none; }
-.case.is-open { display: block; }
-.case__backdrop { position: absolute; inset: 0; background: rgba(16,18,20,0.72); backdrop-filter: blur(3px); }
-.case__panel {
-  position: relative;
-  max-width: 1080px;
-  margin: max(3vh, 20px) auto;
-  max-height: 94vh;
-  background: var(--paper);
-  border-radius: 4px;
-  overflow-y: auto;
-  box-shadow: 0 20px 60px rgba(0,0,0,0.45);
-}
-.case__head { padding: 30px clamp(20px, 4vw, 44px) 20px; border-bottom: 1px solid var(--hairline); }
-.case__eyebrow { color: var(--accent); font-size: 11px; letter-spacing: 0.22em; text-transform: uppercase; font-weight: 600; margin: 0 0 10px; }
-.case__title { font-size: clamp(22px, 3vw, 32px); margin: 0 0 12px; line-height: 1.15; }
-.case__story { margin: 0; max-width: 62ch; color: var(--muted); font-size: 15px; line-height: 1.75; }
-.case__close {
-  position: sticky; top: 12px; float: right; margin: 12px 12px 0 0;
-  width: 38px; height: 38px; border-radius: 50%; border: 1px solid var(--hairline);
-  background: #fff; font-size: 19px; line-height: 1; cursor: pointer; z-index: 2;
-}
-.case__close:hover { background: var(--accent); color: #fff; border-color: var(--accent); }
-.case__grid { padding: 24px clamp(20px, 4vw, 44px) 40px; display: grid; gap: 26px; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); }
-.case__fig { margin: 0; }
-.case__fig img { width: 100%; height: auto; display: block; background: #e8e6e1; border-radius: 3px; }
-.case__phase { display: inline-block; font-size: 10.5px; letter-spacing: 0.2em; text-transform: uppercase; font-weight: 700; padding: 3px 9px; margin-bottom: 8px; border-radius: 2px; }
-.case__phase--before { background: var(--navy); color: #fff; }
-.case__phase--after { background: var(--accent); color: #fff; }
-.case__cap { font-size: 12.5px; color: var(--muted); margin: 8px 0 0; }
+/* Button inside a map popup that jumps the carousel to that job */
 .case__open {
   display: inline-block; margin-top: 10px; padding: 8px 14px;
   background: var(--accent); color: #fff; border: 0; border-radius: 2px;
   font: inherit; font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase; cursor: pointer;
 }
-body.case-lock { overflow: hidden; }
 
 /* Carousel */
 
@@ -450,11 +418,50 @@ body.case-lock { overflow: hidden; }
   flex: 0 0 100%;
   min-width: 0;
   display: grid;
-  grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+  grid-template-columns: minmax(0, auto) minmax(0, 1fr);
 }
-@media (max-width: 720px) { .carousel__slide { grid-template-columns: 1fr; } }
-.carousel__img { position: relative; aspect-ratio: 16 / 10; background: #e8e6e1; }
+.carousel__media { display: flex; align-items: center; justify-content: center; background: #0f1113; }
+
+/* Portrait 9:16 — the shape phones actually shoot in. Height drives the
+   layout; width follows from the ratio. */
+.carousel__img {
+  position: relative;
+  aspect-ratio: 9 / 16;
+  height: min(74vh, 780px);
+  width: auto;
+  flex: 0 0 auto;          /* stop the flex row stretching it back to square */
+  max-width: 100%;
+  background: #e8e6e1;
+  overflow: hidden;
+}
 .carousel__img img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+.carousel__phase {
+  position: absolute; top: 14px; left: 14px;
+  font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; font-weight: 700;
+  padding: 4px 10px; border-radius: 2px; color: #fff;
+}
+.carousel__phase--before { background: rgba(29,39,51,0.92); }
+.carousel__phase--after  { background: var(--accent); }
+
+/* Caption laid into the foot of the photo. Mobile only — on desktop the
+   same words live in the column to the right. */
+.carousel__overlay {
+  display: none;
+  position: absolute; left: 0; right: 0; bottom: 0;
+  padding: 92px 20px 30px;
+  background: linear-gradient(to top, rgba(8,9,10,0.92) 0%, rgba(8,9,10,0.72) 42%, rgba(8,9,10,0) 100%);
+  color: #fff;
+}
+.carousel__overlay-title {
+  margin: 0 0 7px;
+  font-size: 16.5px; font-weight: 700; line-height: 1.25;
+}
+.carousel__overlay-cap {
+  margin: 0;
+  font-size: 13.5px; line-height: 1.5; color: rgba(255,255,255,0.86);
+}
+
 .carousel__info { padding: clamp(18px, 2.6vw, 34px); display: flex; flex-direction: column; justify-content: center; }
 .carousel__info .eyebrow { margin-bottom: 8px; font-size: 11px; }
 .carousel__info h3 { margin: 0 0 6px; font-size: clamp(19px, 2vw, 26px); letter-spacing: -0.01em; }
@@ -463,6 +470,13 @@ body.case-lock { overflow: hidden; }
 .carousel__desc { margin: 0; font-size: 14.5px; line-height: 1.6; color: #33383d; }
 .carousel__caption { margin: 10px 0 0; font-size: 12px; color: var(--muted); }
 .carousel__plans { display: inline-block; margin-top: 12px; font-size: 13px; color: var(--navy); font-weight: 600; }
+@media (max-width: 860px) {
+  .carousel__slide { grid-template-columns: 1fr; }
+  .carousel__img { height: auto; width: 100%; }
+  .carousel__info { display: none; }
+  .carousel__overlay { display: block; }
+}
+
 
 .carousel__nav {
   display: flex;

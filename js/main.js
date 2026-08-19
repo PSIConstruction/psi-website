@@ -54,7 +54,7 @@
         (p.type ? `<em style="color:#d60000;font-style:normal;font-weight:600">${p.type}</em><br>` : "") +
         `${p.city}` +
         (p.desc ? `<span style="display:block;margin-top:6px;max-width:240px">${p.desc}</span>` : "") +
-        `<button class="case__open" data-case="${i}">View photos &rarr;</button>`
+        `<button class="case__open" data-project="${i}">See these photos &rarr;</button>`
       : `<strong>${p.name}</strong><br>${p.city}`);
     m.on("click", () => select(i, "map"));
     return m;
@@ -62,8 +62,10 @@
 
   // Popups are re-created by Leaflet, so delegate instead of binding per popup.
   document.addEventListener("click", (e) => {
-    const btn = e.target.closest("[data-case]");
-    if (btn) openCase(+btn.dataset.case);
+    const btn = e.target.closest("button[data-project]");   // slides carry the id too
+    if (!btn) return;
+    enterProject(+btn.dataset.project);
+    document.getElementById("projectCarousel").scrollIntoView({ behavior: "smooth", block: "center" });
   });
   const allBounds = L.latLngBounds(projects.map(p => [p.lat, p.lng])).pad(0.08);
   map.fitBounds(allBounds);
@@ -103,33 +105,114 @@
   // Every project still gets a map pin and a list row.
   const track = document.getElementById("carouselTrack");
   const counter = document.getElementById("carouselCounter");
-  const shot = projects.map((p, i) => ({ p, i })).filter(({ p }) => !!p.img);
-  const slideOf = new Map(shot.map(({ i }, s) => [i, s]));
-  shot.forEach(({ p }) => {
-    const slide = document.createElement("div");
-    slide.className = "carousel__slide";
-    // The carousel leads with what the photograph shows, not the street
-    // address. The project is tracked by its internal id instead.
-    slide.dataset.project = p.id || "";
-    slide.innerHTML = `
-      <div class="carousel__img"><img loading="lazy" src="${p.img}" alt="${p.caption || p.type || "PSI project"}"></div>
-      <div class="carousel__info">
-        <p class="eyebrow eyebrow--accent">Previous Project</p>
-        <h3>${p.caption || p.type || p.city}</h3>
-        <p class="carousel__loc">${p.city}</p>
-        ${p.type ? `<p class="carousel__type">${p.type}</p>` : ""}
-        ${p.desc ? `<p class="carousel__desc">${p.desc}</p>` : ""}
-        ${p.desc ? "" : `<p class="carousel__caption">PSI portfolio photography</p>`}
-        ${p.plans ? `<a class="carousel__plans" href="${p.plans}" target="_blank" rel="noopener">View filed plans (PDF) &rarr;</a>` : ""}
-        ${hasCase(p) ? `<button class="case__open" data-case="${projects.indexOf(p)}">View photos &rarr;</button>` : ""}
-      </div>`;
-    track.appendChild(slide);
+
+  // One entry per PHOTOGRAPH, not per project. A project with a gallery
+  // contributes all of its shots; anything else contributes its single image.
+  const shots = [];
+  projects.forEach((p, i) => {
+    if (Array.isArray(p.gallery) && p.gallery.length) {
+      p.gallery.forEach((g) => shots.push({ i, p, src: g.src, cap: g.cap, phase: g.phase }));
+    } else if (p.img) {
+      shots.push({ i, p, src: p.img, cap: p.caption, phase: null });
+    }
   });
+  const shotsOf = new Map();
+  shots.forEach((sh, k) => {
+    if (!shotsOf.has(sh.i)) shotsOf.set(sh.i, []);
+    shotsOf.get(sh.i).push(k);
+  });
+
+  const shuffled = () => {
+    const a = shots.map((_, k) => k);
+    for (let k = a.length - 1; k > 0; k--) {
+      const j = Math.floor(Math.random() * (k + 1));
+      [a[k], a[j]] = [a[j], a[k]];
+    }
+    return a;
+  };
+
+  let order = shuffled();   // current running order (indices into `shots`)
+  let pos = 0;              // where we are within `order`
+  let projectMode = -1;     // project index while showing one job, else -1
+
+  const slideHTML = (sh) => {
+    const title = sh.p.type || sh.p.city;
+    const line  = sh.cap || sh.p.desc || "";
+    return `
+      <div class="carousel__media">
+        <div class="carousel__img">
+          <img loading="lazy" src="${sh.src}" alt="${line || title}">
+          ${sh.phase ? `<span class="carousel__phase carousel__phase--${sh.phase}">${sh.phase}</span>` : ""}
+          <div class="carousel__overlay">
+            <p class="carousel__overlay-title">${title}</p>
+            ${line ? `<p class="carousel__overlay-cap">${line}</p>` : ""}
+          </div>
+        </div>
+      </div>
+      <div class="carousel__info">
+        <p class="eyebrow eyebrow--accent">${sh.phase ? sh.phase : "Previous Project"}</p>
+        <h3>${title}</h3>
+        <p class="carousel__loc">${sh.p.city}</p>
+        ${line ? `<p class="carousel__desc">${line}</p>` : ""}
+        ${sh.p.desc && sh.cap ? `<p class="carousel__caption">${sh.p.desc}</p>` : ""}
+        ${sh.p.plans ? `<a class="carousel__plans" href="${sh.p.plans}" target="_blank" rel="noopener">View filed plans (PDF) &rarr;</a>` : ""}
+      </div>`;
+  };
+
+  function renderTrack() {
+    track.innerHTML = "";
+    order.forEach((k) => {
+      const sh = shots[k];
+      const slide = document.createElement("div");
+      slide.className = "carousel__slide";
+      slide.dataset.project = sh.p.id || "";
+      slide.innerHTML = slideHTML(sh);
+      track.appendChild(slide);
+    });
+  }
+
+  let syncing = false;
+  function showPos(p2, sync) {
+    if (!order.length) return;
+    pos = (p2 + order.length) % order.length;
+    track.style.transform = `translateX(-${pos * 100}%)`;
+    const sh = shots[order[pos]];
+    counter.textContent = projectMode >= 0
+      ? `${pos + 1} / ${order.length} — ${sh.p.type || sh.p.city}`
+      : `${sh.p.type || sh.p.city}`;
+    if (sync && sh.i !== current) {
+      syncing = true;
+      select(sh.i, "carousel");
+      syncing = false;
+    }
+  }
+
+  // Show only one job's photographs, in order.
+  function enterProject(i) {
+    const ks = shotsOf.get(i);
+    if (!ks || !ks.length) return false;
+    projectMode = i;
+    order = ks.slice();
+    renderTrack();
+    showPos(0, false);
+    return true;
+  }
+
+  // Back to everything, freshly shuffled.
+  function exitToShuffle() {
+    projectMode = -1;
+    order = shuffled();
+    renderTrack();
+    showPos(0, true);
+  }
 
   let current = -1;
 
   function select(i, source) {
     if (i === current) {
+      // Re-clicking the job that happens to be selected must still open its
+      // photo set — otherwise the row goes dead once the shuffle lands on it.
+      if (source === "list" || source === "map") enterProject(i);
       if (source === "list" || source === "carousel") focusPin(i);
       return;
     }
@@ -149,12 +232,9 @@
     rows[i].classList.add("is-active");
     rows[i].scrollIntoView({ block: "nearest", behavior: "smooth" });
 
-    // Carousel — only moves when this project has photos of its own
-    const s = slideOf.get(i);
-    if (s !== undefined) {
-      track.style.transform = `translateX(-${s * 100}%)`;
-      counter.textContent = `${s + 1} / ${shot.length} — ${p.type || p.caption || p.city}`;
-    }
+    // Carousel: clicking a pin or row shows just that job's photographs.
+    // Skipped when the carousel itself drove the change, or on first paint.
+    if (!syncing && source !== "init") enterProject(i);
   }
 
   function focusPin(i) {
@@ -163,69 +243,17 @@
   }
 
   const stepCarousel = (delta) => {
-    if (!shot.length) return;
-    const here = slideOf.get(current);
-    const next = here === undefined ? 0 : (here + delta + shot.length) % shot.length;
-    select(shot[next].i, "carousel");
+    if (!order.length) return;
+    // Walking off the end of one job's photos returns to the shuffle.
+    if (projectMode >= 0 && delta > 0 && pos === order.length - 1) { exitToShuffle(); return; }
+    if (projectMode >= 0 && delta < 0 && pos === 0) { exitToShuffle(); return; }
+    showPos(pos + delta, true);
   };
   document.getElementById("carouselPrev").addEventListener("click", () => stepCarousel(-1));
   document.getElementById("carouselNext").addEventListener("click", () => stepCarousel(1));
 
-  // ---------------- Case-study modal ----------------
-
-  const caseEl = document.createElement("div");
-  caseEl.className = "case";
-  caseEl.setAttribute("role", "dialog");
-  caseEl.setAttribute("aria-modal", "true");
-  caseEl.setAttribute("aria-hidden", "true");
-  caseEl.innerHTML = `
-    <div class="case__backdrop" data-close></div>
-    <div class="case__panel">
-      <button class="case__close" data-close aria-label="Close">&times;</button>
-      <div class="case__head">
-        <p class="case__eyebrow">Project</p>
-        <h2 class="case__title"></h2>
-        <p class="case__story"></p>
-      </div>
-      <div class="case__grid"></div>
-    </div>`;
-  document.body.appendChild(caseEl);
-
-  let lastFocus = null;
-
-  function openCase(i) {
-    const p = projects[i];
-    if (!hasCase(p)) return;
-    lastFocus = document.activeElement;
-    caseEl.querySelector(".case__eyebrow").textContent = p.type || "Project";
-    caseEl.querySelector(".case__title").textContent = p.name;
-    caseEl.querySelector(".case__story").textContent = p.desc || "";
-    caseEl.querySelector(".case__grid").innerHTML = p.gallery.map((g) => `
-      <figure class="case__fig">
-        ${g.phase ? `<span class="case__phase case__phase--${g.phase}">${g.phase}</span>` : ""}
-        <img loading="lazy" src="${g.src}" alt="${g.cap || p.name}">
-        ${g.cap ? `<figcaption class="case__cap">${g.cap}</figcaption>` : ""}
-      </figure>`).join("");
-    caseEl.classList.add("is-open");
-    caseEl.setAttribute("aria-hidden", "false");
-    document.body.classList.add("case-lock");
-    caseEl.querySelector(".case__close").focus();
-  }
-
-  function closeCase() {
-    caseEl.classList.remove("is-open");
-    caseEl.setAttribute("aria-hidden", "true");
-    document.body.classList.remove("case-lock");
-    caseEl.querySelector(".case__panel").scrollTop = 0;
-    if (lastFocus) lastFocus.focus();
-  }
-
-  caseEl.addEventListener("click", (e) => { if (e.target.closest("[data-close]")) closeCase(); });
-  document.addEventListener("keydown", (e) => {
-    if (e.key === "Escape" && caseEl.classList.contains("is-open")) closeCase();
-  });
-
-  select(shot.length ? shot[0].i : 0, "init");
+  renderTrack();
+  if (shots.length) { showPos(0, false); select(shots[order[0]].i, "init"); }
 
   // ---------------- Google Reviews carousel ----------------
   const reviews = [
