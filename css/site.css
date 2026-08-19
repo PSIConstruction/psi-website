@@ -477,7 +477,7 @@ body.viewer-lock { overflow: hidden; }
   scrollbar-width: none;
 }
 .viewer__rail::-webkit-scrollbar { display: none; }
-.viewer__fig { flex: 0 0 auto; margin: 0; scroll-snap-align: center; }
+.viewer__fig { flex: 0 0 auto; margin: 0; scroll-snap-align: start; }
 .viewer__imgwrap { position: relative; display: block; }
 /* Uniform height: two portrait shots sit side by side, one landscape fills. */
 /* Height is the constant. A landscape shot simply runs wider — never

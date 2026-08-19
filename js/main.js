@@ -224,8 +224,9 @@
     viewer.setAttribute("aria-hidden", "false");
     document.body.classList.add("viewer-lock");
     requestAnimationFrame(() => {
-      const fig = vRail.children[startAt || 0];
-      if (fig) vRail.scrollLeft = fig.offsetLeft - 24;
+      vPos = Math.min(vRail.children.length - 1, Math.max(0, startAt || 0));
+      const fig = vRail.children[vPos];
+      if (fig) vRail.scrollLeft = Math.max(0, fig.offsetLeft - V_PAD);
     });
     viewer.querySelector(".viewer__close").focus();
   }
@@ -238,18 +239,18 @@
     if (vReturn) vReturn.focus();
   }
 
-  function stepViewer(dir) {
-    const figs = [...vRail.children];
+  const V_PAD = 24;
+  let vPos = 0;                       // authoritative position in the rail
+  function goViewer(k) {
+    const figs = vRail.children;
     if (!figs.length) return;
-    const mid = vRail.scrollLeft + vRail.clientWidth / 2;
-    let cur = 0, best = Infinity;
-    figs.forEach((f, k) => {
-      const c = f.offsetLeft + f.offsetWidth / 2;
-      if (Math.abs(c - mid) < best) { best = Math.abs(c - mid); cur = k; }
-    });
-    const next = figs[Math.min(figs.length - 1, Math.max(0, cur + dir))];
-    if (next) vRail.scrollTo({ left: next.offsetLeft - 24, behavior: "smooth" });
+    vPos = Math.min(figs.length - 1, Math.max(0, k));
+    vRail.scrollTo({ left: Math.max(0, figs[vPos].offsetLeft - V_PAD), behavior: "smooth" });
   }
+  // Track position explicitly rather than deriving it from scrollLeft: CSS
+  // scroll-snap re-settles the rail after each programmatic scroll, so a
+  // measured index disagreed with where we asked to go and "back" stalled.
+  const stepViewer = (dir) => goViewer(vPos + dir);
 
   viewer.addEventListener("click", (e) => {
     if (e.target.closest("[data-vclose]")) return closeViewer();
