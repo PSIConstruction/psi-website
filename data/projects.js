@@ -56,13 +56,13 @@ window.PSI_PROJECTS = [
     id: "basement-finish-warren",
     type: "Basement Renovation",
     desc: "An unfinished basement turned into finished living space \u2014 bedrooms, a full bathroom with a tiled tub surround, new flooring and lighting throughout.",
-    img: "assets/photos/554-warren/554warren-04.jpg",
+    img: "https://psiconstruction.github.io/psi-website/assets/photos/554-warren/554warren-03.jpg",
     caption: "The tiled tub surround",
     gallery: [
-      { src: "assets/photos/554-warren/554warren-01.jpg", phase: "after", cap: "A finished basement bedroom, new flooring throughout" },
-      { src: "assets/photos/554-warren/554warren-02.jpg", phase: "after", cap: "The second bedroom, light fitting hung" },
-      { src: "assets/photos/554-warren/554warren-04.jpg", phase: "after", cap: "Vertical green tile running the full tub surround" },
-      { src: "assets/photos/554-warren/554warren-08.jpg", phase: "after", cap: "The stair down into the finished basement" }
+      { src: "https://psiconstruction.github.io/psi-website/assets/photos/554-warren/554warren-01.jpg", phase: "after", cap: "A finished basement bedroom — recessed lighting and new plank flooring" },
+      { src: "https://psiconstruction.github.io/psi-website/assets/photos/554-warren/554warren-02.jpg", phase: "after", cap: "The larger bedroom, painted and lit, flooring run wall to wall" },
+      { src: "https://psiconstruction.github.io/psi-website/assets/photos/554-warren/554warren-03.jpg", phase: "after", cap: "Vertical green tile the full height of the tub surround, with a recessed niche" },
+      { src: "https://psiconstruction.github.io/psi-website/assets/photos/554-warren/554warren-04.jpg", phase: "after", cap: "The new stair down into the finished basement" },
     ] },
   { name: "453 Warren Avenue",   city: "Kingston, PA", lat: 41.2629624, lng: -75.8861046 },
   { name: "417 Warren Avenue",   city: "Kingston, PA", lat: 41.2625177, lng: -75.8871484,
