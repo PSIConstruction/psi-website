@@ -61,11 +61,7 @@ window.PSI_PROJECTS = [
     gallery: [
       { src: "assets/photos/554-warren/554warren-01.jpg", phase: "after", cap: "A finished basement bedroom, new flooring throughout" },
       { src: "assets/photos/554-warren/554warren-02.jpg", phase: "after", cap: "The second bedroom, light fitting hung" },
-      { src: "assets/photos/554-warren/554warren-03.jpg", phase: "after", cap: "The new basement bathroom — dark tile and gold fittings" },
       { src: "assets/photos/554-warren/554warren-04.jpg", phase: "after", cap: "Vertical green tile running the full tub surround" },
-      { src: "assets/photos/554-warren/554warren-05.jpg", phase: "after", cap: "The bathroom complete, arched mirror over the vanity" },
-      { src: "assets/photos/554-warren/554warren-06.jpg", phase: "after", cap: "A bedroom furnished and in use" },
-      { src: "assets/photos/554-warren/554warren-07.jpg", phase: "after", cap: "Twin beds in the finished bedroom" },
       { src: "assets/photos/554-warren/554warren-08.jpg", phase: "after", cap: "The stair down into the finished basement" }
     ] },
   { name: "453 Warren Avenue",   city: "Kingston, PA", lat: 41.2629624, lng: -75.8861046 },
