@@ -140,6 +140,7 @@
   // the map — so it is obvious where the shot was taken, and clicking that
   // pin opens the whole job.
   let syncFrame = 0;
+  let firstSync = true;
   function syncPinToShot() {
     const mid = wall.scrollLeft + wall.clientWidth / 2;
     let best = Infinity, hit = null;
@@ -270,7 +271,10 @@
 
     // Pin
     markers[i].setIcon(pinIcon(true, hasCase(p)));
-    if (source === "scroll") return;                       // highlight only
+    // Scrolling the photos flies the map to that job and zooms in, so the lit
+    // pin is actually readable — at full extent it is hard to see what changed.
+    // No popup though: that would cover the map on every step.
+    if (source === "scroll") { if (!firstSync) focusPin(i, 16.5); firstSync = false; return; }
     if (source !== "map" && source !== "init") focusPin(i);
     if (source !== "init") markers[i].openPopup();
 
@@ -278,9 +282,9 @@
     if (source === "map") openViewer(i, 0);
   }
 
-  function focusPin(i) {
+  function focusPin(i, zoom) {
     const p = projects[i];
-    map.flyTo([p.lat, p.lng], Math.max(map.getZoom(), 16), { duration: 0.7 });
+    map.flyTo([p.lat, p.lng], zoom || Math.max(map.getZoom(), 16), { duration: 0.9 });
   }
 
   renderShots();
