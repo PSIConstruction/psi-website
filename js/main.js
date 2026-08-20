@@ -177,10 +177,27 @@
   // Advances on its own; a click restarts the clock so it does not jump
   // straight after you have chosen a photograph yourself.
   let timer = null;
-  const HOLD = 3000;
+  const HOLD = 5000;
   function play() { stop(); timer = setInterval(() => stepShots(1), HOLD); }
   function stop() { if (timer) { clearInterval(timer); timer = null; } }
   function nudge(dir) { stepShots(dir); play(); }
+
+  // Panning or zooming the map by hand means the visitor is hunting for
+  // something specific, and having the map fly off to the next photograph
+  // every few seconds makes that job impossible. The photographs keep
+  // advancing and the pin still lights up so they can follow along — the map
+  // just stops moving itself. Ten quiet seconds and it resumes following.
+  // Clicking a pin is an explicit request, so that still zooms.
+  const MAP_HOLD = 10000;
+  let mapHeldUntil = 0;
+  const mapHeld = () => Date.now() < mapHeldUntil;
+  const holdMap = () => { mapHeldUntil = Date.now() + MAP_HOLD; };
+  // Listening on the container catches only real input: map.flyTo fires
+  // Leaflet's own move and zoom events, which would otherwise hold the map
+  // against itself and never let it go.
+  ["pointerdown", "wheel", "touchstart", "keydown", "dblclick"].forEach((ev) =>
+    map.getContainer().addEventListener(ev, holdMap, { passive: true })
+  );
 
   document.getElementById("shotPrev").addEventListener("click", () => nudge(-1));
   document.getElementById("shotNext").addEventListener("click", () => nudge(1));
@@ -279,7 +296,7 @@
       // Re-clicking the job that happens to be selected must still open its
       // photo set — otherwise the row goes dead once the shuffle lands on it.
       if (source === "map") openViewer(i, 0);
-      focusPin(i);
+      focusPin(i, null, source === "map");
       return;
     }
     if (current >= 0) markers[current].setIcon(pinIcon(false, hasCase(projects[current])));
@@ -292,14 +309,18 @@
     // pin is actually readable — at full extent it is hard to see what changed.
     // No popup though: that would cover the map on every step.
     if (source === "scroll") { if (!firstSync) focusPin(i, 16.5); firstSync = false; return; }
-    if (source !== "map" && source !== "init") focusPin(i);
+    if (source !== "map" && source !== "init") focusPin(i, null, true);
     if (source !== "init") markers[i].openPopup();
 
     // Clicking a pin opens that job's photographs full screen.
     if (source === "map") openViewer(i, 0);
   }
 
-  function focusPin(i, zoom) {
+  // force is for moves the visitor actually asked for — clicking a pin or a
+  // job. Everything else is the slideshow driving, and that yields while they
+  // have hold of the map.
+  function focusPin(i, zoom, force) {
+    if (!force && mapHeld()) return;
     const p = projects[i];
     map.flyTo([p.lat, p.lng], zoom || Math.max(map.getZoom(), 16), { duration: 0.9 });
   }
