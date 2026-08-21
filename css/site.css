@@ -88,6 +88,15 @@ img { max-width: 100%; }
   .nav__logo { transition: none; }
 }
 
+/* The PSI inside the phone number, wherever it appears — the nav, the contact
+   details and the footer. The letters are the point of the number, so they
+   carry the logo red. */
+.tel-psi { color: var(--accent); font-weight: 600; }
+/* On the navy footer and over the dark hero, #d60000 sits too close to the
+   background to read. Lift it there rather than dimming the letters. */
+.footer .tel-psi,
+.nav:not(.nav--solid) .tel-psi { color: #ff5a5a; }
+
 .nav__links { display: flex; align-items: center; gap: clamp(10px, 2.4vw, 28px); flex-wrap: wrap; }
 .nav__links a {
   color: inherit;
