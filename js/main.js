@@ -9,10 +9,24 @@
 
   // ---------------- Nav ----------------
   const nav = document.getElementById("topNav");
+  // Point in the hero scrub where the sequence has swung round from the aerial
+  // to the front elevation. Past it the image behind the logo is light, so the
+  // white mark stops reading and the full-colour one takes over — well before
+  // the hero itself ends.
+  const LOGO_SWITCH_AT = 0.5;
+  const heroProgress = (heroEl) => {
+    const runway = heroEl.offsetHeight - window.innerHeight;
+    if (runway <= 0) return 1;
+    return Math.min(1, Math.max(0, -heroEl.getBoundingClientRect().top / runway));
+  };
   const onScroll = () => {
     const heroEl = document.getElementById("hero");
     const threshold = heroEl ? heroEl.offsetHeight - window.innerHeight * 0.5 : 40;
     nav.classList.toggle("nav--solid", window.scrollY > threshold);
+    // No hero (inner pages): the bar is solid from the start, so the
+    // full-colour mark is always the right one.
+    nav.classList.toggle("nav--darklogo",
+      heroEl ? heroProgress(heroEl) >= LOGO_SWITCH_AT : true);
   };
   window.addEventListener("scroll", onScroll, { passive: true });
   onScroll();
@@ -252,10 +266,13 @@
       const fig = vRail.children[vPos];
       if (fig) vRail.scrollLeft = Math.max(0, fig.offsetLeft - V_PAD);
     });
+    vHeldUntil = 0;
+    vPlay();
     viewer.querySelector(".viewer__close").focus();
   }
 
   function closeViewer() {
+    vStop();
     play();
     viewer.classList.remove("is-open");
     viewer.setAttribute("aria-hidden", "true");
@@ -268,7 +285,9 @@
   function goViewer(k) {
     const figs = vRail.children;
     if (!figs.length) return;
-    vPos = Math.min(figs.length - 1, Math.max(0, k));
+    // Wrap rather than clamp, so the slideshow keeps running round the job
+    // instead of stalling on the last photograph.
+    vPos = ((k % figs.length) + figs.length) % figs.length;
     vRail.scrollTo({ left: Math.max(0, figs[vPos].offsetLeft - V_PAD), behavior: "smooth" });
   }
   // Track position explicitly rather than deriving it from scrollLeft: CSS
@@ -276,17 +295,37 @@
   // measured index disagreed with where we asked to go and "back" stalled.
   const stepViewer = (dir) => goViewer(vPos + dir);
 
+  // The full-screen view runs its own slideshow, on the same terms as the
+  // panel beside the map: it advances from wherever you opened it, and backs
+  // off for ten seconds whenever you take control yourself.
+  const V_HOLD = 5000;
+  const V_NUDGE_HOLD = 10000;
+  let vTimer = null;
+  let vHeldUntil = 0;
+  function vPlay() {
+    vStop();
+    vTimer = setInterval(() => {
+      if (Date.now() < vHeldUntil) return;   // you are driving; wait it out
+      stepViewer(1);
+    }, V_HOLD);
+  }
+  function vStop() { if (vTimer) { clearInterval(vTimer); vTimer = null; } }
+  // Stepping by hand holds the slideshow off without stopping it for good.
+  const nudgeViewer = (dir) => { vHeldUntil = Date.now() + V_NUDGE_HOLD; stepViewer(dir); };
+  vRail.addEventListener("wheel", () => { vHeldUntil = Date.now() + V_NUDGE_HOLD; }, { passive: true });
+  vRail.addEventListener("pointerdown", () => { vHeldUntil = Date.now() + V_NUDGE_HOLD; }, { passive: true });
+
   viewer.addEventListener("click", (e) => {
     if (e.target.closest("[data-vclose]")) return closeViewer();
     const st = e.target.closest("[data-vstep]");
-    if (st) return stepViewer(+st.dataset.vstep);
+    if (st) return nudgeViewer(+st.dataset.vstep);
     if (e.target === viewer) closeViewer();
   });
   document.addEventListener("keydown", (e) => {
     if (!viewer.classList.contains("is-open")) return;
     if (e.key === "Escape") closeViewer();
-    if (e.key === "ArrowRight") stepViewer(1);
-    if (e.key === "ArrowLeft") stepViewer(-1);
+    if (e.key === "ArrowRight") nudgeViewer(1);
+    if (e.key === "ArrowLeft") nudgeViewer(-1);
   });
 
   let current = -1;

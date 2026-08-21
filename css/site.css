@@ -61,14 +61,32 @@ img { max-width: 100%; }
 }
 .nav__logo {
   display: block;
-  height: clamp(30px, 3.4vw, 40px);
+  /* 25% larger than the original clamp(30px, 3.4vw, 40px). */
+  height: clamp(38px, 4.25vw, 50px);
   width: auto;
 }
-/* White-on-transparent mark over the hero; full-colour mark once the nav
-   turns solid. Only one is ever painted. */
-.nav__logo--onsolid { display: none; }
-.nav--solid .nav__logo--onhero { display: none; }
-.nav--solid .nav__logo--onsolid { display: block; }
+/* White mark over the aerial opening of the hero; full-colour mark from the
+   moment the sequence swings round to the front elevation. The swap is driven
+   by .nav--darklogo, which hero scrub progress sets partway through the hero
+   — not by .nav--solid, so the bar itself stays transparent over the image.
+   Both marks are stacked and cross-faded rather than display-swapped, so the
+   change reads as a deliberate shift and catches the eye. */
+.nav__brand { position: relative; }
+/* Left/top only — pinning bottom too would stretch it and override the
+   shared height. */
+.nav__logo--onsolid { position: absolute; left: 0; top: 0; opacity: 0; }
+.nav__logo--onhero { opacity: 1; }
+.nav__logo { transition: opacity 260ms ease; }
+/* .nav--solid is listed too so inner pages, which hard-code a solid bar and
+   never load main.js, still get the full-colour mark without any script. */
+.nav--darklogo .nav__logo--onhero,
+.nav--solid    .nav__logo--onhero { opacity: 0; }
+.nav--darklogo .nav__logo--onsolid,
+.nav--solid    .nav__logo--onsolid { opacity: 1; }
+
+@media (prefers-reduced-motion: reduce) {
+  .nav__logo { transition: none; }
+}
 
 .nav__links { display: flex; align-items: center; gap: clamp(10px, 2.4vw, 28px); flex-wrap: wrap; }
 .nav__links a {
