@@ -263,13 +263,16 @@ img { max-width: 100%; }
 
 .build-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  /* Nine cards, so three columns divides exactly. auto-fill was fitting four
+     across and leaving a 4 + 4 + 1 row, and the empty half-row showed the
+     grid's own hairline background through as a grey block. */
+  grid-template-columns: repeat(3, 1fr);
   gap: 1px;
   background: var(--hairline);
   border: 1px solid var(--hairline);
   margin-top: 36px;
 }
-.build-grid__item { background: #fff; padding: 26px 24px; }
+.build-grid__item { background: #fff; padding: 30px 26px; min-height: 150px; }
 .build-grid__item h3 { margin: 0 0 8px; font-size: 16.5px; letter-spacing: -0.01em; }
 .build-grid__item h3::before {
   content: "";
@@ -280,6 +283,18 @@ img { max-width: 100%; }
   vertical-align: 2px;
 }
 .build-grid__item p { margin: 0; color: var(--muted); font-size: 14.5px; line-height: 1.55; }
+
+/* Narrower screens drop to two columns and then one. Nine into two leaves an
+   odd card, so the last one spans the full width rather than sitting beside
+   the same grey gap this change was meant to remove. */
+@media (max-width: 900px) {
+  .build-grid { grid-template-columns: repeat(2, 1fr); }
+  .build-grid__item:last-child { grid-column: 1 / -1; }
+}
+@media (max-width: 600px) {
+  .build-grid { grid-template-columns: 1fr; }
+  .build-grid__item { min-height: 0; }
+}
 
 .svc { border-top: 1px solid var(--hairline); }
 .svc:last-of-type { border-bottom: 1px solid var(--hairline); }
