@@ -15,19 +15,19 @@
   // Configuration (kept in one place; frame data injected at build time)
   // ------------------------------------------------------------------
   const CONFIG = {
-    frameCount: window.HERO_FRAME_COUNT || 0,   // set by frames-manifest.js
+    frameCount: window.HERO_FRAME_COUNT || 0, // set by frames-manifest.js
     framePath: (i) =>
       `assets/hero-sequence/frame-${String(i + 1).padStart(4, "0")}.webp`,
-    scrollLengthVh: 340,        // virtual scroll runway for the pinned hero
-    settleTailPct: 0.06,        // last 6% of scroll holds the final frame
+    scrollLengthVh: 340, // virtual scroll runway for the pinned hero
+    settleTailPct: 0.06, // last 6% of scroll holds the final frame
     // Normalised focal point of the house in the source frames.
     // Cover-cropping keeps this point sensibly placed at any aspect.
-    focalX: 0.50,
+    focalX: 0.5,
     focalY: 0.42,
     // Frame-scrub smoothing: how quickly the drawn frame chases the
     // scroll-mapped target. High enough to feel direct, low enough to
     // absorb discrete wheel steps. (~0 lag at trackpad speeds)
-    smoothing: 14,              // higher = snappier (units: 1/s)
+    smoothing: 14, // higher = snappier (units: 1/s)
   };
 
   const hero = document.getElementById("hero");
@@ -38,6 +38,21 @@
   if (!hero || !canvas) return;
 
   const ctx = canvas.getContext("2d", { alpha: false });
+
+  // ------------------------------------------------------------------
+  // Two heroes. Portrait phones open on the sunset photograph: one
+  // 348K frame, no pin. Landscape viewports get the scroll-scrubbed
+  // build sequence back, exactly as it ran before.
+  // ------------------------------------------------------------------
+  if (
+    window.matchMedia("(max-width: 760px) and (orientation: portrait)").matches
+  ) {
+    hero.style.height = "100svh";
+    hero.classList.add("hero--still");
+    canvas.style.display = "none";
+    if (loader) loader.remove();
+    return;
+  }
   const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
 
   // ------------------------------------------------------------------
@@ -46,7 +61,12 @@
   // ------------------------------------------------------------------
   if (reducedMotion.matches) {
     hero.style.height = "100svh";
-    if (CONFIG.frameCount > 0) {
+    if (
+      window.matchMedia("(max-width: 760px) and (orientation: portrait)")
+        .matches
+    ) {
+      poster.src = "assets/hero-mobile-seq/final.jpg";
+    } else if (CONFIG.frameCount > 0) {
       poster.src = CONFIG.framePath(CONFIG.frameCount - 1);
       poster.style.objectPosition = "50% 50%";
     }
@@ -54,16 +74,77 @@
     return;
   }
 
+  // ------------------------------------------------------------------
+  // Phones get a different hero on purpose. The sequence is 193 landscape
+  // frames (25MB) cover-cropped to the viewport: on a portrait screen that
+  // throws away most of the frame and the house with it. Here the markup's
+  // portrait source stands on its own, nothing is scrubbed, and the
+  // sequence is never requested.
+  // ------------------------------------------------------------------
+  // ------------------------------------------------------------------
+  // Sequence variants. The desktop set is 193 landscape stills; on a
+  // portrait phone, cover-cropping them throws away the house. The
+  // mobile set is 24 frames pre-cropped to 3:4 around the building.
+  // The choice keys on ORIENTATION, not width: a landscape phone is a
+  // wide, short viewport and the 16:9 set is the right one for it.
+  // ------------------------------------------------------------------
+  const portraitPhone = window.matchMedia(
+    "(max-width: 760px) and (orientation: portrait)",
+  );
+  const startedPortrait = portraitPhone.matches;
+  if (startedPortrait) {
+    CONFIG.frameCount = 24;
+    CONFIG.framePath = (i) =>
+      `assets/hero-mobile-seq/m-${String(i + 1).padStart(3, "0")}.jpg`;
+    CONFIG.scrollLengthVh = 200; // a shorter runway suits a thumb
+    CONFIG.focalX = 0.5;
+    CONFIG.focalY = 0.5; // frames are already composed; no bias needed
+    hero.classList.add("hero--phone");
+  } else if (window.matchMedia("(max-width: 900px)").matches) {
+    // small landscape viewports keep the 16:9 frames but a shorter runway
+    CONFIG.scrollLengthVh = 220;
+  }
+
+  // The engine can always retreat to a correct still: right sequence's
+  // final frame, full-viewport, no scrub. Used on any runtime failure
+  // and when a rotation crosses the portrait/landscape boundary, where
+  // the loaded frames stop matching the viewport they were cut for.
+  let dead = false;
+  const retreat = () => {
+    if (dead) return;
+    dead = true;
+    hero.classList.add("hero--still");
+    hero.style.height = "100svh";
+    canvas.style.display = "none";
+    if (poster) {
+      // the still must match the viewport it retreats into, not the
+      // orientation the page happened to load in
+      poster.src = portraitPhone.matches
+        ? "assets/hero-mobile-seq/final.jpg"
+        : "assets/hero-sequence/frame-0193.webp";
+      poster.style.display = "";
+    }
+    if (loader) loader.remove();
+  };
+
+  if (portraitPhone.addEventListener) {
+    portraitPhone.addEventListener("change", () => {
+      if (portraitPhone.matches !== startedPortrait) retreat();
+    });
+  }
+
   hero.style.setProperty("--hero-scroll-length", CONFIG.scrollLengthVh + "vh");
   document.documentElement.style.setProperty(
-    "--hero-scroll-length", CONFIG.scrollLengthVh + "vh");
+    "--hero-scroll-length",
+    CONFIG.scrollLengthVh + "vh",
+  );
 
   // ------------------------------------------------------------------
   // Frame store + progressive loader
   // ------------------------------------------------------------------
   const N = CONFIG.frameCount;
-  const frames = new Array(N).fill(null);      // ImageBitmap | HTMLImageElement
-  const loadState = new Array(N).fill(0);      // 0 idle, 1 loading, 2 ready
+  const frames = new Array(N).fill(null); // ImageBitmap | HTMLImageElement
+  const loadState = new Array(N).fill(0); // 0 idle, 1 loading, 2 ready
   let readyCount = 0;
   let firstFrameReady = false;
 
@@ -85,7 +166,7 @@
               img.onload = () => res(img);
               img.onerror = rej;
               img.src = URL.createObjectURL(blob);
-            })
+            }),
       )
       .then((bmp) => {
         frames[i] = bmp;
@@ -94,7 +175,9 @@
         if (i === 0) firstFrameReady = true;
         onFrameArrived(i);
       })
-      .catch(() => { loadState[i] = 0; }); // transient failure -> retryable
+      .catch(() => {
+        loadState[i] = 0;
+      }); // transient failure -> retryable
   }
 
   // Coarse-to-fine order: frame 0, last frame, then successive halvings.
@@ -103,8 +186,14 @@
   function coarseToFineOrder(n) {
     const order = [];
     const seen = new Uint8Array(n);
-    const push = (i) => { if (i >= 0 && i < n && !seen[i]) { seen[i] = 1; order.push(i); } };
-    push(0); push(n - 1);
+    const push = (i) => {
+      if (i >= 0 && i < n && !seen[i]) {
+        seen[i] = 1;
+        order.push(i);
+      }
+    };
+    push(0);
+    push(n - 1);
     let step = Math.max(1, Math.floor(n / 2));
     while (step >= 1) {
       for (let i = 0; i < n; i += step) push(i);
@@ -119,12 +208,30 @@
   const MAX_INFLIGHT = 6;
   let inflight = 0;
 
+  let retrySweeps = 0;
   function pump() {
     while (inflight < MAX_INFLIGHT && orderCursor < loadOrder.length) {
       const i = loadOrder[orderCursor++];
       if (loadState[i] !== 0) continue;
       inflight++;
-      loadFrame(i).finally(() => { inflight--; pump(); });
+      loadFrame(i).finally(() => {
+        inflight--;
+        pump();
+      });
+    }
+    // Transient fetch failures were marked retryable; sweep the order a
+    // few more times so one bad response cannot strand the loader.
+    if (
+      inflight === 0 &&
+      orderCursor >= loadOrder.length &&
+      readyCount < N &&
+      retrySweeps < 3
+    ) {
+      retrySweeps++;
+      setTimeout(() => {
+        orderCursor = 0;
+        pump();
+      }, 1500 * retrySweeps);
     }
   }
 
@@ -141,7 +248,9 @@
   // ------------------------------------------------------------------
   // Canvas sizing (devicePixelRatio-aware, memory-capped)
   // ------------------------------------------------------------------
-  let cw = 0, ch = 0, dpr = 1;
+  let cw = 0,
+    ch = 0,
+    dpr = 1;
 
   function resize() {
     // Cap backing store: sequence frames are 1920px wide, so >2x their
@@ -162,23 +271,71 @@
   function draw(idx) {
     const img = frames[idx];
     if (!img) return;
-    const iw = img.width, ih = img.height;
+    const iw = img.width,
+      ih = img.height;
     const scale = Math.max((cw * dpr) / iw, (ch * dpr) / ih);
-    const dw = iw * scale, dh = ih * scale;
-    const maxX = dw - cw * dpr, maxY = dh - ch * dpr;
-    const dx = -Math.min(maxX, Math.max(0, CONFIG.focalX * dw - (cw * dpr) / 2));
-    const dy = -Math.min(maxY, Math.max(0, CONFIG.focalY * dh - (ch * dpr) / 2));
+    const dw = iw * scale,
+      dh = ih * scale;
+    const maxX = dw - cw * dpr,
+      maxY = dh - ch * dpr;
+    const dx = -Math.min(
+      maxX,
+      Math.max(0, CONFIG.focalX * dw - (cw * dpr) / 2),
+    );
+    const dy = -Math.min(
+      maxY,
+      Math.max(0, CONFIG.focalY * dh - (ch * dpr) / 2),
+    );
     ctx.imageSmoothingEnabled = true;
     ctx.imageSmoothingQuality = "high";
     ctx.drawImage(img, dx, dy, dw, dh);
+
+    if (finaleReady && progressNow > BLEND_FROM) {
+      const t = Math.min(
+        1,
+        (progressNow - BLEND_FROM) / (1 - BLEND_FROM - 0.04),
+      );
+      const a = t * t * (3 - 2 * t); // smoothstep: eases in and lands flat
+      const fw = finale.width,
+        fh = finale.height;
+      const fs = Math.max((cw * dpr) / fw, (ch * dpr) / fh);
+      const fdw = fw * fs,
+        fdh = fh * fs;
+      ctx.globalAlpha = a;
+      ctx.drawImage(
+        finale,
+        -(fdw - cw * dpr) / 2,
+        -(fdh - ch * dpr) / 2,
+        fdw,
+        fdh,
+      );
+      ctx.globalAlpha = 1;
+    }
   }
 
   // ------------------------------------------------------------------
   // Scroll mapping + render loop
   // ------------------------------------------------------------------
-  let targetFloat = 0;   // scroll-mapped fractional frame
-  let currentFloat = 0;  // smoothed fractional frame actually drawn
+  let targetFloat = 0; // scroll-mapped fractional frame
+  let currentFloat = 0; // smoothed fractional frame actually drawn
   let drawnFrame = -1;
+
+  // The landing frame: the whole house, outpainted to portrait. The
+  // cropped scrub frames ride in on it and the hero settles here, so
+  // the final composition is never cut off.
+  let finale = null,
+    finaleReady = false,
+    progressNow = 0;
+  if (startedPortrait) {
+    finale = new Image();
+    finale.decoding = "async";
+    finale.onload = () => {
+      finaleReady = true;
+      drawnFrame = -1;
+    };
+    finale.src = "assets/hero-mobile-seq/final.jpg";
+  }
+  const BLEND_FROM = 0.78;
   let lastT = performance.now();
   let canvasLive = false;
 
@@ -210,8 +367,11 @@
 
   function stepOnce(dt) {
     const p = scrollProgress();
+    progressNow = p;
     hero.style.setProperty("--hero-progress", p.toFixed(4));
     targetFloat = frameForProgress(p);
+    // the dissolve tracks scroll continuously, so it repaints every step
+    if (finaleReady && p > BLEND_FROM) drawnFrame = -1;
 
     // Exponential chase: framerate-independent, sub-frame accurate.
     const k = 1 - Math.exp(-CONFIG.smoothing * dt);
@@ -234,6 +394,7 @@
   }
 
   function tick(now) {
+    if (dead) return;
     const dt = Math.min(0.05, (now - lastT) / 1000);
     lastT = now;
     stepOnce(dt);
@@ -252,18 +413,40 @@
   // Debug/QA hook (read-only introspection; no runtime cost).
   Object.defineProperty(window, "__hero", {
     value: {
-      get progress() { return scrollProgress(); },
-      get target() { return targetFloat; },
-      get current() { return currentFloat; },
-      get drawn() { return drawnFrame; },
-      get ready() { return readyCount; },
-      get total() { return N; },
-      step(dt) { stepOnce(dt || 1 / 60); },
+      get progress() {
+        return scrollProgress();
+      },
+      get target() {
+        return targetFloat;
+      },
+      get current() {
+        return currentFloat;
+      },
+      get drawn() {
+        return drawnFrame;
+      },
+      get ready() {
+        return readyCount;
+      },
+      get total() {
+        return N;
+      },
+      step(dt) {
+        stepOnce(dt || 1 / 60);
+      },
     },
   });
 
   window.addEventListener("resize", resize, { passive: true });
   resize();
   pump();
-  requestAnimationFrame((t) => { lastT = t; requestAnimationFrame(tick); });
+  try {
+    requestAnimationFrame((t) => {
+      if (dead) return;
+      resize();
+      requestAnimationFrame(tick);
+    });
+  } catch (e) {
+    retreat();
+  }
 })();
