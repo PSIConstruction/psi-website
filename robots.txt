@@ -1,0 +1,5 @@
+User-agent: *
+Allow: /
+Disallow: /pin-editor.html
+
+Sitemap: https://psiconstructionpa.com/sitemap.xml

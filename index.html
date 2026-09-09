@@ -46,7 +46,15 @@
       rel="stylesheet"
     />
     <link rel="stylesheet" href="css/site.css?v=8c068dca" />
-  </head>
+    <!-- Search and link-preview metadata. -->
+  <link rel="canonical" href="https://psiconstructionpa.com/">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="PSI Construction">
+  <meta property="og:url" content="https://psiconstructionpa.com/">
+  <meta property="og:image:width" content="2752">
+  <meta property="og:image:height" content="1536">
+  <meta name="twitter:card" content="summary_large_image">
+</head>
   <body>
     <nav class="nav" id="topNav" aria-label="Primary">
       <a
@@ -2060,6 +2068,39 @@
     ></script>
     <script src="js/main.js?v=f05c15bd" defer></script>
     <script src="js/process.js?v=c277bcb8" defer></script>
+    <!-- Business and location, for Google to tie this site to a real place.
+         This does NOT create a Google Maps listing — only a verified Google
+         Business Profile does that, and verification is the owner's to do.
+         What this does is let Google match the site to the profile once it
+         exists, and give it a consistent name, phone and address in the
+         meantime. The address is the one the FAQ on this page already states.
+         postalCode is deliberately absent rather than guessed; fill it in. -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "GeneralContractor",
+        "@id": "https://psiconstructionpa.com/#business",
+        "name": "PSI Construction, LLC",
+        "url": "https://psiconstructionpa.com/",
+        "telephone": "+1-570-338-8774",
+        "image": "https://psiconstructionpa.com/assets/logo/icon-512.png",
+        "logo": "https://psiconstructionpa.com/assets/logo/icon-512.png",
+        "address": {
+          "@type": "PostalAddress",
+          "streetAddress": "190 Wyoming Street",
+          "addressLocality": "Wilkes-Barre",
+          "addressRegion": "PA",
+          "addressCountry": "US"
+        },
+        "areaServed": [
+          { "@type": "City", "name": "Kingston, PA" },
+          { "@type": "City", "name": "Wilkes-Barre, PA" },
+          { "@type": "City", "name": "West Pittston, PA" },
+          { "@type": "City", "name": "Exeter, PA" },
+          { "@type": "AdministrativeArea", "name": "Luzerne County, PA" }
+        ]
+      }
+    </script>
     <script type="application/ld+json">
       {
         "@context": "https://schema.org",
