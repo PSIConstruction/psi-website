@@ -22,7 +22,7 @@
     <link
       rel="preload"
       as="image"
-      href="assets/hero-sunset.jpg"
+      href="assets/hero-mobile-seq/m-001.jpg"
       media="(orientation: portrait)"
     />
     <link
@@ -37,7 +37,7 @@
       href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="css/site.css?v=bug12" />
+    <link rel="stylesheet" href="css/site.css?v=6752278d" />
   </head>
   <body>
     <nav class="nav" id="topNav" aria-label="Primary">
@@ -100,9 +100,15 @@
     <section class="hero" id="hero" aria-label="Cinematic aerial introduction">
       <div class="hero__viewport">
         <picture>
+          <!-- Portrait phones get frame one of the mobile scroll sequence, not a
+               separate photograph. The sunset still was a different image
+               entirely, so on a phone the hero read as a picture that simply
+               sat there while everything else moved. Starting on the sequence's
+               own first frame means the canvas scrub continues from exactly
+               what you were already looking at. -->
           <source
             media="(orientation: portrait)"
-            srcset="assets/hero-sunset.jpg"
+            srcset="assets/hero-mobile-seq/m-001.jpg"
           />
           <img
             class="hero__poster"
@@ -1734,20 +1740,19 @@
     <!-- ===================== PREVIOUS PROJECTS ===================== -->
     <section class="section section--white" id="projects">
       <div class="section__inner">
+        <p class="eyebrow eyebrow--accent">Previous Projects</p>
         <h2 class="section__title">Where We&rsquo;ve Built</h2>
-        <p class="lede">
-          Discover some of our previous projects across Kingston, Wilkes-Barre,
-          West Pittston, and Exeter, PA. Click a pin on the map, or any
-          photograph, to open that job.
-        </p>
+        <p class="lede">34 projects across Kingston, Wilkes-Barre, West Pittston, and Exeter, PA. Click a pin on the map, or any photograph, to open that job.</p>
 
         <div class="projects__layout">
-          <div
-            id="projectMap"
-            aria-label="Interactive map of PSI project locations"
-          ></div>
-          <div class="jobs" id="jobsGrid" aria-label="Documented jobs"></div>
+          <div id="projectMap" aria-label="Interactive map of PSI project locations"></div>
+          <div class="shots-wrap">
+            <div class="shots" id="shotWall" aria-label="Project photographs"></div>
+            <button class="shots__arrow shots__arrow--prev" id="shotPrev" aria-label="Previous photograph">&larr;</button>
+            <button class="shots__arrow shots__arrow--next" id="shotNext" aria-label="Next photograph">&rarr;</button>
+          </div>
         </div>
+        <p class="shots__hint" id="shotHint"></p>
       </div>
     </section>
 
@@ -2038,15 +2043,15 @@
     </footer>
 
     <script src="assets/hero-sequence/frames-manifest.js"></script>
-    <script src="js/hero.js?v=bug12" defer></script>
-    <script src="data/projects.js?v=pab42706"></script>
+    <script src="js/hero.js?v=56370c43" defer></script>
+    <script src="data/projects.js?v=32542378"></script>
     <script
       src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
       integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
       crossorigin=""
     ></script>
-    <script src="js/main.js?v=bug12" defer></script>
-    <script src="js/process.js?v=c8015468" defer></script>
+    <script src="js/main.js?v=7d85b60f" defer></script>
+    <script src="js/process.js?v=632454f4" defer></script>
     <script type="application/ld+json">
       {
         "@context": "https://schema.org",
@@ -2119,6 +2124,6 @@
         ]
       }
     </script>
-    <script src="js/support.js?v=bug12" defer></script>
+    <script src="js/support.js?v=ecb760e5" defer></script>
   </body>
 </html>

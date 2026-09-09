@@ -18,7 +18,11 @@ import re
 import sys
 
 PAGES = ("index.html", "contact.html", "pin-editor.html")
-ASSET = re.compile(r'(href|src)="((?:css|js|data)/[^"?]+)(?:\?v=[0-9a-f]+)?"')
+# The stamp may be anything a person typed by hand, so match any query value
+# rather than hex only. Matching hex alone made this pattern fail on
+# "?v=bug12", which silently left those files unstamped and stale in every
+# browser cache for as long as the value stayed there.
+ASSET = re.compile(r'(href|src)="((?:css|js|data)/[^"?]+)(?:\?v=[^"]*)?"')
 
 
 def digest(path):

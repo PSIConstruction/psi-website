@@ -3087,13 +3087,6 @@ section[id],
     gap: 12px;
   }
 
-  #projectMap {
-    height: clamp(200px, 30svh, 300px);
-  }
-
-  .shots {
-    height: clamp(220px, 33svh, 320px);
-  }
 }
 
 /* ---------------- Where We've Built: the job index ---------------- */
@@ -3358,7 +3351,26 @@ section[id],
     z-index: 65;
     background: transparent;
     box-shadow: none;
-    color: #fff; /* the X must read on the navy panel, whatever the bar held before */
+  }
+
+  /* These controls sit on two different grounds, so the colour follows the
+     ground rather than being fixed.
+
+     Over the hero the bar is transparent and the photograph behind it is
+     dark, so the controls are white. Once the bar goes solid it is a
+     near-white panel, so they take the bar's own navy — white there was
+     invisible, which is the bug this replaced. And while the menu panel is
+     open the ground is navy again, at any scroll position, so white returns.
+
+     Scoping white to .nav--open alone was the other half of that mistake: it
+     left the phone button navy over the dark hero, where it had been white. */
+  .nav:not(.nav--solid) .nav__brand,
+  .nav:not(.nav--solid) .nav__call,
+  .nav:not(.nav--solid) .nav__toggle,
+  .nav--open .nav__brand,
+  .nav--open .nav__call,
+  .nav--open .nav__toggle {
+    color: #fff;
   }
 
   .nav--open .nav__call {
@@ -4041,3 +4053,63 @@ section[id],
     animation: none;
   }
 }
+
+
+/* ============================================================
+   Where We've Built — photo wall, restored from the pre-rework site.
+   The reworked section replaced this wall with a card grid; these rules
+   come back with it. Appended rather than merged in place so nothing the
+   reviews carousel shares gets rewritten underneath it.
+   ============================================================ */
+.shots-wrap { position: relative; }
+.shots {
+  height: clamp(380px, 56vh, 560px);
+  border: 1px solid var(--hairline);
+  background: #0f1113;
+  display: flex;
+  overflow: hidden;            /* no manual scrolling — arrows only, so the
+                                  page scrolls normally over the panel */
+}
+.shots::-webkit-scrollbar { display: none; }
+
+.shot {
+  flex: 0 0 100%;
+  position: relative;
+  height: 100%;
+  padding: 0; border: 0; margin: 0;
+  background: #0f1113;
+  cursor: pointer;
+  overflow: hidden;
+}
+.shot img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+.shot__phase {
+  position: absolute; top: 12px; left: 12px;
+  background: rgba(29,39,51,0.92);
+  font-size: 9.5px; letter-spacing: 0.2em; text-transform: uppercase; font-weight: 700;
+  padding: 3px 9px; border-radius: 2px; color: #fff;
+}
+.shot__phase--before { background: rgba(29,39,51,0.92); }
+.shot__phase--after  { background: var(--accent); }
+
+.shot__cap {
+  position: absolute; left: 0; right: 0; bottom: 0;
+  display: block; text-align: left;
+  padding: 74px 18px 16px;
+  background: linear-gradient(to top, rgba(8,9,10,0.93) 0%, rgba(8,9,10,0.68) 48%, rgba(8,9,10,0) 100%);
+  color: #fff;
+}
+.shot__cap strong { display: block; font-size: 14px; line-height: 1.25; margin-bottom: 4px; }
+.shot__cap span { display: block; font-size: 12.5px; line-height: 1.45; color: rgba(255,255,255,0.86); }
+
+.shots__arrow {
+  position: absolute; top: 50%; transform: translateY(-50%); z-index: 2;
+  width: 40px; height: 40px; border-radius: 50%;
+  border: 1px solid rgba(255,255,255,0.3); background: rgba(0,0,0,0.4);
+  color: #fff; font-size: 16px; cursor: pointer;
+}
+.shots__arrow:hover { background: var(--accent); border-color: var(--accent); }
+.shots__arrow--prev { left: 12px; }
+.shots__arrow--next { right: 12px; }
+
+.shots__hint { margin: 12px 0 0; font-size: 12.5px; color: var(--muted); }

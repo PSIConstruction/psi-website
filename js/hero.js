@@ -40,19 +40,14 @@
   const ctx = canvas.getContext("2d", { alpha: false });
 
   // ------------------------------------------------------------------
-  // Two heroes. Portrait phones open on the sunset photograph: one
-  // 348K frame, no pin. Landscape viewports get the scroll-scrubbed
-  // build sequence back, exactly as it ran before.
+  // One hero, two frame sets. This used to return early on a portrait
+  // phone and show a single sunset photograph instead — which meant the
+  // 24-frame portrait sequence prepared below could never run, and the
+  // hero on a phone was a still picture sitting there while every other
+  // image on the page moved. The mobile frames exist in
+  // assets/hero-mobile-seq, pre-cropped to 3:4 around the building, so
+  // the phone now scrubs its own sequence rather than opting out.
   // ------------------------------------------------------------------
-  if (
-    window.matchMedia("(max-width: 760px) and (orientation: portrait)").matches
-  ) {
-    hero.style.height = "100svh";
-    hero.classList.add("hero--still");
-    canvas.style.display = "none";
-    if (loader) loader.remove();
-    return;
-  }
   const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
 
   // ------------------------------------------------------------------
@@ -117,11 +112,22 @@
     hero.style.height = "100svh";
     canvas.style.display = "none";
     if (poster) {
-      // the still must match the viewport it retreats into, not the
-      // orientation the page happened to load in
-      poster.src = portraitPhone.matches
+      // The still must match the viewport it retreats into, not the
+      // orientation the page happened to load in.
+      const still = portraitPhone.matches
         ? "assets/hero-mobile-seq/final.jpg"
         : "assets/hero-sequence/frame-0193.webp";
+      // Inside a <picture>, a matching <source> beats img.src outright, so
+      // setting src alone did nothing on a portrait phone — the browser kept
+      // painting whatever the portrait <source> pointed at. Update the source
+      // too, or this fallback is silently dead exactly where it is needed.
+      const pic = poster.parentElement;
+      if (pic && pic.tagName === "PICTURE") {
+        pic.querySelectorAll("source").forEach((sourceEl) => {
+          sourceEl.srcset = still;
+        });
+      }
+      poster.src = still;
       poster.style.display = "";
     }
     if (loader) loader.remove();
@@ -129,7 +135,21 @@
 
   if (portraitPhone.addEventListener) {
     portraitPhone.addEventListener("change", () => {
-      if (portraitPhone.matches !== startedPortrait) retreat();
+      if (portraitPhone.matches === startedPortrait) return;
+      // The two orientations use different frame sets — 24 stills cropped 3:4
+      // for a portrait phone, 193 landscape ones otherwise — and the count is
+      // captured when this module boots, so the loaded frames stop matching
+      // the viewport the moment the boundary is crossed.
+      //
+      // This used to call retreat(), which sets dead = true permanently: the
+      // canvas was hidden and the scrub never came back, so rotating a phone
+      // or dragging a split-view divider left the hero inert until a manual
+      // reload. Re-loading the page is heavier than a live swap but it is
+      // always correct, and a wrong-aspect or dead hero is worse. Guarded so
+      // a media query that fires twice cannot loop.
+      if (window.__psiHeroReloading) return;
+      window.__psiHeroReloading = true;
+      window.location.reload();
     });
   }
 

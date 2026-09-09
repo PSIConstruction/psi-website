@@ -24,8 +24,12 @@
   };
   const onScroll = () => {
     const heroEl = document.getElementById("hero");
+    // The hero's scroll runway finishes when its bottom reaches the bottom of
+    // the viewport — offsetHeight minus one viewport. Subtracting only half a
+    // viewport flipped the bar 360px too late on a portrait phone, leaving a
+    // white bar over white content for most of a screen.
     const threshold = heroEl
-      ? heroEl.offsetHeight - window.innerHeight * 0.5
+      ? heroEl.offsetHeight - window.innerHeight
       : 40;
     nav.classList.toggle("nav--solid", window.scrollY > threshold);
     // No hero (inner pages): the bar is solid from the start, so the
@@ -191,7 +195,10 @@
   };
   if (phone.addEventListener) phone.addEventListener("change", sync);
   window.addEventListener("resize", sync);
-
+  // ---------------- Previous Projects ----------------
+  // Restored from the pre-rework site: Leaflet map beside a photo wall that
+  // steps one job at a time. Panning the map by hand holds it for ten
+  // seconds so a visitor hunting for something is not yanked to the next pin.
   // ---------------- Previous Projects ----------------
   const projects = window.PSI_PROJECTS || [];
   const office = window.PSI_OFFICE;
@@ -199,65 +206,39 @@
   if (!mapEl || !projects.length || typeof L === "undefined") return;
 
   const map = L.map(mapEl, { scrollWheelZoom: false });
-  // Leaflet 1.9 puts a Ukrainian flag in its attribution prefix; keep the
-  // required Leaflet and OpenStreetMap credits, drop the flag.
-  map.attributionControl.setPrefix(
-    '<a href="https://leafletjs.com">Leaflet</a>',
-  );
   L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
     maxZoom: 19,
-    attribution:
-      '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
   }).addTo(map);
 
   // A project is a "case study" once it has a photo gallery attached.
   // Those pins are styled differently and open a detail view.
   const hasCase = (p) => Array.isArray(p.gallery) && p.gallery.length > 0;
 
-  const pinIcon = (active, isCase) =>
-    L.divIcon({
-      className: "",
-      html: `<div class="pin${active ? " pin--active" : ""}${isCase ? " pin--case" : ""}"></div>`,
-      iconSize: [16, 16],
-      iconAnchor: [8, 16],
-    });
+  const pinIcon = (active, isCase) => L.divIcon({
+    className: "",
+    html: `<div class="pin${active ? " pin--active" : ""}${isCase ? " pin--case" : ""}"></div>`,
+    iconSize: [16, 16],
+    iconAnchor: [8, 16]
+  });
 
   // Office marker (distinct, not part of the sync set)
   if (office) {
     L.marker([office.lat, office.lng], {
-      icon: L.divIcon({
-        className: "",
-        html: '<div class="pin pin--office"></div>',
-        iconSize: [16, 16],
-        iconAnchor: [8, 8],
-      }),
-    })
-      .addTo(map)
-      .bindPopup(
-        `<strong>${office.name}</strong><br>${office.address}<br><em>Visits available upon request</em>`,
-      );
+      icon: L.divIcon({ className: "", html: '<div class="pin pin--office"></div>', iconSize: [16, 16], iconAnchor: [8, 8] })
+    }).addTo(map).bindPopup(`<strong>${office.name}</strong><br>${office.address}<br><em>Visits available upon request</em>`);
   }
 
   const markers = projects.map((p, i) => {
-    const m = L.marker([p.lat, p.lng], {
-      icon: pinIcon(false, hasCase(p)),
-    }).addTo(map);
-    m.bindPopup(
-      hasCase(p)
-        ? `<strong>${p.type || "Previous project"}</strong><br>` +
-            (p.type
-              ? `<em style="color:#d60000;font-style:normal;font-weight:600">${p.type}</em><br>`
-              : "") +
-            `${p.city}` +
-            (p.desc
-              ? `<span style="display:block;margin-top:6px;max-width:240px">${p.desc}</span>`
-              : "") +
-            `<button class="case__open" data-project="${i}" data-open="${i}">See these photos &rarr;</button>`
-        : `<strong>${p.type || "Previous project"}</strong><br>${p.city}`,
-    );
+    const m = L.marker([p.lat, p.lng], { icon: pinIcon(false, hasCase(p)) }).addTo(map);
+    m.bindPopup(hasCase(p)
+      ? `<strong>${p.name}</strong><br>` +
+        (p.type ? `<em style="color:#d60000;font-style:normal;font-weight:600">${p.type}</em><br>` : "") +
+        `${p.city}` +
+        (p.desc ? `<span style="display:block;margin-top:6px;max-width:240px">${p.desc}</span>` : "") +
+        `<button class="case__open" data-project="${i}" data-open="${i}">See these photos &rarr;</button>`
+      : `<strong>${p.name}</strong><br>${p.city}`);
     m.on("click", () => select(i, "map"));
-    // hovering a pin lights its card, exactly as the cards light the pins
-    m.on("mouseover", () => select(i, "hover"));
     return m;
   });
 
@@ -267,9 +248,7 @@
     if (!btn || !btn.dataset.open) return;
     openViewer(+btn.dataset.open, 0);
   });
-  const allBounds = L.latLngBounds(projects.map((p) => [p.lat, p.lng])).pad(
-    0.08,
-  );
+  const allBounds = L.latLngBounds(projects.map(p => [p.lat, p.lng])).pad(0.08);
   map.fitBounds(allBounds);
 
   // If the map booted inside a hidden/zero-size container (collapsed panel,
@@ -286,78 +265,127 @@
     ro.observe(mapEl);
   }
 
-  // ---- the job index: one card per documented job ----
-  const jobsGrid = document.getElementById("jobsGrid");
+  const wall = document.getElementById("shotWall");
+  const hint = document.getElementById("shotHint");
 
-  function buildJobs() {
-    jobsGrid.innerHTML = "";
-    projects.forEach((p, i) => {
-      const count =
-        Array.isArray(p.gallery) && p.gallery.length
-          ? p.gallery.length
-          : p.img
-            ? 1
-            : 0;
-      if (!count) return;
-      const card = document.createElement("button");
-      card.type = "button";
-      card.className = "job";
-      card.dataset.job = i;
-      card.innerHTML =
-        '<span class="job__media">' +
-        '<img loading="lazy" src="' +
-        p.img +
-        '" alt="' +
-        (p.caption || p.type || "PSI project") +
-        '">' +
-        '<span class="job__count">' +
-        count +
-        (count === 1 ? " photo" : " photos") +
-        "</span>" +
-        "</span>" +
-        '<span class="job__body">' +
-        '<span class="job__name">' +
-        (p.type || "Previous project") +
-        "</span>" +
-        '<span class="job__type">' +
-        p.city +
-        "</span>" +
-        "</span>";
-      jobsGrid.appendChild(card);
+  // One entry per PHOTOGRAPH. A project with a gallery contributes all of its
+  // shots; anything else contributes its single image.
+  const shots = [];
+  projects.forEach((p, i) => {
+    if (Array.isArray(p.gallery) && p.gallery.length) {
+      p.gallery.forEach((g, n) => shots.push({ i, p, n, src: g.src, cap: g.cap, phase: g.phase }));
+    } else if (p.img) {
+      shots.push({ i, p, n: 0, src: p.img, cap: p.caption, phase: null });
+    }
+  });
+
+  const shuffled = (arr) => {
+    const a2 = arr.slice();
+    for (let k = a2.length - 1; k > 0; k--) {
+      const j = Math.floor(Math.random() * (k + 1));
+      [a2[k], a2[j]] = [a2[j], a2[k]];
+    }
+    return a2;
+  };
+
+  // ---- one photograph at a time, beside the map ----
+  // Each slide fills the panel and is cropped to fill it (cover), so a
+  // landscape shot loses a little from each side rather than shrinking.
+  function renderShots() {
+    wall.innerHTML = "";
+    shuffled(shots.map((_, k) => k)).forEach((k) => {
+      const sh = shots[k];
+      const b2 = document.createElement("button");
+      b2.type = "button";
+      b2.className = "shot";
+      b2.dataset.shot = k;
+      b2.innerHTML = `
+        <img loading="lazy" src="${sh.src}" alt="${sh.cap || sh.p.type || "PSI project"}">
+        ${sh.phase ? `<span class="shot__phase shot__phase--${sh.phase}">${sh.phase}</span>` : ""}
+        <span class="shot__cap">
+          <strong>${sh.p.type || sh.p.city}</strong>
+          ${sh.cap ? `<span>${sh.cap}</span>` : ""}
+        </span>`;
+      wall.appendChild(b2);
     });
   }
 
-  jobsGrid.addEventListener("click", (e) => {
-    const card = e.target.closest(".job");
-    if (!card) return;
-    const i = +card.dataset.job;
-    select(i, "card");
-    openViewer(i, 0);
+  wall.addEventListener("click", (e) => {
+    const item = e.target.closest(".shot");
+    if (!item) return;
+    const sh = shots[+item.dataset.shot];
+    select(sh.i, "shots");
+    openViewer(sh.i, sh.n);
   });
 
-  // Hovering a card lights its pin, so the grid and the map read as one
-  // instrument rather than two widgets sharing a section.
-  jobsGrid.addEventListener("pointerover", (e) => {
-    const card = e.target.closest(".job");
-    if (card) select(+card.dataset.job, "hover");
-  });
+  // Whichever photograph is on screen, its job's pin grows and lights up on
+  // the map — so it is obvious where the shot was taken, and clicking that
+  // pin opens the whole job.
+  let syncFrame = 0;
+  let firstSync = true;
+  function syncPinToShot() {
+    const el = wall.children[sPos];
+    if (!el) return;
+    const sh = shots[+el.dataset.shot];
+    if (sh && sh.i !== current) select(sh.i, "scroll");
+  }
+  wall.addEventListener("scroll", () => {
+    if (syncFrame) return;
+    syncFrame = requestAnimationFrame(() => { syncFrame = 0; syncPinToShot(); });
+  }, { passive: true });
 
-  // tabbing through the cards lights the pins just like the pointer does
-  jobsGrid.addEventListener("focusin", (e) => {
-    const card = e.target.closest(".job");
-    if (card) select(+card.dataset.job, "hover");
-  });
+  // Position is held explicitly and the browser does the alignment.
+  // Computing `index * clientWidth` drifted: clientWidth is a rounded
+  // integer while the real slide width is fractional, so the error
+  // compounded and clipped the caption on one side and leaked the next
+  // photograph in on the other.
+  let sPos = 0;
+  const slideCount = () => wall.children.length;
+  // Slide width is fractional (e.g. 435.8px) while offsetLeft and clientWidth
+  // both report rounded integers, so any index-times-width or scrollIntoView
+  // approach accumulates error and clips the caption. Measure the real width
+  // and scroll to the exact fractional offset.
+  const slideWidth = () => (wall.firstElementChild
+    ? wall.firstElementChild.getBoundingClientRect().width
+    : wall.getBoundingClientRect().width);
+  function goTo(idx) {
+    const n = slideCount();
+    if (!n) return;
+    sPos = ((idx % n) + n) % n;                    // wrap both ways
+    wall.scrollTo({ left: sPos * slideWidth(), behavior: "smooth" });
+  }
+  const stepShots = (dir) => goTo(sPos + dir);
 
-  // The map holds still while the visitor is driving it themselves.
+  // Advances on its own; a click restarts the clock so it does not jump
+  // straight after you have chosen a photograph yourself.
+  let timer = null;
+  const HOLD = 5000;
+  function play() { stop(); timer = setInterval(() => stepShots(1), HOLD); }
+  function stop() { if (timer) { clearInterval(timer); timer = null; } }
+  function nudge(dir) { stepShots(dir); play(); }
+
+  // Panning or zooming the map by hand means the visitor is hunting for
+  // something specific, and having the map fly off to the next photograph
+  // every few seconds makes that job impossible. The photographs keep
+  // advancing and the pin still lights up so they can follow along — the map
+  // just stops moving itself. Ten quiet seconds and it resumes following.
+  // Clicking a pin is an explicit request, so that still zooms.
   const MAP_HOLD = 10000;
   let mapHeldUntil = 0;
   const mapHeld = () => Date.now() < mapHeldUntil;
-  const holdMap = () => {
-    mapHeldUntil = Date.now() + MAP_HOLD;
-  };
+  const holdMap = () => { mapHeldUntil = Date.now() + MAP_HOLD; };
+  // Listening on the container catches only real input: map.flyTo fires
+  // Leaflet's own move and zoom events, which would otherwise hold the map
+  // against itself and never let it go.
   ["pointerdown", "wheel", "touchstart", "keydown", "dblclick"].forEach((ev) =>
-    map.getContainer().addEventListener(ev, holdMap, { passive: true }),
+    map.getContainer().addEventListener(ev, holdMap, { passive: true })
   );
+
+  document.getElementById("shotPrev").addEventListener("click", () => nudge(-1));
+  document.getElementById("shotNext").addEventListener("click", () => nudge(1));
+  document.addEventListener("visibilitychange", () => (document.hidden ? stop() : play()));
+  window.addEventListener("resize", () => { wall.scrollLeft = sPos * slideWidth(); }, { passive: true });
+
 
   // ---- the full-screen viewer ----
   const viewer = document.createElement("div");
@@ -374,56 +402,30 @@
     </div>
     <button class="viewer__arrow viewer__arrow--prev" data-vstep="-1" aria-label="Previous photo">&larr;</button>
     <div class="viewer__rail"></div>
-    <button class="viewer__arrow viewer__arrow--next" data-vstep="1" aria-label="Next photo">&rarr;</button>
-    <div class="viewer__foot">
-      <div class="viewer__thumbs" role="tablist" aria-label="Photographs in this job"></div>
-      <p class="viewer__count"></p>
-    </div>`;
+    <button class="viewer__arrow viewer__arrow--next" data-vstep="1" aria-label="Next photo">&rarr;</button>`;
   document.body.appendChild(viewer);
   const vRail = viewer.querySelector(".viewer__rail");
-  const vThumbs = viewer.querySelector(".viewer__thumbs");
-  const vCount = viewer.querySelector(".viewer__count");
   let vReturn = null;
 
   function openViewer(i, startAt) {
     const p = projects[i];
-    const list =
-      Array.isArray(p.gallery) && p.gallery.length
-        ? p.gallery.map((g) => ({ src: g.src, cap: g.cap, phase: g.phase }))
-        : p.img
-          ? [{ src: p.img, cap: p.caption, phase: null }]
-          : [];
+    const list = Array.isArray(p.gallery) && p.gallery.length
+      ? p.gallery.map((g) => ({ src: g.src, cap: g.cap, phase: g.phase }))
+      : (p.img ? [{ src: p.img, cap: p.caption, phase: null }] : []);
     if (!list.length) return;
     vReturn = document.activeElement;
-    viewer.querySelector(".viewer__eyebrow").textContent = p.city;
-    viewer.querySelector(".viewer__title").textContent =
-      p.type || "Previous project";
+    viewer.querySelector(".viewer__eyebrow").textContent = p.type || "Previous project";
+    viewer.querySelector(".viewer__title").textContent = p.name;
     viewer.querySelector(".viewer__desc").textContent = p.desc || "";
-    vThumbs.innerHTML = list
-      .map(function (g, k) {
-        return (
-          '<button class="viewer__thumb" data-vgo="' +
-          k +
-          '" role="tab" aria-label="Photo ' +
-          (k + 1) +
-          '"><img src="' +
-          g.src +
-          '" alt=""></button>'
-        );
-      })
-      .join("");
-    vRail.innerHTML = list
-      .map(
-        (g) => `
+    vRail.innerHTML = list.map((g) => `
       <figure class="viewer__fig">
         <div class="viewer__imgwrap">
-          <img src="${g.src}" alt="${g.cap || p.type}">
+          <img src="${g.src}" alt="${g.cap || p.name}">
           ${g.phase ? `<span class="viewer__phase viewer__phase--${g.phase}">${g.phase}</span>` : ""}
           ${g.cap ? `<figcaption class="viewer__cap">${g.cap}</figcaption>` : ""}
         </div>
-      </figure>`,
-      )
-      .join("");
+      </figure>`).join("");
+    stop();
     viewer.classList.add("is-open");
     viewer.setAttribute("aria-hidden", "false");
     document.body.classList.add("viewer-lock");
@@ -431,7 +433,6 @@
       vPos = Math.min(vRail.children.length - 1, Math.max(0, startAt || 0));
       const fig = vRail.children[vPos];
       if (fig) vRail.scrollLeft = Math.max(0, fig.offsetLeft - V_PAD);
-      paintViewerChrome();
     });
     vHeldUntil = 0;
     vPlay();
@@ -440,6 +441,7 @@
 
   function closeViewer() {
     vStop();
+    play();
     viewer.classList.remove("is-open");
     viewer.setAttribute("aria-hidden", "true");
     document.body.classList.remove("viewer-lock");
@@ -447,36 +449,14 @@
   }
 
   const V_PAD = 24;
-  let vPos = 0; // authoritative position in the rail
+  let vPos = 0;                       // authoritative position in the rail
   function goViewer(k) {
     const figs = vRail.children;
     if (!figs.length) return;
     // Wrap rather than clamp, so the slideshow keeps running round the job
     // instead of stalling on the last photograph.
     vPos = ((k % figs.length) + figs.length) % figs.length;
-    vRail.scrollTo({
-      left: Math.max(0, figs[vPos].offsetLeft - V_PAD),
-      behavior: "smooth",
-    });
-    paintViewerChrome();
-  }
-
-  function paintViewerChrome() {
-    const n = vRail.children.length;
-    if (vCount) vCount.textContent = n ? vPos + 1 + " / " + n : "";
-    if (vThumbs) {
-      [...vThumbs.children].forEach(function (t, k) {
-        t.classList.toggle("is-on", k === vPos);
-        t.setAttribute("aria-selected", k === vPos ? "true" : "false");
-      });
-      const on = vThumbs.children[vPos];
-      if (on)
-        on.scrollIntoView({
-          block: "nearest",
-          inline: "center",
-          behavior: "smooth",
-        });
-    }
+    vRail.scrollTo({ left: Math.max(0, figs[vPos].offsetLeft - V_PAD), behavior: "smooth" });
   }
   // Track position explicitly rather than deriving it from scrollLeft: CSS
   // scroll-snap re-settles the rail after each programmatic scroll, so a
@@ -493,72 +473,18 @@
   function vPlay() {
     vStop();
     vTimer = setInterval(() => {
-      if (Date.now() < vHeldUntil) return; // you are driving; wait it out
+      if (Date.now() < vHeldUntil) return;   // you are driving; wait it out
       stepViewer(1);
     }, V_HOLD);
   }
-  function vStop() {
-    if (vTimer) {
-      clearInterval(vTimer);
-      vTimer = null;
-    }
-  }
+  function vStop() { if (vTimer) { clearInterval(vTimer); vTimer = null; } }
   // Stepping by hand holds the slideshow off without stopping it for good.
-  const nudgeViewer = (dir) => {
-    vHeldUntil = Date.now() + V_NUDGE_HOLD;
-    stepViewer(dir);
-  };
-  vRail.addEventListener(
-    "wheel",
-    () => {
-      vHeldUntil = Date.now() + V_NUDGE_HOLD;
-    },
-    { passive: true },
-  );
-  vRail.addEventListener(
-    "pointerdown",
-    () => {
-      vHeldUntil = Date.now() + V_NUDGE_HOLD;
-    },
-    { passive: true },
-  );
-
-  // Dragging or wheeling the rail moves scrollLeft without goViewer(), so
-  // once the scroll settles, adopt whichever photo actually snapped in.
-  let vSettle = null;
-  vRail.addEventListener(
-    "scroll",
-    () => {
-      if (Date.now() >= vHeldUntil) return; // programmatic scroll: vPos is authoritative
-      clearTimeout(vSettle);
-      vSettle = setTimeout(() => {
-        const figs = [...vRail.children];
-        if (!figs.length) return;
-        let best = 0,
-          bestDist = Infinity;
-        figs.forEach((f, k) => {
-          const d = Math.abs(f.offsetLeft - V_PAD - vRail.scrollLeft);
-          if (d < bestDist) {
-            bestDist = d;
-            best = k;
-          }
-        });
-        if (best !== vPos) {
-          vPos = best;
-          paintViewerChrome();
-        }
-      }, 160);
-    },
-    { passive: true },
-  );
+  const nudgeViewer = (dir) => { vHeldUntil = Date.now() + V_NUDGE_HOLD; stepViewer(dir); };
+  vRail.addEventListener("wheel", () => { vHeldUntil = Date.now() + V_NUDGE_HOLD; }, { passive: true });
+  vRail.addEventListener("pointerdown", () => { vHeldUntil = Date.now() + V_NUDGE_HOLD; }, { passive: true });
 
   viewer.addEventListener("click", (e) => {
     if (e.target.closest("[data-vclose]")) return closeViewer();
-    const th = e.target.closest("[data-vgo]");
-    if (th) {
-      vHeldUntil = Date.now() + V_NUDGE_HOLD;
-      return goViewer(+th.dataset.vgo);
-    }
     const st = e.target.closest("[data-vstep]");
     if (st) return nudgeViewer(+st.dataset.vstep);
     if (e.target === viewer) closeViewer();
@@ -580,32 +506,18 @@
       focusPin(i, null, source === "map");
       return;
     }
-    if (current >= 0) {
-      markers[current].setIcon(pinIcon(false, hasCase(projects[current])));
-      markers[current].setZIndexOffset(0);
-    }
+    if (current >= 0) markers[current].setIcon(pinIcon(false, hasCase(projects[current])));
     current = i;
     const p = projects[i];
 
-    // Pin: lit, and above the cluster so it reads at Kingston's density
+    // Pin
     markers[i].setIcon(pinIcon(true, hasCase(p)));
-    markers[i].setZIndexOffset(1000);
-
-    // Card
-    const cards = jobsGrid.querySelectorAll(".job");
-    cards.forEach((c) => c.classList.toggle("is-active", +c.dataset.job === i));
-    const active = jobsGrid.querySelector(".job.is-active");
-    if (active && source === "map")
-      active.scrollIntoView({ block: "nearest", behavior: "smooth" });
     // Scrolling the photos flies the map to that job and zooms in, so the lit
     // pin is actually readable — at full extent it is hard to see what changed.
     // No popup though: that would cover the map on every step.
-    if (source === "hover") {
-      // light the pin, but never fly the map on a hover
-      return;
-    }
+    if (source === "scroll") { if (!firstSync) focusPin(i, 16.5); firstSync = false; return; }
     if (source !== "map" && source !== "init") focusPin(i, null, true);
-    if (source !== "init" && source !== "card") markers[i].openPopup();
+    if (source !== "init") markers[i].openPopup();
 
     // Clicking a pin opens that job's photographs full screen.
     if (source === "map") openViewer(i, 0);
@@ -617,15 +529,13 @@
   function focusPin(i, zoom, force) {
     if (!force && mapHeld()) return;
     const p = projects[i];
-    map.flyTo(
-      [p.lat, p.lng],
-      zoom || Math.min(Math.max(map.getZoom(), 14.5), 15),
-      {
-        duration: 0.9,
-      },
-    );
+    map.flyTo([p.lat, p.lng], zoom || Math.max(map.getZoom(), 16), { duration: 0.9 });
   }
 
-  buildJobs();
+  renderShots();
+  requestAnimationFrame(syncPinToShot);
+  play();
+  hint.textContent = `${shots.length} photographs across ${new Set(shots.map((x) => x.i)).size} documented jobs — click any photograph, or a pin, to open that job.`;
   select(0, "init");
+
 })();
