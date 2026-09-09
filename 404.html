@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>PSI Construction</title>
+    <link rel="icon" href="/favicon.ico" sizes="any" />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="192x192"
+      href="/assets/logo/icon-192.png"
+    />
+    <meta name="robots" content="noindex" />
+
+    <!--
+      GitHub Pages serves this file for any address it cannot match, which is
+      how the old site's leftovers land here: psiconstructionpa.com ran on
+      another platform before this one, and search engines still hold some of
+      those addresses (/appointments is the one that turns up most).
+
+      Known paths get their own real page that returns 200 and names its
+      replacement as canonical — see appointments.html and its siblings. This
+      file is the net underneath that, for the addresses nobody remembers.
+      It still returns a 404 status, so nothing is being misrepresented to a
+      crawler; the redirect is a courtesy to the person who clicked.
+    -->
+    <script>
+      (function () {
+        var p = (location.pathname || "")
+          .toLowerCase()
+          .replace(/^\/+|\/+$/g, "")
+          .replace(/\.(html?|php|aspx?)$/, "");
+
+        // Order matters: the first pattern that appears in the path wins, so
+        // the more specific intents are listed before the general ones.
+        var ROUTES = [
+          [/(appoint|schedul|booking|book|consult|estimate|quote|pricing|price)/, "/contact.html"],
+          [/(review|testimonial|feedback)/, "/#reviews"],
+          [/(project|portfolio|gallery|our-work|^work|photos|built)/, "/#projects"],
+          [/(process|how-we|timeline|phases)/, "/#process"],
+          [/(service|what-we-do|capabilit|remodel|renovat|addition|new-construction)/, "/#capabilities"],
+          [/(contact|reach|call|phone|location|address|directions)/, "/contact.html"],
+        ];
+
+        var to = "/";
+        if (p) {
+          for (var i = 0; i < ROUTES.length; i++) {
+            if (ROUTES[i][0].test(p)) {
+              to = ROUTES[i][1];
+              break;
+            }
+          }
+        }
+        // replace(), not assign(), so Back does not bounce off the dead URL.
+        location.replace(to);
+      })();
+    </script>
+
+    <style>
+      body {
+        margin: 0;
+        min-height: 100vh;
+        display: grid;
+        place-items: center;
+        padding: 28px;
+        background: #f7f6f2;
+        color: #1d2733;
+        font:
+          15px/1.65 -apple-system,
+          BlinkMacSystemFont,
+          "Segoe UI",
+          Helvetica,
+          Arial,
+          sans-serif;
+        text-align: center;
+      }
+      img {
+        width: 76px;
+        height: 76px;
+        margin-bottom: 18px;
+      }
+      h1 {
+        margin: 0 0 8px;
+        font-size: 20px;
+        letter-spacing: -0.01em;
+      }
+      p {
+        margin: 0 0 20px;
+        color: #55606c;
+      }
+      nav {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        justify-content: center;
+      }
+      a {
+        display: inline-block;
+        padding: 10px 16px;
+        border-radius: 7px;
+        border: 1px solid rgba(29, 39, 51, 0.18);
+        color: #1d2733;
+        text-decoration: none;
+        font-size: 13.5px;
+      }
+      a.primary {
+        background: #d60000;
+        border-color: #d60000;
+        color: #fff;
+        font-weight: 700;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        font-size: 12px;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Only seen if scripting is off, or for the half-second before the
+         redirect takes. It should still look like the company. -->
+    <main>
+      <img src="/assets/logo/icon-192.png" alt="PSI Construction" />
+      <h1>That page has moved</h1>
+      <p>The site was rebuilt. Everything is still here:</p>
+      <nav>
+        <a class="primary" href="/contact.html">Get a Quote</a>
+        <a href="/">Home</a>
+        <a href="/#capabilities">Services</a>
+        <a href="/#projects">Where We&rsquo;ve Built</a>
+        <a href="/#process">How We Build</a>
+        <a href="/#reviews">Reviews</a>
+      </nav>
+    </main>
+  </body>
+</html>

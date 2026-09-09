@@ -8,8 +8,16 @@
       name="description"
       content="Free quote consultation with PSI Construction. Call 570-338-8PSI (774) or answer a few questions and we come prepared. Kingston, PA."
     />
-    <link rel="icon" type="image/png" href="assets/logo/favicon.png" />
-    <link rel="apple-touch-icon" href="assets/logo/favicon.png" />
+    <!-- Site icon. Google shows this beside the result for the homepage, so
+         it needs a real .ico at the root (the previous file was a PNG named
+         .ico, which crawlers could not parse — hence the blank block) plus
+         PNGs at multiples of 48. The art is padded to stay inside the circle
+         Google crops it to. -->
+    <link rel="icon" href="favicon.ico" sizes="any" />
+    <link rel="icon" type="image/png" sizes="96x96" href="assets/logo/favicon.png" />
+    <link rel="icon" type="image/png" sizes="192x192" href="assets/logo/icon-192.png" />
+    <link rel="icon" type="image/png" sizes="512x512" href="assets/logo/icon-512.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="assets/logo/apple-touch-icon.png" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link

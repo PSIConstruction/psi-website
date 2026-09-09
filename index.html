@@ -8,8 +8,16 @@
       name="description"
       content="PSI Construction builds and renovates homes, rental properties, and commercial buildings in Kingston and Wilkes-Barre, PA. See the work, the process, and the reviews."
     />
-    <link rel="icon" type="image/png" href="assets/logo/favicon.png" />
-    <link rel="apple-touch-icon" href="assets/logo/favicon.png" />
+    <!-- Site icon. Google shows this beside the result for the homepage, so
+         it needs a real .ico at the root (the previous file was a PNG named
+         .ico, which crawlers could not parse — hence the blank block) plus
+         PNGs at multiples of 48. The art is padded to stay inside the circle
+         Google crops it to. -->
+    <link rel="icon" href="favicon.ico" sizes="any" />
+    <link rel="icon" type="image/png" sizes="96x96" href="assets/logo/favicon.png" />
+    <link rel="icon" type="image/png" sizes="192x192" href="assets/logo/icon-192.png" />
+    <link rel="icon" type="image/png" sizes="512x512" href="assets/logo/icon-512.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="assets/logo/apple-touch-icon.png" />
     <meta property="og:title" content="PSI Construction · Kingston, PA" />
     <meta
       property="og:description"
@@ -2051,7 +2059,7 @@
       crossorigin=""
     ></script>
     <script src="js/main.js?v=f05c15bd" defer></script>
-    <script src="js/process.js?v=632454f4" defer></script>
+    <script src="js/process.js?v=c277bcb8" defer></script>
     <script type="application/ld+json">
       {
         "@context": "https://schema.org",

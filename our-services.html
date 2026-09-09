@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Moved &mdash; PSI Construction</title>
+    <!-- This page exists so an old address does not dead-end.
+         psiconstructionpa.com ran on another platform before this one, and
+         search engines still hold some of those addresses. Serving a real page
+         returns 200 and names its replacement as canonical, which sends the
+         visitor to the right place and lets the old URL fold into the new one.
+         A 404 would do neither. The canonical is the destination PAGE — a
+         fragment is not part of it, so every homepage section points at the
+         site root while the redirect itself keeps the anchor. -->
+    <link rel="canonical" href="https://psiconstructionpa.com/" />
+    <meta http-equiv="refresh" content="0; url=index.html#capabilities" />
+    <link rel="icon" href="/favicon.ico" sizes="any" />
+    <style>
+      body {
+        margin: 0; min-height: 100vh; display: grid; place-items: center;
+        background: #f7f6f2; color: #1d2733; text-align: center; padding: 24px;
+        font: 15px/1.6 -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+      }
+      a { color: #d60000; }
+    </style>
+    <script>
+      location.replace("index.html#capabilities");
+    </script>
+  </head>
+  <body>
+    <p>This page has moved. Continue to <a href="index.html#capabilities">Services</a>.</p>
+  </body>
+</html>
