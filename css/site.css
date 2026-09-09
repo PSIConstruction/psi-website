@@ -2949,19 +2949,27 @@ section[id],
     max-height: min(72vh, calc(100dvh - 88px));
     overflow-y: auto;
     overscroll-behavior: contain;
-    background:
-      radial-gradient(
-        260px 180px at 92% -10%,
-        rgba(214, 0, 0, 0.26),
-        transparent 60%
-      ),
-      var(--navy);
-    color: #fff;
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    /* Neutral and translucent, so the menu belongs to the page rather than
+       introducing a third colour to it. The navy card with a red bloom was
+       one more palette competing with the hero's greens and the paper white
+       underneath. A frosted panel borrows whatever it is over instead.
+
+       How transparent it can be is set by the worst background on the page,
+       not the prettiest. At 62% this looked right over the hero and then went
+       mid-grey over the navy "What We Build" band, where black type on grey
+       had nothing to hold onto. 82% still reads as a frosted panel with the
+       page moving behind it and keeps the type legible over navy, photograph
+       and paper alike. Where backdrop-filter is unavailable it goes nearly
+       opaque — see the @supports below. */
+    background: rgba(250, 249, 246, 0.82);
+    -webkit-backdrop-filter: blur(16px) saturate(115%);
+    backdrop-filter: blur(16px) saturate(115%);
+    color: var(--ink);
+    border: 1px solid rgba(16, 18, 20, 0.62);
     border-radius: 12px;
     box-shadow:
-      0 18px 40px rgba(8, 9, 10, 0.38),
-      0 2px 8px rgba(8, 9, 10, 0.24);
+      0 16px 34px rgba(16, 18, 20, 0.18),
+      0 2px 6px rgba(16, 18, 20, 0.1);
     /* present but inert until opened, so it can animate */
     opacity: 0;
     visibility: hidden;
@@ -2995,13 +3003,16 @@ section[id],
     text-transform: none;
     white-space: nowrap;
     opacity: 1;
-    color: #fff;
+    /* black, but eased off so six stacked rows read as a quiet list rather
+       than six headlines */
+    color: rgba(16, 18, 20, 0.88);
     border-radius: 6px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.09);
+    border-bottom: 1px solid rgba(16, 18, 20, 0.1);
   }
 
   .nav__links a:active {
-    background: rgba(255, 255, 255, 0.08);
+    background: rgba(16, 18, 20, 0.06);
+    color: var(--ink);
   }
 
   /* the phone number reads as a number, not another menu item */
@@ -3009,12 +3020,14 @@ section[id],
     font-size: 13.5px;
     font-weight: 500;
     letter-spacing: 0.02em;
-    color: rgba(255, 255, 255, 0.78);
+    color: rgba(16, 18, 20, 0.66);
     min-height: 40px;
   }
 
+  /* the one piece of colour that earns it */
   .nav__links .nav__cta {
     justify-content: center;
+    color: #fff;
     margin-top: 6px;
     min-height: 42px;
     border: 0;
@@ -3027,6 +3040,12 @@ section[id],
     font-weight: 700;
     letter-spacing: 0.12em;
     text-transform: uppercase;
+  }
+
+  @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+    .nav__links {
+      background: rgba(250, 249, 246, 0.97);
+    }
   }
 
   /* Still here to catch the tap that dismisses the menu, but no longer
