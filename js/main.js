@@ -166,8 +166,10 @@
     toggle.setAttribute("aria-expanded", String(open));
     toggle.setAttribute("aria-label", open ? "Close menu" : "Open menu");
     if (scrim) scrim.hidden = !open;
-    // hold the page still while the panel is up
-    document.body.style.overflow = open ? "hidden" : "";
+    // The page used to be frozen while the menu was up, which made sense when
+    // the menu was a full-screen panel. The dropdown covers a corner, so the
+    // page stays live underneath; the scrim is only there to catch the tap
+    // that dismisses it.
     if (open) {
       const first = panel.querySelector("a");
       if (first) first.focus({ preventScroll: true });
@@ -188,6 +190,11 @@
       toggle.focus();
     }
   });
+
+  // Deliberately NOT dismissed on scroll. The menu is anchored to a fixed bar,
+  // so it travels with it and never strands itself over the content. Closing
+  // on scroll looked tidier until a phone collapsing its address bar fired a
+  // scroll of its own and shut the menu a moment after it was tapped open.
 
   // rotating to landscape must not strand an open panel over a desktop row
   const sync = () => {

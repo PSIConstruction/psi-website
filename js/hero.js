@@ -31,6 +31,12 @@
   };
 
   const hero = document.getElementById("hero");
+  // The sticky child is the pinned window the frames are drawn into. Its
+  // height is the runway's divisor, and unlike window.innerHeight it does not
+  // move when a phone collapses its address bar.
+  const viewportEl = hero
+    ? hero.querySelector(".hero__viewport")
+    : null;
   const canvas = document.getElementById("heroCanvas");
   const poster = document.getElementById("heroPoster");
   const loader = document.getElementById("heroLoader");
@@ -223,7 +229,27 @@
     return order;
   }
 
-  const loadOrder = coarseToFineOrder(N);
+  // Two sequences, two sensible load orders.
+  //
+  // Coarse-to-fine is right for the 193-frame desktop set: 25MB will not all
+  // arrive soon, so having *some* frame near any scroll position matters more
+  // than having them in order. It is wrong for the 24-frame phone set, which
+  // is 1.8MB and lands in a moment. There, out-of-order arrival is the glitch:
+  // nearestReady() would answer frame 0, then 12, then 6, so an early scroll
+  // hopped between completely different camera positions. Loading in order and
+  // refusing to draw ahead of what has arrived turns that into plain motion
+  // that catches up, which is what it looks like once the frames are cached —
+  // and why it seemed to fix itself on later visits.
+  const sequential = startedPortrait;
+  const loadOrder = sequential
+    ? Array.from({ length: N }, (_, i) => i)
+    : coarseToFineOrder(N);
+
+  // Highest index whose whole run from 0 has arrived. -1 until frame 0 lands.
+  let readyPrefix = -1;
+  function growReadyPrefix() {
+    while (readyPrefix + 1 < N && loadState[readyPrefix + 1] === 2) readyPrefix++;
+  }
   let orderCursor = 0;
   const MAX_INFLIGHT = 6;
   let inflight = 0;
@@ -283,8 +309,12 @@
     if (canvas.width !== bw || canvas.height !== bh) {
       canvas.width = bw;
       canvas.height = bh;
+      // Only a real size change needs a repaint. Resetting this on every
+      // resize event meant an address bar sliding away — which fires resize
+      // repeatedly through the first scroll — forced a full redraw each time,
+      // on top of whatever the scrub was already doing.
+      drawnFrame = -1;
     }
-    drawnFrame = -1; // force redraw at new size
   }
 
   // Cover-draw with focal-point bias.
@@ -309,28 +339,6 @@
     ctx.imageSmoothingEnabled = true;
     ctx.imageSmoothingQuality = "high";
     ctx.drawImage(img, dx, dy, dw, dh);
-
-    if (finaleReady && progressNow > BLEND_FROM) {
-      const t = Math.min(
-        1,
-        (progressNow - BLEND_FROM) / (1 - BLEND_FROM - 0.04),
-      );
-      const a = t * t * (3 - 2 * t); // smoothstep: eases in and lands flat
-      const fw = finale.width,
-        fh = finale.height;
-      const fs = Math.max((cw * dpr) / fw, (ch * dpr) / fh);
-      const fdw = fw * fs,
-        fdh = fh * fs;
-      ctx.globalAlpha = a;
-      ctx.drawImage(
-        finale,
-        -(fdw - cw * dpr) / 2,
-        -(fdh - ch * dpr) / 2,
-        fdw,
-        fdh,
-      );
-      ctx.globalAlpha = 1;
-    }
   }
 
   // ------------------------------------------------------------------
@@ -340,28 +348,41 @@
   let currentFloat = 0; // smoothed fractional frame actually drawn
   let drawnFrame = -1;
 
-  // The landing frame: the whole house, outpainted to portrait. The
-  // cropped scrub frames ride in on it and the hero settles here, so
-  // the final composition is never cut off.
-  let finale = null,
-    finaleReady = false,
-    progressNow = 0;
-  if (startedPortrait) {
-    finale = new Image();
-    finale.decoding = "async";
-    finale.onload = () => {
-      finaleReady = true;
-      drawnFrame = -1;
-    };
-    finale.src = "assets/hero-mobile-seq/final.jpg";
-  }
-  const BLEND_FROM = 0.78;
+  // No landing still.
+  //
+  // The hero used to dissolve into assets/hero-mobile-seq/final.jpg over the
+  // last fifth of the scroll. That file is the whole house *outpainted* to
+  // portrait — the building sits much smaller inside the frame than it does in
+  // the scrub frames, because a 3:4 crop of a 16:9 source is only 810px wide
+  // while the building itself spans about 1000px, so the wide framing had to be
+  // painted rather than cropped. Cross-fading two different framings of the
+  // same subject reads as the house changing size and shape right at the end,
+  // which is what it was: the camera flew in, then popped back out.
+  //
+  // The sequence now ends where the camera actually lands. One distance, no
+  // dissolve, nothing to mismatch. (final.jpg is still the right single image
+  // for the reduced-motion and failure paths, which show no motion at all.)
+  let progressNow = 0;
   let lastT = performance.now();
   let canvasLive = false;
 
+  // The pinned height, measured from layout rather than the window.
+  //
+  // This used to divide by window.innerHeight, which is the one number on a
+  // phone that changes while you scroll: the address bar collapses, innerHeight
+  // grows by ~60-100px, and the runway silently gets shorter. Progress is
+  // -top/runway, so the same scroll position suddenly mapped to a different
+  // frame and the sequence lurched — every time, on the first scroll of a fresh
+  // load, which is exactly when the bar is still expanded. The sticky child is
+  // sized in svh and holds still, so it is the honest divisor.
+  function pinnedHeight() {
+    if (viewportEl && viewportEl.offsetHeight > 0) return viewportEl.offsetHeight;
+    return window.innerHeight;
+  }
+
   function scrollProgress() {
     const rect = hero.getBoundingClientRect();
-    const runway = hero.offsetHeight - window.innerHeight;
+    const runway = hero.offsetHeight - pinnedHeight();
     if (runway <= 0) return 1;
     const p = -rect.top / runway;
     return Math.min(1, Math.max(0, p));
@@ -376,6 +397,7 @@
   }
 
   function onFrameArrived(i) {
+    growReadyPrefix();
     if (loaderBar) {
       loaderBar.style.width = ((readyCount / N) * 100).toFixed(1) + "%";
     }
@@ -390,8 +412,11 @@
     progressNow = p;
     hero.style.setProperty("--hero-progress", p.toFixed(4));
     targetFloat = frameForProgress(p);
-    // the dissolve tracks scroll continuously, so it repaints every step
-    if (finaleReady && p > BLEND_FROM) drawnFrame = -1;
+    // Hold at the edge of what has actually loaded rather than skipping onto a
+    // distant frame that happens to be ready.
+    if (sequential && readyPrefix >= 0 && targetFloat > readyPrefix) {
+      targetFloat = readyPrefix;
+    }
 
     // Exponential chase: framerate-independent, sub-frame accurate.
     const k = 1 - Math.exp(-CONFIG.smoothing * dt);
@@ -399,7 +424,9 @@
     if (Math.abs(targetFloat - currentFloat) < 0.02) currentFloat = targetFloat;
 
     const want = Math.round(currentFloat);
-    const idx = nearestReady(want);
+    const idx = sequential
+      ? Math.min(readyPrefix, Math.max(0, want)) // -1 while nothing has arrived
+      : nearestReady(want);
 
     if (idx >= 0) {
       if (!canvasLive && firstFrameReady) {

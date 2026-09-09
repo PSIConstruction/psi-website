@@ -2123,7 +2123,14 @@ section[id],
   width: 100%;
   height: auto;
   max-height: 80vh;
-  overflow: visible;
+  /* Clip to the frame.
+     This was overflow: visible, so every element parked outside the viewBox
+     before its stage — the excavator waits 159 units past the right edge, the
+     service runs 137 above the top — was painted onto the page instead of
+     being held offstage. On a wide desktop column it went unnoticed; on a
+     phone it put a stray excavator and a loose ground line in the middle of
+     the section. A frame that does not clip is not a frame. */
+  overflow: hidden;
 }
 
 /* ground */
@@ -2348,15 +2355,21 @@ section[id],
 /* ---------------- mobile: scene on top, copy beneath ---------------- */
 
 @media (max-width: 900px) {
+  /* Centred, not top-aligned.
+     The drawing and the seven steps come to about 440px; pinned to the top of
+     a full-height sticky stage that left roughly a third of a phone screen
+     empty underneath, so the section read as though something below it had
+     failed to load. Centring inside padding that still clears the bar puts the
+     dead space where it belongs — split above and below the content. */
   .ps-stage {
-    align-items: flex-start;
-    padding-top: clamp(76px, 11vh, 104px);
+    align-items: center;
+    padding: clamp(64px, 9vh, 92px) 0 clamp(28px, 5vh, 56px);
     min-height: 0;
   }
   .ps-inner {
     grid-template-columns: 1fr;
     gap: clamp(4px, 1.4vh, 14px);
-    align-content: start;
+    align-content: center;
   }
   .ps-art {
     order: 1;
@@ -2907,26 +2920,57 @@ section[id],
     transform: translateY(-7px) rotate(-45deg);
   }
 
+  /* A menu, not a takeover. This was a fixed full-screen navy panel, which
+     hid the page behind it for the sake of six links. It is now a small card
+     hung under the toggle it belongs to, so the page stays visible and the
+     menu reads as an extension of the bar.
+
+     flex-wrap matters more than it looks: the desktop rule above is a
+     horizontal row with flex-wrap: wrap, and only flex-direction was
+     overridden here. A column that is allowed to wrap starts a SECOND column
+     as soon as the rows outrun the container's height, which is what put the
+     links side by side and cut them off on shorter phones. */
   .nav__links {
-    position: fixed;
-    inset: 0;
+    position: absolute;
+    inset: auto;
+    top: calc(100% - 6px);
+    right: clamp(10px, 3.5vw, 18px);
     z-index: 60;
+    width: min(250px, calc(100vw - 28px));
     display: flex;
     flex-direction: column;
+    flex-wrap: nowrap;
     align-items: stretch;
-    justify-content: center;
+    justify-content: flex-start;
     gap: 0;
-    padding: 96px clamp(22px, 7vw, 40px) 32px;
-    background: var(--navy);
+    padding: 6px;
+    /* it can never be taller than the screen, and scrolls rather than clips
+       if a link is ever added */
+    max-height: min(72vh, calc(100dvh - 88px));
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    background:
+      radial-gradient(
+        260px 180px at 92% -10%,
+        rgba(214, 0, 0, 0.26),
+        transparent 60%
+      ),
+      var(--navy);
     color: #fff;
-    /* the panel is present but inert until opened, so it can animate */
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    box-shadow:
+      0 18px 40px rgba(8, 9, 10, 0.38),
+      0 2px 8px rgba(8, 9, 10, 0.24);
+    /* present but inert until opened, so it can animate */
     opacity: 0;
     visibility: hidden;
-    transform: translateY(-8px);
+    transform: translateY(-6px) scale(0.97);
+    transform-origin: top right;
     transition:
-      opacity 0.28s ease,
-      transform 0.36s cubic-bezier(0.2, 0.8, 0.2, 1),
-      visibility 0s linear 0.3s;
+      opacity 0.18s ease,
+      transform 0.22s cubic-bezier(0.2, 0.8, 0.2, 1),
+      visibility 0s linear 0.2s;
   }
 
   .nav--open .nav__links {
@@ -2936,56 +2980,69 @@ section[id],
     transition-delay: 0s;
   }
 
-  /* each row is a full-width target, not a word */
+  /* Small rows, one under the other. The old 30px display type belonged to a
+     full-screen panel; at menu scale it is a list, and 44px keeps each row a
+     comfortable thumb target without the card growing tall. */
   .nav__links a {
     display: flex;
     align-items: center;
-    min-height: 60px;
-    padding: 4px 2px;
-    font-family: var(--font-display);
-    font-size: clamp(23px, 6.4vw, 30px);
-    font-weight: 700;
-    letter-spacing: -0.01em;
+    min-height: 44px;
+    padding: 0 10px;
+    font-family: var(--font-sans);
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: 0.01em;
     text-transform: none;
+    white-space: nowrap;
     opacity: 1;
     color: #fff;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 6px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.09);
+  }
+
+  .nav__links a:active {
+    background: rgba(255, 255, 255, 0.08);
   }
 
   /* the phone number reads as a number, not another menu item */
   .nav__links a[href^="tel:"] {
-    font-size: 19px;
+    font-size: 13.5px;
+    font-weight: 500;
     letter-spacing: 0.02em;
-    color: rgba(255, 255, 255, 0.8);
-    min-height: 56px;
+    color: rgba(255, 255, 255, 0.78);
+    min-height: 40px;
   }
 
   .nav__links .nav__cta {
     justify-content: center;
-    margin-top: 20px;
-    min-height: 58px;
+    margin-top: 6px;
+    min-height: 42px;
     border: 0;
-    border-radius: 4px;
+    border-bottom: 0;
+    border-radius: 7px;
     background: var(--accent);
     color: #fff;
     font-family: var(--font-sans);
-    font-size: 14px;
+    font-size: 12px;
     font-weight: 700;
-    letter-spacing: 0.14em;
+    letter-spacing: 0.12em;
     text-transform: uppercase;
   }
 
+  /* Still here to catch the tap that dismisses the menu, but no longer
+     dimmed: darkening the whole page was the takeover effect, and a menu this
+     small has no need to hide what is behind it. */
   .nav__scrim {
     position: fixed;
     inset: 0;
     z-index: 55;
-    background: rgba(10, 13, 18, 0.5);
+    background: transparent;
   }
 
-  /* the logo stays legible against the panel behind it */
-  .nav--open .nav__logo--onsolid {
-    opacity: 0;
-  }
+  /* The panel used to cover the bar, so the marks and controls were forced
+     light while it was open. The dropdown sits below the bar and covers
+     nothing, so the bar keeps whatever state its own scroll position gives
+     it — no special-casing. */
 }
 
 @media (max-width: 760px) and (prefers-reduced-motion: reduce) {
@@ -3366,27 +3423,8 @@ section[id],
      left the phone button navy over the dark hero, where it had been white. */
   .nav:not(.nav--solid) .nav__brand,
   .nav:not(.nav--solid) .nav__call,
-  .nav:not(.nav--solid) .nav__toggle,
-  .nav--open .nav__brand,
-  .nav--open .nav__call,
-  .nav--open .nav__toggle {
+  .nav:not(.nav--solid) .nav__toggle {
     color: #fff;
-  }
-
-  .nav--open .nav__call {
-    background: rgba(255, 255, 255, 0.12);
-  }
-
-  /* the panel carries the same red bloom as the site's other navy grounds */
-  .nav__links {
-    background:
-      radial-gradient(
-        520px 340px at 88% -8%,
-        rgba(214, 0, 0, 0.22),
-        transparent 62%
-      ),
-      var(--navy);
-    padding-bottom: calc(32px + env(safe-area-inset-bottom, 0px));
   }
 
   /* rows arrive one after another, settling as the panel lands */
