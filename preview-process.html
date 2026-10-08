@@ -1,0 +1,269 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex, nofollow" />
+    <title>How We Build — scrubber</title>
+    <style>
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        min-height: 100vh;
+        background: #f7f6f2;
+        color: #1d2733;
+        font: 14px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+        display: flex;
+        flex-direction: column;
+      }
+      header {
+        flex: 0 0 auto;
+        background: #fff;
+        border-bottom: 1px solid rgba(29, 39, 51, 0.14);
+        padding: 10px 16px;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+      .row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+      h1 {
+        margin: 0;
+        font-size: 13px;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        font-weight: 700;
+      }
+      button {
+        font: inherit;
+        font-size: 12.5px;
+        padding: 5px 10px;
+        border-radius: 999px;
+        border: 1px solid rgba(29, 39, 51, 0.16);
+        background: #fff;
+        cursor: pointer;
+        color: inherit;
+      }
+      button:hover { border-color: #c8332b; color: #c8332b; }
+      button[aria-pressed="true"] { background: #1d2733; border-color: #1d2733; color: #fff; }
+      .stagebtn { font-size: 11.5px; }
+
+      /* The slider is the main control, so it gets the width. */
+      input[type="range"] { flex: 1 1 320px; min-width: 220px; }
+      .readout {
+        font-variant-numeric: tabular-nums;
+        font-size: 12px;
+        color: #55606c;
+        min-width: 210px;
+      }
+      main {
+        flex: 1 1 auto;
+        min-height: 0;
+        overflow: auto;
+        display: grid;
+        place-items: start center;
+        padding: 16px;
+      }
+      .device {
+        transform-origin: top center;
+        border: 8px solid #14181d;
+        border-radius: 18px;
+        background: #14181d;
+        overflow: hidden;
+        box-shadow: 0 16px 44px rgba(20, 24, 29, 0.26);
+      }
+      iframe { display: block; border: 0; background: #fff; }
+      .hint { font-size: 11.5px; color: #6b7683; }
+    </style>
+  </head>
+  <body>
+    <header>
+      <div class="row">
+        <h1>How We Build — scrubber</h1>
+        <div class="row" id="frames"></div>
+        <div class="row" id="zooms"></div>
+        <button id="reload">Reload</button>
+      </div>
+
+      <div class="row">
+        <button id="play">Play</button>
+        <input id="scrub" type="range" min="0" max="1000" value="0" />
+        <span class="readout" id="readout"></span>
+      </div>
+
+      <div class="row" id="stages"></div>
+
+      <p class="hint">
+        Drives the section directly through its progress function, so every
+        moment can be held still and looked at — no scrolling, and it works even
+        where animation frames are throttled.
+      </p>
+    </header>
+
+    <main>
+      <div class="device" id="device">
+        <iframe id="frame" title="How We Build section"></iframe>
+      </div>
+    </main>
+
+    <script>
+      (function () {
+        var STAGE_NAMES = [
+          "1 Plan & Design",
+          "2 Site Preparation",
+          "3 Foundation",
+          "4 Framing",
+          "5 Exterior & Systems",
+          "6 Interior & Finishes",
+          "7 Final Walkthrough",
+        ];
+        var FRAMES = [
+          { label: "Desktop", w: 1280, h: 800, zoom: 0.62 },
+          { label: "Laptop", w: 1100, h: 720, zoom: 0.7 },
+          { label: "Tablet", w: 820, h: 1100, zoom: 0.55 },
+          { label: "9:16", w: 405, h: 720, zoom: 0.8 },
+        ];
+        var ZOOMS = [0.45, 0.55, 0.7, 0.85, 1];
+
+        var frame = document.getElementById("frame");
+        var device = document.getElementById("device");
+        var scrub = document.getElementById("scrub");
+        var readout = document.getElementById("readout");
+        var playBtn = document.getElementById("play");
+
+        var cfg = FRAMES[0];
+        var zoom = cfg.zoom;
+        var playing = false;
+        var raf = null;
+
+        function api() {
+          try {
+            return frame.contentWindow.__process || null;
+          } catch (e) {
+            return null;
+          }
+        }
+
+        function stageOf(p) {
+          var a = api();
+          if (!a) return null;
+          try { return a.stageAt(p); } catch (e) { return null; }
+        }
+
+        function paint(p) {
+          var a = api();
+          if (!a) return;
+          a.paint(p);
+          var st = stageOf(p);
+          readout.textContent =
+            "progress " + p.toFixed(3) +
+            (st === null ? "" : "  ·  stage " + STAGE_NAMES[st]);
+          document.querySelectorAll("#stages button").forEach(function (b) {
+            b.setAttribute("aria-pressed", String(Number(b.dataset.stage) === st));
+          });
+        }
+
+        scrub.addEventListener("input", function () {
+          stop();
+          paint(Number(scrub.value) / 1000);
+        });
+
+        function step() {
+          var v = Number(scrub.value) + 2.2; // ~7s for the full build
+          if (v > 1000) v = 0;
+          scrub.value = String(v);
+          paint(v / 1000);
+          raf = requestAnimationFrame(step);
+        }
+        function start() {
+          if (playing) return;
+          playing = true;
+          playBtn.textContent = "Pause";
+          playBtn.setAttribute("aria-pressed", "true");
+          raf = requestAnimationFrame(step);
+        }
+        function stop() {
+          playing = false;
+          playBtn.textContent = "Play";
+          playBtn.setAttribute("aria-pressed", "false");
+          if (raf) cancelAnimationFrame(raf);
+          raf = null;
+        }
+        playBtn.addEventListener("click", function () {
+          playing ? stop() : start();
+        });
+
+        STAGE_NAMES.forEach(function (name, i) {
+          var b = document.createElement("button");
+          b.className = "stagebtn";
+          b.textContent = name;
+          b.dataset.stage = String(i);
+          b.addEventListener("click", function () {
+            stop();
+            var a = api();
+            if (!a) return;
+            var S = a.stages;
+            // Land just inside the stage so its own motion is mid-flight
+            // rather than already settled.
+            var p = S[i] + (S[i + 1] - S[i]) * 0.65;
+            scrub.value = String(Math.round(p * 1000));
+            paint(p);
+          });
+          document.getElementById("stages").appendChild(b);
+        });
+
+        FRAMES.forEach(function (f) {
+          var b = document.createElement("button");
+          b.textContent = f.label;
+          b.addEventListener("click", function () {
+            cfg = f;
+            zoom = f.zoom;
+            applyFrame();
+            load();
+          });
+          document.getElementById("frames").appendChild(b);
+        });
+
+        ZOOMS.forEach(function (z) {
+          var b = document.createElement("button");
+          b.textContent = Math.round(z * 100) + "%";
+          b.addEventListener("click", function () {
+            zoom = z;
+            applyFrame();
+          });
+          document.getElementById("zooms").appendChild(b);
+        });
+
+        function applyFrame() {
+          frame.style.width = cfg.w + "px";
+          frame.style.height = cfg.h + "px";
+          device.style.transform = "scale(" + zoom + ")";
+          device.parentElement.style.minHeight =
+            Math.round((cfg.h + 16) * zoom) + 24 + "px";
+        }
+
+        function load() {
+          stop();
+          frame.src = "index.html?psScrub=" + Date.now();
+          frame.onload = function () {
+            // Park the section in view, then hold it: paint() is independent of
+            // scroll, but the runway has to be on screen to be seen at all.
+            try {
+              var d = frame.contentDocument;
+              var w = frame.contentWindow;
+              var runway = d.getElementById("psRunway");
+              if (runway) w.scrollTo(0, runway.offsetTop + 2);
+            } catch (e) {}
+            setTimeout(function () {
+              paint(Number(scrub.value) / 1000);
+            }, 350);
+          };
+        }
+
+        document.getElementById("reload").addEventListener("click", load);
+
+        applyFrame();
+        load();
+      })();
+    </script>
+  </body>
+</html>

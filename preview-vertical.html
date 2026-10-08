@@ -1,0 +1,235 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex, nofollow" />
+    <title>Vertical preview — PSI Construction</title>
+    <style>
+      :root {
+        --ink: #1d2733;
+        --paper: #f7f6f2;
+        --hair: rgba(29, 39, 51, 0.14);
+        --accent: #c8332b;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        min-height: 100vh;
+        background: var(--paper);
+        color: var(--ink);
+        font: 14px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+        display: flex;
+        flex-direction: column;
+      }
+
+      header {
+        flex: 0 0 auto;
+        display: flex;
+        align-items: center;
+        gap: 18px;
+        flex-wrap: wrap;
+        padding: 12px 18px;
+        background: #fff;
+        border-bottom: 1px solid var(--hair);
+      }
+      h1 {
+        margin: 0;
+        font-size: 14px;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        font-weight: 700;
+      }
+      .note { color: #667; font-size: 12px; }
+
+      .group { display: flex; align-items: center; gap: 6px; }
+      .group > span {
+        font-size: 10.5px;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        color: #78838f;
+        margin-right: 2px;
+      }
+      button {
+        font: inherit;
+        font-size: 12.5px;
+        padding: 5px 11px;
+        border-radius: 999px;
+        border: 1px solid var(--hair);
+        background: #fff;
+        color: var(--ink);
+        cursor: pointer;
+      }
+      button:hover { border-color: var(--accent); color: var(--accent); }
+      button[aria-pressed="true"] {
+        background: var(--ink);
+        border-color: var(--ink);
+        color: #fff;
+      }
+
+      /* The stage centres the phone and lets it scroll if the browser window
+         is shorter than the frame we are emulating. */
+      main {
+        flex: 1 1 auto;
+        min-height: 0;
+        overflow: auto;
+        display: grid;
+        place-items: start center;
+        padding: 22px;
+      }
+
+      /* The frame is sized in real CSS pixels so the page inside sees exactly
+         the viewport we claim — media queries and (orientation: portrait)
+         resolve against the iframe, not the laptop. Scaling is applied as a
+         transform afterwards, which changes how big it looks without lying to
+         the page about its width. */
+      .device {
+        transform-origin: top center;
+        border-radius: 34px;
+        border: 9px solid #14181d;
+        background: #14181d;
+        box-shadow: 0 20px 60px rgba(20, 24, 29, 0.28);
+        overflow: hidden;
+      }
+      iframe {
+        display: block;
+        border: 0;
+        background: #000;
+      }
+      .readout {
+        margin: 10px 0 0;
+        text-align: center;
+        font-size: 12px;
+        color: #6b7683;
+        font-variant-numeric: tabular-nums;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>Vertical preview</h1>
+
+      <div class="group" id="sizes">
+        <span>Frame</span>
+      </div>
+
+      <div class="group" id="zooms">
+        <span>Zoom</span>
+      </div>
+
+      <div class="group">
+        <button id="reload" title="Reload the framed page">Reload</button>
+        <button id="openRaw" title="Open the page on its own">Open direct</button>
+      </div>
+
+      <p class="note">
+        Local preview harness — not part of the site. The page inside sees a real
+        portrait viewport, so the phone hero sequence runs here.
+      </p>
+    </header>
+
+    <main>
+      <div>
+        <div class="device" id="device">
+          <iframe id="frame" title="PSI Construction homepage in a portrait viewport"></iframe>
+        </div>
+        <p class="readout" id="readout"></p>
+      </div>
+    </main>
+
+    <script>
+      (function () {
+        var TARGET = "index.html";
+
+        // 9:16 first, since that is the ratio actually asked for, then a few
+        // real handsets whose aspect is close but not identical — worth having
+        // because "looks right at 9:16" and "looks right on an iPhone" are not
+        // the same test.
+        var SIZES = [
+          { label: "9:16", w: 405, h: 720 },
+          { label: "9:16 tall", w: 450, h: 800 },
+          { label: "iPhone 15", w: 393, h: 852 },
+          { label: "iPhone SE", w: 375, h: 667 },
+          { label: "Pixel 8", w: 412, h: 915 },
+        ];
+        var ZOOMS = [0.6, 0.75, 0.9, 1];
+
+        var frame = document.getElementById("frame");
+        var device = document.getElementById("device");
+        var readout = document.getElementById("readout");
+
+        var size = SIZES[0];
+        var zoom = 0.75;
+
+        function apply() {
+          frame.style.width = size.w + "px";
+          frame.style.height = size.h + "px";
+          device.style.transform = "scale(" + zoom + ")";
+          // The scaled frame still occupies its unscaled height in layout, so
+          // reserve the visual height to keep the readout from overlapping.
+          device.parentElement.style.height =
+            Math.round((size.h + 18) * zoom) + 40 + "px";
+
+          var ratio = (size.w / size.h).toFixed(4);
+          var nine16 = (9 / 16).toFixed(4);
+          readout.textContent =
+            size.w +
+            " × " +
+            size.h +
+            " CSS px · aspect " +
+            ratio +
+            (ratio === nine16 ? " (exactly 9:16)" : " (9:16 is " + nine16 + ")") +
+            " · shown at " +
+            Math.round(zoom * 100) +
+            "%";
+
+          document.querySelectorAll("#sizes button").forEach(function (b) {
+            b.setAttribute("aria-pressed", String(b.dataset.label === size.label));
+          });
+          document.querySelectorAll("#zooms button").forEach(function (b) {
+            b.setAttribute("aria-pressed", String(Number(b.dataset.zoom) === zoom));
+          });
+        }
+
+        SIZES.forEach(function (s) {
+          var b = document.createElement("button");
+          b.textContent = s.label;
+          b.dataset.label = s.label;
+          b.addEventListener("click", function () {
+            size = s;
+            apply();
+            // Re-point the iframe so the page boots fresh at the new size:
+            // the hero picks its frame set once, at load, from the viewport it
+            // finds. Resizing a live iframe would cross the orientation
+            // boundary rather than re-choose.
+            load();
+          });
+          document.getElementById("sizes").appendChild(b);
+        });
+
+        ZOOMS.forEach(function (z) {
+          var b = document.createElement("button");
+          b.textContent = Math.round(z * 100) + "%";
+          b.dataset.zoom = String(z);
+          b.addEventListener("click", function () {
+            zoom = z;
+            apply();
+          });
+          document.getElementById("zooms").appendChild(b);
+        });
+
+        function load() {
+          frame.src = TARGET + "?vpreview=" + Date.now();
+        }
+
+        document.getElementById("reload").addEventListener("click", load);
+        document.getElementById("openRaw").addEventListener("click", function () {
+          window.open(TARGET, "_blank");
+        });
+
+        apply();
+        load();
+      })();
+    </script>
+  </body>
+</html>

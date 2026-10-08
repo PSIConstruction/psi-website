@@ -111,6 +111,7 @@
   add(".ps-foot", 0.01, 0.07, null);
   add(".stake", 0.03, 0.1, pop, 0.6);
   add(".ps-string", 0.07, 0.12, null);
+  add(".stake__flag", 0.09, 0.135, pop, 0.7);
   add(".ps-elev", 0.05, 0.14, null);
 
   /* ---------- 02 site preparation ---------- */
@@ -153,6 +154,22 @@
   });
 
   // the hole deepens with each scoop rather than sliding open
+  // Rollers, sprockets and hubs were drawn and never turned, so the machine
+  // slid across the lot like a sticker. Rotating them on the same range as the
+  // dig is a small thing that makes it read as a machine doing work.
+  add(".exc-sprocket", 0.15, 0.31, (el, t) => {
+    el.style.transformOrigin = "center";
+    el.style.transform = `rotate(${t * 900}deg)`;
+  });
+  add(".exc-roller", 0.15, 0.31, (el, t) => {
+    el.style.transformOrigin = "center";
+    el.style.transform = `rotate(${t * 1200}deg)`;
+  });
+  add(".exc-hub", 0.15, 0.31, (el, t) => {
+    el.style.transformOrigin = "center";
+    el.style.transform = `rotate(${t * 900}deg)`;
+  });
+
   add(".ps-pit", 0.17, 0.3, (el, t) => {
     el.style.opacity = 1;
     el.style.transform = `scaleY(${kf(t, [
@@ -182,6 +199,12 @@
   add(".ps-string", 0.22, 0.28, (el, t) => (el.style.opacity = 1 - t), 0, true);
 
   /* ---------- 03 foundation ---------- */
+  // Forms go up before anything is poured and come off once it has set. The
+  // panels existed in the drawing and never appeared, which left the middle
+  // of the foundation stage almost motionless.
+  add(".fdn__panels", 0.3, 0.345, fade);
+  add(".fdn__panels", 0.415, 0.45, (el, t) => (el.style.opacity = 1 - t), 0, true);
+
   add(".fdn__ftg", 0.29, 0.34, grow);
   add(".fdn__p", 0.33, 0.43, grow, 0.7); // walls go up off the footing
   add(".fdn__slab", 0.4, 0.44, fade);
@@ -197,13 +220,34 @@
   );
 
   /* ---------- 04 framing ---------- */
-  add(".fl1", 0.44, 0.47, rise(14));
-  add(".s1 .stud", 0.46, 0.5, grow, 0.8);
-  add(".fl2", 0.5, 0.525, rise(14));
-  add(".s2 .stud", 0.515, 0.555, grow, 0.8);
-  add(".fl3", 0.552, 0.575, rise(14));
-  add(".s3 .stud", 0.565, 0.6, grow, 0.8);
-  add(".sw .stud", 0.5, 0.56, grow, 0.7);
+  // A floor is a rim board, then joists laid one at a time, then the deck,
+  // then the studs stand on it. All 48 joists were already drawn and none of
+  // them moved, so a storey used to arrive as a single slab — which is the
+  // part that read as too easy. Laying them in is where the framing gets its
+  // texture, and the heavy spread is what makes them read as placed rather
+  // than switched on.
+  // Framing has to finish about where the ridge beam lands (0.59-0.625), or
+  // the copy beside it reads "Exterior & Systems" while a storey is still
+  // going up. Floors one and two get the fullest treatment; the third is
+  // tighter by necessity and hands straight over to the roof.
+  add(".fl1__rim", 0.432, 0.444, grow);
+  add(".fl1__j", 0.438, 0.478, grow, 0.9);
+  add(".fl1", 0.474, 0.489, rise(14));
+  add(".s1 .stud", 0.483, 0.512, grow, 0.86);
+
+  add(".fl2__rim", 0.508, 0.519, grow);
+  add(".fl2__j", 0.514, 0.552, grow, 0.9);
+  add(".fl2", 0.548, 0.561, rise(14));
+  add(".s2 .stud", 0.556, 0.582, grow, 0.86);
+
+  add(".fl3__rim", 0.578, 0.587, grow);
+  add(".fl3__j", 0.582, 0.606, grow, 0.9);
+  add(".fl3", 0.602, 0.611, rise(14));
+  add(".s3 .stud", 0.606, 0.618, grow, 0.86);
+
+  // The rear wall rises alongside the storeys rather than waiting for them,
+  // the way a crew works more than one elevation at once.
+  add(".sw .stud", 0.5, 0.6, grow, 0.84);
   add(".ps-beam:not(.wing)", 0.59, 0.625, drop(52)); // ridge beam lands
   add(".ps-beam.wing", 0.6, 0.635, drop(34));
 
@@ -249,8 +293,17 @@
     0,
     true,
   );
-  add(".ps-batt", 0.77, 0.84, fade);
-  add(".ps-batt", 0.85, 0.9, (el, t) => (el.style.opacity = 1 - t), 0, true);
+  // Measured across the whole sweep, this stage had one or two elements moving
+  // at a time — insulation faded in and straight back out and nothing else
+  // happened, so "Interior & Finishes" was the emptiest part of the build.
+  // Insulation goes in, board covers it, then the things you actually touch.
+  add(".ps-batt", 0.762, 0.815, fade, 0.5);
+  add(".ps-batt", 0.83, 0.862, (el, t) => (el.style.opacity = 1 - t), 0, true);
+  add(".ps-reveal", 0.828, 0.868, fade);
+  add(".door", 0.845, 0.876, rise(10));
+  add(".knob", 0.872, 0.886, pop);
+  add(".ps-crown", 0.856, 0.882, fade);
+  add(".ps-lamp", 0.874, 0.895, pop);
 
   /* ---------- 07 handover ---------- */
   add(".ps-walk", 0.88, 0.92, fade);
@@ -317,7 +370,11 @@
       return;
     }
     const w = vpW();
-    const per = w >= 900 ? 0.48 : w >= 600 ? 0.42 : 0.36; // less scroll on a phone
+    // Scroll distance per stage. Raised from 0.48/0.42/0.36: with joists,
+    // formwork and the interior sequence now in the build there is far more to
+    // see, and at the old pacing a single flick crossed a whole stage before
+    // any of it registered.
+    const per = w >= 900 ? 0.62 : w >= 600 ? 0.54 : 0.46;
     runway.style.height = Math.round(vpH() * (1 + 7 * per)) + "px";
     render(true);
   };
@@ -368,6 +425,30 @@
         behavior: "smooth",
       });
     });
+  });
+
+  // Introspection hook. The build is a pure function of progress, so any
+  // moment of it can be drawn on demand — which is the only practical way to
+  // review the choreography without scrubbing a long runway by hand, and the
+  // only way to inspect it at all where rAF is throttled.
+  Object.defineProperty(window, "__process", {
+    value: {
+      paint(p) {
+        paint(cl(Number(p) || 0));
+      },
+      get stages() {
+        return S.slice();
+      },
+      get pinned() {
+        return pinned;
+      },
+      stageAt(p) {
+        for (let i = 0; i < S.length - 1; i++) {
+          if (p >= S[i] && p < S[i + 1]) return i;
+        }
+        return S.length - 2;
+      },
+    },
   });
 
   window.addEventListener("scroll", onScroll, { passive: true });

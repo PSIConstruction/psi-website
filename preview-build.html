@@ -1,0 +1,830 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex, nofollow" />
+    <title>How We Build — full rebuild</title>
+    <style>
+      * { box-sizing: border-box; }
+      body {
+        margin: 0; min-height: 100vh; display: flex; flex-direction: column;
+        background: #eceae5; color: #1d2733;
+        font: 13.5px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+      }
+      header {
+        flex: 0 0 auto; background: #fff; border-bottom: 1px solid rgba(29,39,51,.14);
+        padding: 9px 14px; display: flex; flex-direction: column; gap: 6px;
+      }
+      .row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+      h1 { margin: 0; font-size: 12px; letter-spacing: .14em; text-transform: uppercase; font-weight: 700; }
+      button {
+        font: inherit; font-size: 11.5px; padding: 3px 8px; border-radius: 999px;
+        border: 1px solid rgba(29,39,51,.18); background: #fff; color: inherit; cursor: pointer;
+      }
+      button:hover { border-color: #c8332b; color: #c8332b; }
+      button[aria-pressed="true"] { background: #1d2733; border-color: #1d2733; color: #fff; }
+      input[type=range] { flex: 1 1 320px; min-width: 180px; }
+      .readout { font-variant-numeric: tabular-nums; font-size: 11.5px; color: #55606c; min-width: 300px; }
+      .hint { font-size: 11.5px; color: #6b7683; margin: 0; }
+      main { flex: 1 1 auto; min-height: 0; overflow: auto; display: grid; place-items: center; padding: 14px; }
+      .frame {
+        background: #fff; border: 1px solid rgba(29,39,51,.14); border-radius: 10px;
+        overflow: hidden; box-shadow: 0 10px 30px rgba(20,24,29,.10);
+      }
+      svg { display: block; }
+    </style>
+  </head>
+  <body>
+    <header>
+      <div class="row">
+        <h1>How We Build — full rebuild</h1>
+        <button id="play">Play</button>
+        <input id="scrub" type="range" min="0" max="1000" value="0" />
+        <span class="readout" id="readout"></span>
+      </div>
+      <div class="row" id="beats"></div>
+      <div class="row" id="frames"></div>
+      <p class="hint">
+        One isometric world, generated in code, with a camera that pans, pushes
+        in and cuts away the near walls to get inside. Drag to hold any moment.
+      </p>
+    </header>
+    <main><div class="frame" id="frame"><svg id="scene"></svg></div></main>
+
+    <script>
+      (function () {
+        "use strict";
+
+        /* ==========================================================
+           1. PROJECTION
+           World is in feet. x runs along the front of the house, y runs
+           back into the lot, z is up. The nearest corner is the one with
+           the largest (x + y), which is also the painter's-order rule:
+           anything with a bigger (x + y) is drawn later.
+           ========================================================== */
+        var COS30 = Math.cos(Math.PI / 6), U = 7.2;
+        function px(x, y, z) { return [(x - y) * COS30 * U, ((x + y) * 0.5 - (z || 0)) * U]; }
+        function pt(x, y, z) { var p = px(x, y, z); return p[0] + "," + p[1]; }
+
+        var NS = "http://www.w3.org/2000/svg";
+        function mk(tag, a, p) {
+          var e = document.createElementNS(NS, tag);
+          if (a) for (var k in a) if (a[k] != null) e.setAttribute(k, a[k]);
+          if (p) p.appendChild(e);
+          return e;
+        }
+        function grp(a, p) { return mk("g", a, p); }
+
+        /* Three visible faces, consistently lit. That lighting is most of
+           what makes a flat polygon read as a solid. */
+        function box(parent, x, y, z, dx, dy, dz, c, cls) {
+          var g = grp({ class: cls || null }, parent);
+          mk("polygon", { points: [pt(x + dx, y, z), pt(x + dx, y + dy, z), pt(x + dx, y + dy, z + dz), pt(x + dx, y, z + dz)].join(" "), fill: c.r }, g);
+          mk("polygon", { points: [pt(x, y + dy, z), pt(x + dx, y + dy, z), pt(x + dx, y + dy, z + dz), pt(x, y + dy, z + dz)].join(" "), fill: c.l }, g);
+          mk("polygon", { points: [pt(x, y, z + dz), pt(x + dx, y, z + dz), pt(x + dx, y + dy, z + dz), pt(x, y + dy, z + dz)].join(" "), fill: c.t }, g);
+          g.__d = x + y;                       // depth key: bigger is nearer
+          g.__z = z;                           // tie-break for stacked boxes
+          return g;
+        }
+        function quad(parent, a, b, c, d, fill, cls) {
+          return mk("polygon", { points: [a, b, c, d].join(" "), fill: fill, class: cls || null }, parent);
+        }
+        function shade(hex, f) {              // simple multiply, for face variants
+          var n = parseInt(hex.slice(1), 16);
+          var r = Math.round(((n >> 16) & 255) * f), g = Math.round(((n >> 8) & 255) * f), b = Math.round((n & 255) * f);
+          return "#" + ((1 << 24) + (Math.min(255, r) << 16) + (Math.min(255, g) << 8) + Math.min(255, b)).toString(16).slice(1);
+        }
+        function mat(hex) { return { t: hex, l: shade(hex, .88), r: shade(hex, .74) }; }
+
+        var C = {
+          grass: mat("#cfd6c4"), dirt: mat("#a08a6f"), pit: mat("#6d5a44"),
+          steel: mat("#d3d8dd"), red: mat("#d94a3f"), ink: mat("#39424e"),
+          wood: mat("#e2cfa8"), lumber: mat("#e8d5ac"), cmu: mat("#c9c7c0"),
+          conc: mat("#cfcdc6"), sheath: mat("#d8c294"), stucco: mat("#efeee9"),
+          gyp: mat("#f2f2ef"), batt: mat("#e7b9a8"), tile: mat("#dcdad3"),
+          copper: mat("#c98a5b"), roof: mat("#4a5360")
+        };
+
+        var scene = document.getElementById("scene"), world = grp({ id: "world" }, scene);
+
+        /* ==========================================================
+           2. THE HOUSE, AS DATA
+           Every later scene is derived from this: block courses, joists,
+           studs with their kings and jacks, sheathing, windows, drywall.
+           Change the footprint and all of it follows.
+           ========================================================== */
+        var FP = { x0: 0, y0: 0, x1: 40, y1: 28 };
+        var FH = 10, FLOORS = 3, WT = 1;              // floor height, storeys, wall thickness
+        var Z = [0, FH, FH * 2, FH * 3];              // slab top, then each floor level
+        var FDN_TOP = 0, FDN_BOT = -8, FTG = -9;
+
+        // Openings, per storey, on the two walls the camera can see.
+        function frontOpenings(fl) {
+          var o = [];
+          [7, 20, 33].forEach(function (cx) {
+            if (fl === 0 && cx === 20) o.push({ a: 18, b: 22, sill: 0, head: 7.6, door: true });
+            else o.push({ a: cx - 2.5, b: cx + 2.5, sill: 3.4, head: 8.0 });
+          });
+          return o;
+        }
+        function rightOpenings() { return [{ a: 7, b: 11, sill: 3.4, head: 8.0 }, { a: 18, b: 22, sill: 3.4, head: 8.0 }]; }
+
+        // axis 'x' runs along x at y = at; axis 'y' runs along y at x = at.
+        var WALLS = [
+          { id: "front", axis: "x", at: FP.y1 - WT, from: FP.x0, to: FP.x1, near: true, op: frontOpenings },
+          { id: "right", axis: "y", at: FP.x1 - WT, from: FP.y0, to: FP.y1, near: true, op: rightOpenings },
+          { id: "back", axis: "x", at: FP.y0, from: FP.x0, to: FP.x1, near: false, op: function () { return []; } },
+          { id: "left", axis: "y", at: FP.x0, from: FP.y0, to: FP.y1, near: false, op: function () { return []; } }
+        ];
+        function place(w, pos, z, len, thick, h) {
+          return w.axis === "x" ? [pos, w.at, z, len, thick, h] : [w.at, pos, z, thick, len, h];
+        }
+
+        /* ==========================================================
+           3. BUILDING THE SCENE, far to near
+           ========================================================== */
+        var L = {};                                   // layer groups
+        ["ground", "pit", "footing", "cmu", "slab", "floorsys", "framing",
+         "interior", "sheath", "stucco", "windows", "roof", "site", "figures"]
+          .forEach(function (n) { L[n] = grp({ id: "L-" + n }, world); });
+
+        /* ---------- ground ---------- */
+        var LOT = { x0: -18, y0: -14, x1: 66, y1: 50 };
+        quad(L.ground, pt(LOT.x0, LOT.y0, 0), pt(LOT.x1, LOT.y0, 0), pt(LOT.x1, LOT.y1, 0), pt(LOT.x0, LOT.y1, 0), C.grass.t);
+        var gridG = grp({ stroke: "rgba(29,39,51,.06)", "stroke-width": ".8", fill: "none" }, L.ground);
+        for (var gx = LOT.x0; gx <= LOT.x1; gx += 8) mk("line", { x1: px(gx, LOT.y0, 0)[0], y1: px(gx, LOT.y0, 0)[1], x2: px(gx, LOT.y1, 0)[0], y2: px(gx, LOT.y1, 0)[1] }, gridG);
+        for (var gy = LOT.y0; gy <= LOT.y1; gy += 8) mk("line", { x1: px(LOT.x0, gy, 0)[0], y1: px(LOT.x0, gy, 0)[1], x2: px(LOT.x1, gy, 0)[0], y2: px(LOT.x1, gy, 0)[1] }, gridG);
+        quad(L.ground, pt(LOT.x0, 44, 0), pt(LOT.x1, 44, 0), pt(LOT.x1, 50, 0), pt(LOT.x0, 50, 0), "#b7babc");   // road, near side
+        var walkG = quad(L.ground, pt(17, FP.y1, .02), pt(23, FP.y1, .02), pt(23, 44, .02), pt(17, 44, .02), "#cfcdc6");
+        walkG.style.opacity = 0;
+
+        /* A soft ground shadow. The single cheapest thing that stops a
+           building looking pasted onto the grass. */
+        var aoDefs = mk("defs", null, scene);
+        var rg = mk("radialGradient", { id: "aoGrad", cx: "50%", cy: "50%", r: "50%" }, aoDefs);
+        mk("stop", { offset: "0%", "stop-color": "rgba(29,39,51,.30)" }, rg);
+        mk("stop", { offset: "62%", "stop-color": "rgba(29,39,51,.16)" }, rg);
+        mk("stop", { offset: "100%", "stop-color": "rgba(29,39,51,0)" }, rg);
+        var aoC = px((FP.x0 + FP.x1) / 2, (FP.y0 + FP.y1) / 2, 0);
+        var ao = mk("ellipse", {
+          cx: aoC[0], cy: aoC[1] + 6, rx: (FP.x1 - FP.x0) * U * 0.62, ry: (FP.y1 - FP.y0) * U * 0.34,
+          fill: "url(#aoGrad)"
+        }, L.ground);
+        ao.style.opacity = 0;
+
+        /* ---------- layout: batter boards, strings, flags ---------- */
+        var layout = grp({}, L.site), stakes = [], strings = [];
+        var CORN = [[FP.x0, FP.y0], [FP.x1, FP.y0], [FP.x1, FP.y1], [FP.x0, FP.y1]];
+        CORN.forEach(function (c) {
+          var g = grp({}, layout);
+          var ox = c[0] === FP.x0 ? -3.5 : 3.5, oy = c[1] === FP.y0 ? -3.5 : 3.5;
+          box(g, c[0] + ox - .2, c[1] - .2, 0, .4, .4, 3.6, C.wood);
+          box(g, c[0] - .2, c[1] + oy - .2, 0, .4, .4, 3.6, C.wood);
+          box(g, c[0] + Math.min(ox, 0) - .2, c[1] + Math.min(oy, 0) - .2, 3.3, Math.abs(ox) + .4, .5, .25, C.wood);
+          var fp = px(c[0] + ox, c[1], 3.7);
+          mk("polygon", { points: [fp[0] + "," + fp[1], (fp[0] + 9) + "," + (fp[1] + 3), fp[0] + "," + (fp[1] + 6)].join(" "), fill: "#d94a3f" }, g);
+          stakes.push(g);
+        });
+        for (var si = 0; si < 4; si++) {
+          var a = CORN[si], b = CORN[(si + 1) % 4], pa = px(a[0], a[1], 3.4), pb = px(b[0], b[1], 3.4);
+          var ln = mk("line", { x1: pa[0], y1: pa[1], x2: pb[0], y2: pb[1], stroke: "#d94a3f", "stroke-width": 1.3 }, layout);
+          var len = Math.hypot(pb[0] - pa[0], pb[1] - pa[1]);
+          ln.style.strokeDasharray = len + " " + len;
+          strings.push({ el: ln, len: len });
+        }
+
+        /* ---------- site work, revealed at handover ---------- */
+        var site2 = grp({}, L.ground);
+        var drive = quad(site2, pt(FP.x1 + 1, 30, .02), pt(FP.x1 + 13, 30, .02), pt(FP.x1 + 13, 44, .02), pt(FP.x1 + 1, 44, .02), "#c2c0ba");
+        var shrubs = [];
+        [[3, 30], [9, 30.5], [15, 30], [26, 30.5], [32, 30], [38, 30.5], [41.5, 22], [41.5, 12]].forEach(function (s) {
+          var g = grp({}, site2);
+          var c = px(s[0], s[1], 0);
+          mk("ellipse", { cx: c[0], cy: c[1], rx: 6, ry: 3, fill: "rgba(29,39,51,.13)" }, g);
+          mk("ellipse", { cx: c[0], cy: c[1] - 7, rx: 5.4, ry: 6.4, fill: "#8ea183" }, g);
+          mk("ellipse", { cx: c[0] - 1.6, cy: c[1] - 9, rx: 3.2, ry: 3.6, fill: "#9fb094" }, g);
+          g.style.opacity = 0;
+          shrubs.push(g);
+        });
+        site2.style.opacity = 1;
+        drive.style.opacity = 0;
+
+        /* ---------- the excavation ---------- */
+        var PIT = { x0: -1, y0: -1, x1: 41, y1: 29, d: 9 };
+        var pitG = grp({}, L.pit);
+        var pitFloor = quad(pitG, pt(PIT.x0, PIT.y0, -PIT.d), pt(PIT.x1, PIT.y0, -PIT.d), pt(PIT.x1, PIT.y1, -PIT.d), pt(PIT.x0, PIT.y1, -PIT.d), C.pit.t);
+        var pitWallN = quad(pitG, pt(PIT.x0, PIT.y1, 0), pt(PIT.x1, PIT.y1, 0), pt(PIT.x1, PIT.y1, -PIT.d), pt(PIT.x0, PIT.y1, -PIT.d), C.pit.l);
+        var pitWallE = quad(pitG, pt(PIT.x1, PIT.y0, 0), pt(PIT.x1, PIT.y1, 0), pt(PIT.x1, PIT.y1, -PIT.d), pt(PIT.x1, PIT.y0, -PIT.d), C.pit.r);
+
+        /* ---------- footing and block courses ---------- */
+        var footG = grp({}, L.footing), footings = [];
+        WALLS.forEach(function (w) {
+          var f = box(footG, place(w, w.from, FTG, w.to - w.from, WT + 1.4, 1)[0],
+                            place(w, w.from, FTG, w.to - w.from, WT + 1.4, 1)[1], FTG,
+                            place(w, w.from, FTG, w.to - w.from, WT + 1.4, 1)[3],
+                            place(w, w.from, FTG, w.to - w.from, WT + 1.4, 1)[4], 1, C.conc);
+          footings.push(f);
+        });
+
+        var BLK = { len: 2, h: 1.333 }, COURSES = 6, blocks = [];
+        WALLS.forEach(function (w) {
+          for (var c = 0; c < COURSES; c++) {
+            var z = FDN_BOT + c * BLK.h;
+            var stagger = (c % 2) * (BLK.len / 2);
+            for (var s = w.from + stagger; s < w.to - .2; s += BLK.len) {
+              var ln = Math.min(BLK.len - .12, w.to - s - .12);
+              if (ln < .5) continue;
+              var d = place(w, s, z, ln, WT, BLK.h - .1);
+              var g = box(L.cmu, d[0], d[1], d[2], d[3], d[4], d[5], C.cmu, "blk");
+              blocks.push({ el: g, course: c, s: s, near: w.near, key: c * 1000 + s });
+            }
+          }
+        });
+        blocks.sort(function (a, b) { return a.key - b.key; });
+
+        var slab = box(L.slab, FP.x0 + WT, FP.y0 + WT, -0.5, FP.x1 - FP.x0 - WT * 2, FP.y1 - FP.y0 - WT * 2, .5, C.conc);
+        var backfill = [];
+        WALLS.forEach(function (w) {
+          var d = place(w, w.from, FDN_BOT, w.to - w.from, 2.6, 8);
+          backfill.push(box(L.slab, w.axis === "x" ? d[0] : (w.near ? d[0] + WT : d[0] - 1.6),
+                            w.axis === "x" ? (w.near ? d[1] + WT : d[1] - 1.6) : d[1],
+                            FDN_BOT, d[3], d[4], 8, C.dirt));
+        });
+
+        /* ---------- floor systems: rim + joists, per storey ---------- */
+        var floorsys = [];
+        for (var fl = 0; fl < FLOORS; fl++) {
+          var z = Z[fl], g = grp({ class: "flsys" }, L.floorsys), joists = [];
+          box(g, FP.x0 + WT, FP.y0 + WT, z - .9, FP.x1 - WT * 2, .8, .9, C.lumber);
+          box(g, FP.x0 + WT, FP.y1 - WT - .8, z - .9, FP.x1 - WT * 2, .8, .9, C.lumber);
+          for (var jx = FP.x0 + WT + 1; jx < FP.x1 - WT - 1; jx += 1.333) {
+            joists.push(box(g, jx, FP.y0 + WT + .8, z - .85, .25, FP.y1 - FP.y0 - WT * 2 - 1.6, .8, C.lumber, "joist"));
+          }
+          var deck = box(g, FP.x0 + WT, FP.y0 + WT, z - .06, FP.x1 - WT * 2, FP.y1 - FP.y0 - WT * 2, .12, C.sheath);
+          floorsys.push({ g: g, joists: joists, deck: deck, z: z });
+        }
+
+        /* ---------- wall framing, with real openings ----------
+           A stud layout that knows about openings: kings either side, jacks
+           inside them carrying a doubled header, a sill and cripples below.
+           This is the detail that makes the shell read as the finished
+           house rather than a grid of sticks. */
+        function studLayout(run0, run1, ops) {
+          var out = [], OC = 1.333;
+          ops.forEach(function (o) {
+            out.push({ pos: o.a - 0.6, role: "king", op: o });
+            out.push({ pos: o.a - 0.3, role: "jack", op: o });
+            out.push({ pos: o.b + 0.3, role: "jack", op: o });
+            out.push({ pos: o.b + 0.6, role: "king", op: o });
+          });
+          for (var s = run0; s <= run1 - .3; s += OC) {
+            var inside = ops.some(function (o) { return s > o.a - 1.0 && s < o.b + 1.0; });
+            if (!inside) out.push({ pos: s, role: "stud" });
+            else {
+              // cripples above the header and below the sill keep the 16" rhythm
+              var o = ops.find(function (o) { return s > o.a - 1.0 && s < o.b + 1.0; });
+              if (o && s > o.a && s < o.b) {
+                out.push({ pos: s, role: "cripple-top", op: o });
+                if (!o.door) out.push({ pos: s, role: "cripple-bot", op: o });
+              }
+            }
+          }
+          return out;
+        }
+
+        var framing = [];
+        WALLS.forEach(function (w) {
+          for (var fl = 0; fl < FLOORS; fl++) {
+            var z = Z[fl], ops = w.op(fl), g = grp({ class: "wall wall-" + w.id }, L.framing), parts = [];
+            // plates
+            var dp = place(w, w.from, z, w.to - w.from, WT, .3);
+            parts.push({ el: box(g, dp[0], dp[1], z, dp[3], dp[4], .3, C.lumber), role: "plate", pos: w.from });
+            var dt = place(w, w.from, z + FH - .6, w.to - w.from, WT, .6);
+            parts.push({ el: box(g, dt[0], dt[1], z + FH - .6, dt[3], dt[4], .6, C.lumber), role: "plate-top", pos: w.to });
+            studLayout(w.from, w.to, ops).forEach(function (s) {
+              var zz = z + .3, hh = FH - .9, o = s.op;
+              if (s.role === "cripple-top") { zz = z + o.head; hh = FH - .6 - o.head; }
+              if (s.role === "cripple-bot") { zz = z + .3; hh = o.sill - .3; }
+              if (s.role === "jack") { zz = z + .3; hh = o.head - .3; }
+              if (hh <= .15) return;
+              var d = place(w, s.pos, zz, s.role === "king" || s.role === "jack" ? .32 : .26, WT, hh);
+              var m = s.role === "king" ? C.wood : C.lumber;
+              parts.push({ el: box(g, d[0], d[1], zz, d[3], d[4], hh, m, s.role), role: s.role, pos: s.pos });
+            });
+            ops.forEach(function (o) {
+              var dh = place(w, o.a - .3, z + o.head, (o.b - o.a) + .6, WT, .9);
+              parts.push({ el: box(g, dh[0], dh[1], z + o.head, dh[3], dh[4], .9, C.wood, "header"), role: "header", pos: o.a });
+              if (!o.door) {
+                var ds = place(w, o.a - .3, z + o.sill, (o.b - o.a) + .6, WT, .35);
+                parts.push({ el: box(g, ds[0], ds[1], z + o.sill, ds[3], ds[4], .35, C.wood, "sill"), role: "sill", pos: o.a });
+              }
+            });
+            parts.sort(function (a, b) { return a.pos - b.pos; });
+            framing.push({ g: g, parts: parts, fl: fl, wall: w });
+          }
+        });
+
+        /* ---------- sheathing, stucco, windows ---------- */
+        var sheets = [], stuccoP = [], wins = [];
+        WALLS.filter(function (w) { return w.near; }).forEach(function (w) {
+          for (var fl = 0; fl < FLOORS; fl++) {
+            var z = Z[fl];
+            for (var s = w.from; s < w.to - .2; s += 4) {
+              var ln = Math.min(4, w.to - s);
+              var d = place(w, s, z, ln - .08, .18, FH - .1);
+              var off = w.axis === "x" ? [d[0], d[1] + WT - .02] : [d[0] + WT - .02, d[1]];
+              sheets.push({ el: box(L.sheath, off[0], off[1], z, d[3], d[4], FH - .1, C.sheath, "sheet"), pos: s, fl: fl });
+              var d2 = place(w, s, z, ln - .06, .16, FH - .08);
+              var off2 = w.axis === "x" ? [d2[0], d2[1] + WT + .14] : [d2[0] + WT + .14, d2[1]];
+              stuccoP.push({ el: box(L.stucco, off2[0], off2[1], z, d2[3], d2[4], FH - .08, C.stucco, "stucco"), pos: s, fl: fl });
+            }
+            w.op(fl).forEach(function (o) {
+              var g = grp({ class: "win" }, L.windows);
+              var d = place(w, o.a, z + o.sill, o.b - o.a, .34, o.head - o.sill);
+              var off = w.axis === "x" ? [d[0], d[1] + WT - .1] : [d[0] + WT - .1, d[1]];
+              box(g, off[0], off[1], z + o.sill, d[3], d[4], o.head - o.sill, C.ink);
+              var d3 = place(w, o.a + .35, z + o.sill + .35, o.b - o.a - .7, .1, o.head - o.sill - .7);
+              var off3 = w.axis === "x" ? [d3[0], d3[1] + WT + .05] : [d3[0] + WT + .05, d3[1]];
+              var glass = box(g, off3[0], off3[1], z + o.sill + .35, d3[3], d3[4], o.head - o.sill - .7,
+                              { t: "#9fb3c2", l: "#8aa2b4", r: "#7b93a6" }, "glass");
+              var d4 = place(w, o.a + .35, z + o.sill + .35, o.b - o.a - .7, .08, o.head - o.sill - .7);
+              var off4 = w.axis === "x" ? [d4[0], d4[1] + WT + .16] : [d4[0] + WT + .16, d4[1]];
+              var litPane = box(g, off4[0], off4[1], z + o.sill + .35, d4[3], d4[4], o.head - o.sill - .7,
+                                { t: "#f6dfa8", l: "#f0d494", r: "#e6c581" }, "lit");
+              litPane.style.opacity = 0;
+              g.__key = (w.axis === "x" ? o.a + w.at : w.at + o.a) * 100 + z;
+              wins.push({ el: g, glass: glass, lit: litPane, pos: o.a, fl: fl, door: !!o.door });
+            });
+          }
+        });
+
+        /* ---------- the front door ---------- */
+        var doorG = grp({}, L.windows);
+        (function () {
+          var o = frontOpenings(0).find(function (o) { return o.door; });
+          var d = place(WALLS[0], o.a + .3, Z[0], (o.b - o.a) - .6, .28, o.head - .3);
+          box(doorG, d[0], d[1] + WT - .08, Z[0], d[3], d[4], o.head - .3, mat("#2f3a46"));
+          var kn = px(o.b - 1.0, FP.y1 + .2, Z[0] + 3.4);
+          mk("circle", { cx: kn[0], cy: kn[1], r: 1.5, fill: "#c9a961" }, doorG);
+        })();
+        doorG.style.opacity = 0;
+
+        /* ---------- roof ---------- */
+        var roof = box(L.roof, FP.x0 - .6, FP.y0 - .6, Z[3], (FP.x1 - FP.x0) + 1.2, (FP.y1 - FP.y0) + 1.2, .9, C.roof);
+        var parapet = box(L.roof, FP.x0 - .8, FP.y1 - WT, Z[3] + .9, (FP.x1 - FP.x0) + 1.6, WT + .8, .5, C.roof);
+
+        /* ---------- interior: partition, services, insulation, board, floor ----------
+           One interior wall carries the whole services story: wire drilled
+           through studs, pipe beside it, then batts, then board. */
+        var IW = { axis: "y", at: 22, from: FP.y0 + WT, to: FP.y1 - WT - 6 };
+        var ipart = [], iStuds = [];
+        (function () {
+          var z = Z[0], g = grp({}, L.interior);
+          box(g, IW.at, IW.from, z, .5, IW.to - IW.from, .3, C.lumber);
+          box(g, IW.at, IW.from, z + FH - .6, .5, IW.to - IW.from, .6, C.lumber);
+          for (var s = IW.from; s <= IW.to - .3; s += 1.333) {
+            iStuds.push(box(g, IW.at + .1, s, z + .3, .3, .26, FH - .9, C.lumber, "istud"));
+          }
+          ipart.push(g);
+        })();
+
+        // wire: a run that steps through the middle of each stud, with boxes
+        var wireEls = [], pipeEls = [], boxes = [];
+        (function () {
+          var zw = Z[0] + 4.2, d = "";
+          for (var i = 0; i < iStuds.length; i++) {
+            var s = IW.from + i * 1.333;
+            var p1 = px(IW.at + .25, s, zw);
+            d += (i ? " L " : "M ") + p1[0] + " " + p1[1];
+          }
+          var w = mk("path", { d: d, fill: "none", stroke: "#e0a23c", "stroke-width": 1.6, "stroke-linecap": "round" }, L.interior);
+          var len = w.getTotalLength ? w.getTotalLength() : 400;
+          w.style.strokeDasharray = len + " " + len;
+          wireEls.push({ el: w, len: len });
+
+          var zp = Z[0] + 2.2, dp = "";
+          for (var j = 0; j < iStuds.length; j++) {
+            var s2 = IW.from + j * 1.333, p2 = px(IW.at + .25, s2, zp);
+            dp += (j ? " L " : "M ") + p2[0] + " " + p2[1];
+          }
+          var pp = mk("path", { d: dp, fill: "none", stroke: "#b9763f", "stroke-width": 2.1, "stroke-linecap": "round" }, L.interior);
+          var lp = pp.getTotalLength ? pp.getTotalLength() : 400;
+          pp.style.strokeDasharray = lp + " " + lp;
+          pipeEls.push({ el: pp, len: lp });
+
+          [3, 8, 13].forEach(function (i) {
+            var s3 = IW.from + i * 1.333;
+            boxes.push(box(L.interior, IW.at - .05, s3 - .3, Z[0] + 3.6, .35, .8, 1.1, C.ink, "ebox"));
+          });
+        })();
+
+        var batts = [], gyp = [], tiles = [];
+        for (var bi = 0; bi < iStuds.length - 1; bi++) {
+          var s = IW.from + bi * 1.333 + .3;
+          batts.push(box(L.interior, IW.at + .12, s, Z[0] + .35, .26, 1.02, FH - 1, C.batt, "batt"));
+        }
+        var painted = [];
+        for (var gi = 0; gi < 4; gi++) {
+          var s2 = IW.from + gi * 4;
+          if (s2 >= IW.to) break;
+          var w4 = Math.min(4, IW.to - s2) - .06;
+          gyp.push(box(L.interior, IW.at + .42, s2, Z[0] + .2, .12, w4, FH - .8, C.gyp, "gyp"));
+          // the finished coat, faded up over the board rather than recoloured
+          var pf = box(L.interior, IW.at + .55, s2, Z[0] + .2, .06, w4, FH - .8, mat("#e8ddd0"), "painted");
+          pf.style.opacity = 0;
+          painted.push(pf);
+        }
+        // screw pattern on each board: field screws at 12in, edges doubled
+        var screws = [];
+        gyp.forEach(function (g, gi) {
+          var s0 = IW.from + gi * 4;
+          for (var sy = s0 + .5; sy < Math.min(s0 + 4, IW.to) - .2; sy += 1.1) {
+            for (var sz = Z[0] + 1.0; sz < Z[0] + FH - 1.0; sz += 2.2) {
+              var c = px(IW.at + .62, sy, sz);
+              var d = mk("circle", { cx: c[0], cy: c[1], r: .85, fill: "rgba(29,39,51,.28)", class: "screw" }, L.interior);
+              d.style.opacity = 0;
+              screws.push({ el: d, board: gi, key: gi * 100 + sy });
+            }
+          }
+        });
+        screws.sort(function (a, b) { return a.key - b.key; });
+
+        for (var tx = FP.x0 + WT + 1; tx < 20; tx += 2)
+          for (var ty = FP.y0 + WT + 1; ty < FP.y1 - WT - 1; ty += 2)
+            tiles.push({ el: box(L.interior, tx, ty, .04, 1.9, 1.9, .06, C.tile, "tile"), d: tx + ty });
+        tiles.sort(function (a, b) { return a.d - b.d; });
+
+        /* ---------- painter's order ---------- */
+        function sortBoxes(container) {
+          var kids = [].slice.call(container.children).filter(function (c) { return c.__d !== undefined; });
+          if (kids.length < 2) return;
+          kids.sort(function (a, b) { return (a.__d - b.__d) || (a.__z - b.__z); });
+          kids.forEach(function (k) { container.appendChild(k); });
+        }
+        [L.cmu, L.footing, L.sheath, L.stucco, L.interior].forEach(sortBoxes);
+        // NOTE: the site layer's order is set further down, once the machine
+        // and truck exist — see "site order" below.
+        // wall framing: far walls first, then near, and depth-sorted inside each
+        var WALL_ORDER = ["back", "left", "right", "front"];
+        framing.slice().sort(function (a, b) {
+          return (a.fl - b.fl) || (WALL_ORDER.indexOf(a.wall.id) - WALL_ORDER.indexOf(b.wall.id));
+        }).forEach(function (fw) { L.framing.appendChild(fw.g); sortBoxes(fw.g); });
+        floorsys.forEach(function (f) { L.floorsys.appendChild(f.g); sortBoxes(f.g); });
+        wins.slice().sort(function (a, b) { return a.el.__key - b.el.__key; }).forEach(function (w) { L.windows.appendChild(w.el); sortBoxes(w.el); });
+        L.windows.appendChild(doorG);
+
+        /* ==========================================================
+           4. MACHINES AND PEOPLE
+           ========================================================== */
+        function worker(parent, x, y, s) {
+          var g = grp({ class: "worker" }, parent), p = px(x, y, 0);
+          var h = grp({ transform: "translate(" + p[0] + "," + p[1] + ")" }, g);
+          mk("ellipse", { cx: 0, cy: 0, rx: 4.4, ry: 2.1, fill: "rgba(29,39,51,.15)" }, h);
+          mk("rect", { x: -2.2, y: -7.6, width: 1.9, height: 7.6, rx: .8, fill: "#2b3440" }, h);
+          mk("rect", { x: .4, y: -7.6, width: 1.9, height: 7.6, rx: .8, fill: "#2b3440" }, h);
+          mk("rect", { x: -2.3, y: -16.2, width: 4.6, height: 9, rx: 1.7, fill: "#e8a33d" }, h);
+          var arm = mk("rect", { x: s > 0 ? 1.5 : -3.5, y: -15, width: 2, height: 7.4, rx: .9, fill: "#e8a33d" }, h);
+          arm.style.transformOrigin = (s > 0 ? 2.5 : -2.5) + "px -14.4px";
+          mk("circle", { cx: 0, cy: -18.4, r: 2.7, fill: "#f0d9b0" }, h);
+          mk("path", { d: "M -3.5 -18.8 A 3.5 3.5 0 0 1 3.5 -18.8 Z", fill: "#f2c033" }, h);
+          g.__arm = arm; g.__body = h;
+          return g;
+        }
+
+        var EXC = { y: 13 }, exc = grp({ id: "exc" }, L.site);
+        (function () {
+          var g = exc, x = 62;
+          box(g, x - 1.5, EXC.y - 5.5, 0, 10, 2.6, 1.9, C.ink);
+          box(g, x - 1.5, EXC.y + 2.9, 0, 10, 2.6, 1.9, C.ink);
+          box(g, x - .5, EXC.y - 3.2, 1.9, 8, 6.4, 1.1, C.steel);
+          box(g, x + .4, EXC.y - 2.6, 3, 5.4, 5.2, 3.5, C.red);
+          box(g, x + 4.6, EXC.y - 2.2, 6.5, 2.6, 3, 3.2, C.steel);
+          var piv = px(x + 1.2, EXC.y + .2, 5.2);
+          var BOOM = 17 * U, STICK = 8.6 * U, BUCK = 4.2 * U;
+          /* Positioning and rotation live on SEPARATE groups: on an SVG
+             element a CSS transform REPLACES the transform attribute rather
+             than composing with it, so rotating a group that was positioned
+             by attribute silently discards the translate. */
+          var arm = grp({ transform: "translate(" + piv[0] + "," + piv[1] + ")" }, g);
+          var boom = grp({}, arm);
+          mk("rect", { x: -.06 * BOOM, y: -.075 * BOOM, width: BOOM, height: .15 * BOOM, rx: .07 * BOOM, fill: C.red.l }, boom);
+          mk("rect", { x: -.06 * BOOM, y: -.075 * BOOM, width: BOOM, height: .055 * BOOM, rx: .03 * BOOM, fill: C.red.t }, boom);
+          mk("circle", { r: .085 * BOOM, fill: C.ink.l }, boom);
+          var stickPos = grp({ transform: "translate(" + BOOM * .94 + ",0)" }, boom), stick = grp({}, stickPos);
+          mk("rect", { x: -.1 * STICK, y: -.12 * STICK, width: STICK, height: .24 * STICK, rx: .11 * STICK, fill: C.steel.l }, stick);
+          mk("rect", { x: -.1 * STICK, y: -.12 * STICK, width: STICK, height: .09 * STICK, rx: .05 * STICK, fill: C.steel.t }, stick);
+          mk("circle", { r: .13 * STICK, fill: C.ink.l }, stick);
+          var buckPos = grp({ transform: "translate(" + STICK * .9 + ",0)" }, stick), bucket = grp({}, buckPos), B = BUCK;
+          mk("path", { d: "M 0 " + (-.5 * B) + " L " + (1.1 * B) + " " + (-.32 * B) + " Q " + (1.4 * B) + " " + (.62 * B) + " " + (.45 * B) + " " + (1.08 * B) + " L " + (-.22 * B) + " " + (.56 * B) + " Z", fill: C.ink.l }, bucket);
+          mk("path", { d: "M " + (1.1 * B) + " " + (-.32 * B) + " Q " + (1.4 * B) + " " + (.62 * B) + " " + (.45 * B) + " " + (1.08 * B), fill: "none", stroke: C.ink.r, "stroke-width": .15 * B, "stroke-linecap": "round" }, bucket);
+          var load = mk("ellipse", { cx: .5 * B, cy: .16 * B, rx: .6 * B, ry: .42 * B, fill: C.dirt.l }, bucket);
+          load.style.opacity = 0;
+          boom.style.transformOrigin = stick.style.transformOrigin = bucket.style.transformOrigin = "0px 0px";
+          exc.__boom = boom; exc.__stick = stick; exc.__bucket = bucket; exc.__load = load;
+          exc.__L1 = BOOM * .94; exc.__L2 = STICK * .9; exc.__x0 = x;
+        })();
+
+        var truck = grp({ id: "truck" }, L.site);
+        (function () {
+          var g = truck;
+          [[1, -4.2], [1, 2.2], [12, -4.2], [12, 2.2]].forEach(function (w) { box(g, w[0], w[1], 0, 4, 2, 1.6, C.ink); });
+          box(g, 0, -4.4, 1.6, 18, 8.8, .8, C.steel);
+          box(g, -.4, -4.6, 2.4, 12.4, .6, 4.6, C.red);
+          box(g, -.4, 4, 2.4, 12.4, .6, 4.6, C.red);
+          box(g, -.4, -4.6, 2.4, .6, 9.2, 4.6, C.red);
+          truck.__fill = box(g, .2, -4, 2.6, 11.6, 8, 4, C.dirt, "bedfill");
+          box(g, 12.6, -4, 2.4, 4.6, 8, 5.4, C.red);
+          box(g, 13.2, -3.4, 7.8, 3.4, 6.8, .4, C.steel);
+        })();
+
+        /* site order: layout hardware, then the machine, then the truck,
+           which parks nearer the camera than the machine. Explicit rather
+           than depth-sorted, because both machines are built at a fixed
+           origin and moved at runtime, so their build-time depth keys are
+           meaningless. */
+        L.site.appendChild(layout); L.site.appendChild(exc); L.site.appendChild(truck);
+
+        var W = {
+          setter: worker(L.figures, -6, 10, 1),
+          digger: worker(L.figures, 30, 38, -1),
+          mason: worker(L.figures, 30, 31, -1),
+          framer: worker(L.figures, 26, 26, -1),
+          glazier: worker(L.figures, 33, 32, -1),
+          plasterer: worker(L.figures, 8, 32, -1),
+          sparky: worker(L.figures, 25, 12, -1),
+          taper: worker(L.figures, 25, 8, -1),
+          painter: worker(L.figures, 16, 20, 1)
+        };
+
+        /* ==========================================================
+           5. CAMERA — the beats from the brief
+           ========================================================== */
+        var CAM = [
+          [0.00, 20, 14, 2, 150], [0.06, 20, 14, 2, 132],
+          [0.11, 46, 15, 4, 108], [0.15, 38, 14, 3, 104],
+          [0.20, 36, 18, 3, 118], [0.235, 24, 14, 1, 126],
+          [0.265, 34, 26, -4, 54],                        // in tight on the block work
+          [0.325, 30, 24, -3, 62],
+          [0.375, 20, 14, 2, 120],
+          [0.415, 20, 14, 13, 82],                        // bird's eye: up high, deck fills the frame
+          [0.47, 24, 20, 9, 118], [0.545, 22, 20, 14, 132],
+          [0.60, 26, 24, 12, 112],                        // sheathing and windows
+          [0.655, 30, 26, 9, 84],                         // stucco, close
+          [0.71, 24, 16, 5, 64],                          // inside: the raceway
+          [0.775, 23, 12, 6, 52],                         // insulation
+          [0.825, 22, 12, 6, 56],                         // board
+          [0.865, 14, 16, 3, 66],                         // floor
+          [0.905, 18, 18, 6, 72],                         // paint
+          [0.95, 22, 20, 12, 128], [1.00, 20, 14, 10, 150]
+        ];
+        function camAt(p) {
+          for (var i = 0; i < CAM.length - 1; i++) {
+            var a = CAM[i], b = CAM[i + 1];
+            if (p <= b[0]) {
+              var u = b[0] === a[0] ? 1 : (p - a[0]) / (b[0] - a[0]);
+              var e = u < .5 ? 2 * u * u : 1 - Math.pow(-2 * u + 2, 2) / 2;
+              return [a[1] + (b[1] - a[1]) * e, a[2] + (b[2] - a[2]) * e, a[3] + (b[3] - a[3]) * e, a[4] + (b[4] - a[4]) * e];
+            }
+          }
+          var l = CAM[CAM.length - 1]; return [l[1], l[2], l[3], l[4]];
+        }
+        var VW = 900, VH = 560;
+        function applyCam(p) {
+          var c = camAt(p), ctr = px(c[0], c[1], c[2]);
+          var w = c[3] * U * COS30 * 1.15, h = w * (VH / VW);
+          scene.setAttribute("viewBox", (ctr[0] - w / 2) + " " + (ctr[1] - h / 2) + " " + w + " " + h);
+        }
+
+        /* ==========================================================
+           6. CHOREOGRAPHY
+           ========================================================== */
+        var cl = function (v) { return v < 0 ? 0 : v > 1 ? 1 : v; };
+        var at = function (p, a, b) { return cl((p - a) / (b - a)); };
+        var o3 = function (t) { return 1 - Math.pow(1 - t, 3); };
+        function kf(t, pts) {
+          for (var i = 0; i < pts.length - 1; i++) {
+            var a = pts[i], b = pts[i + 1];
+            if (t <= b[0]) { var u = b[0] === a[0] ? 1 : cl((t - a[0]) / (b[0] - a[0])); return a[1] + (b[1] - a[1]) * o3(u); }
+          }
+          return pts[pts.length - 1][1];
+        }
+        function back(t) { var c = 1.7; return 1 + (c + 1) * Math.pow(t - 1, 3) + c * Math.pow(t - 1, 2); }
+        function ik(L1, L2, tx, ty) {
+          var d = Math.hypot(tx, ty), lo = Math.abs(L1 - L2) + .5, hi = L1 + L2 - .5;
+          d = d < lo ? lo : d > hi ? hi : d;
+          var c2 = cl2((d * d - L1 * L1 - L2 * L2) / (2 * L1 * L2));
+          var a2 = -Math.acos(c2);
+          var a1 = Math.atan2(ty, tx) - Math.atan2(L2 * Math.sin(a2), L1 + L2 * Math.cos(a2));
+          return [a1 * 180 / Math.PI, a2 * 180 / Math.PI];
+        }
+        function cl2(v) { return v < -1 ? -1 : v > 1 ? 1 : v; }
+
+        /* Staggered reveal: each item gets its own slice of [a,b], in order.
+           This is how ninety blocks get laid one at a time from one call. */
+        function seq(items, a, b, spread, fn) {
+          var n = items.length; if (!n) return;
+          var span = (b - a) * (1 - spread);
+          for (var i = 0; i < n; i++) {
+            var s = a + (n === 1 ? 0 : (b - a - span) * (i / (n - 1)));
+            fn(items[i], cl((PP - s) / span), i);
+          }
+        }
+        var PP = 0;
+
+        function riseIn(el, t, dz) {
+          el.style.opacity = t > .01 ? Math.min(1, t * 2.2) : 0;
+          el.style.transform = "translateY(" + (1 - back(cl(t))) * (dz || 16) + "px)";
+        }
+        function growUp(el, t) {
+          el.style.opacity = t > .01 ? 1 : 0;
+          el.style.transform = "scaleY(" + o3(cl(t)) + ")";
+        }
+
+        function paint(p) {
+          PP = p; applyCam(p);
+          var i, t;
+
+          /* ---- 1 layout ---- */
+          stakes.forEach(function (g, i) { var t = at(p, .008 + i * .010, .048 + i * .010); g.style.opacity = t; g.style.transform = "translateY(" + (1 - o3(t)) * -14 + "px)"; });
+          strings.forEach(function (s, i) { var t = at(p, .042 + i * .009, .080 + i * .009); s.el.style.strokeDashoffset = (1 - o3(t)) * s.len; s.el.style.opacity = t > 0 ? 1 : 0; });
+          layout.style.opacity = 1 - at(p, .135, .175) * .85;
+          var sw = kf(at(p, .01, .095), [[0, 0], [1, 1]]);
+          W.setter.style.transform = "translate(" + sw * 150 + "px," + sw * 40 + "px)";
+          W.setter.style.opacity = at(p, .004, .02) * (1 - at(p, .11, .145));
+          W.setter.__arm.style.transform = "rotate(" + (Math.sin(p * 200) * 26 - 20) + "deg)";
+
+          /* ---- 2 excavation ---- */
+          var depth = kf(at(p, .150, .225), [[0, 0], [1, 1]]);
+          var backIn = kf(at(p, .148, .180), [[0, 0], [1, 1]]);
+          var leave = kf(at(p, .228, .258), [[0, 0], [1, 1]]);
+          var tX = 86 - backIn * 24 + leave * 52, tY = 36;
+          var appr = kf(at(p, .105, .148), [[0, 0], [1, 1]]), ex = 62 - appr * 6;
+          var bp = px(ex - exc.__x0, 0, 0);
+          exc.style.transform = "translate(" + bp[0] + "px," + bp[1] + "px)";
+          exc.style.opacity = at(p, .098, .118) * (1 - at(p, .265, .30));
+
+          var digT = at(p, .150, .228), cyc = digT * 4, ci = Math.min(3, Math.floor(cyc)), u = cyc - ci;
+          var floorZ = -1.5 - 6.5 * depth;
+          var TG = [[0, [40, EXC.y, 10]], [.22, [34 + ci * .8, EXC.y, floorZ]], [.38, [29 - ci * .5, EXC.y, floorZ]],
+                    [.52, [36, EXC.y, 5]], [.68, [tX + 2, tY - 2, 10]], [.80, [tX + 2, tY - 2, 10]], [1, [40, EXC.y, 10]]];
+          var tg = (function (t) {
+            for (var i = 0; i < TG.length - 1; i++) {
+              var a = TG[i], b = TG[i + 1];
+              if (t <= b[0]) { var q = b[0] === a[0] ? 1 : cl((t - a[0]) / (b[0] - a[0])); var e = q < .5 ? 2 * q * q : 1 - Math.pow(-2 * q + 2, 2) / 2;
+                return [a[1][0] + (b[1][0] - a[1][0]) * e, a[1][1] + (b[1][1] - a[1][1]) * e, a[1][2] + (b[1][2] - a[1][2]) * e]; }
+            }
+            return TG[TG.length - 1][1];
+          })(u);
+          var pP = px(ex + 1.2, EXC.y + .2, 5.2), tP = px(tg[0], tg[1], tg[2]);
+          var sol = ik(exc.__L1, exc.__L2, tP[0] - pP[0], tP[1] - pP[1]);
+          exc.__boom.style.transform = "rotate(" + sol[0] + "deg)";
+          exc.__stick.style.transform = "rotate(" + sol[1] + "deg)";
+          var bk = kf(u, [[0, 10], [.22, 46], [.38, 6], [.52, -6], [.66, -6], [.74, -104], [.84, -104], [1, 10]]);
+          exc.__bucket.style.transform = "rotate(" + (bk - sol[0] - sol[1]) + "deg)";
+          exc.__load.style.opacity = digT > 0 && digT < 1 ? kf(u, [[0, 0], [.28, 0], [.34, 1], [.66, 1], [.72, 0], [1, 0]]) : 0;
+
+          var tp = px(tX, tY, 0);
+          truck.style.transform = "translate(" + tp[0] + "px," + tp[1] + "px)";
+          truck.style.opacity = at(p, .142, .168) * (1 - at(p, .262, .275));
+          var lvl = digT <= 0 ? 0 : Math.min(1, (ci + (u > .72 ? 1 : u / .72)) / 4);
+          truck.__fill.style.opacity = lvl > .02 ? 1 : 0;
+          truck.__fill.style.transform = "scaleY(" + Math.max(.02, lvl) + ")";
+          truck.__fill.style.transformOrigin = px(0, 0, 2.6)[0] + "px " + px(0, 0, 2.6)[1] + "px";
+          W.digger.style.opacity = at(p, .145, .175) * (1 - at(p, .235, .265));
+          W.digger.__arm.style.transform = "rotate(" + (Math.sin(p * 240) * 18 - 30) + "deg)";
+
+          pitG.style.opacity = at(p, .148, .168);
+          [pitWallN, pitWallE].forEach(function (w) { w.style.opacity = depth; });
+          pitG.style.transform = "scaleY(" + (.06 + .94 * depth) + ")";
+          pitG.style.transformOrigin = px(PIT.x0, PIT.y1, 0)[0] + "px " + px(PIT.x0, PIT.y1, 0)[1] + "px";
+
+          /* ---- 3 foundation: footing, then blocks laid course by course ---- */
+          footings.forEach(function (f, i) { var t = at(p, .238 + i * .006, .262 + i * .006); f.style.opacity = t; growUp(f, t); });
+          seq(blocks, .258, .352, .90, function (b, t) {
+            b.el.style.opacity = t > .02 ? 1 : 0;
+            b.el.style.transform = "translateY(" + (1 - back(cl(t))) * -11 + "px)";
+          });
+          W.mason.style.opacity = at(p, .252, .272) * (1 - at(p, .348, .372));
+          W.mason.__arm.style.transform = "rotate(" + (Math.sin(p * 420) * 40 - 26) + "deg)";
+          var mx = kf(at(p, .26, .35), [[0, 0], [1, 1]]);
+          W.mason.style.transform = "translate(" + (-mx * 120) + "px," + (mx * 32) + "px)";
+          backfill.forEach(function (b, i) { var t = at(p, .352 + i * .004, .378 + i * .004); b.style.opacity = t; growUp(b, t); });
+          slab.style.opacity = at(p, .360, .380);
+
+          /* ---- 4 framing: floor systems then walls, storey by storey ---- */
+          floorsys.forEach(function (f, k) {
+            var a0 = .385 + k * .052, b0 = a0 + .030;
+            seq(f.joists, a0, b0, .86, function (j, t) { riseIn(j, t, 12); });
+            f.deck.style.opacity = at(p, b0 + .004, b0 + .016);
+          });
+          framing.forEach(function (fw) {
+            var a0 = .400 + fw.fl * .052 + (fw.wall.near ? .008 : 0), b0 = a0 + .040;
+            seq(fw.parts, a0, b0, .88, function (part, t) {
+              part.el.style.opacity = t > .02 ? 1 : 0;
+              part.el.style.transform = "scaleY(" + o3(cl(t)) + ")";
+            });
+          });
+          // the shadow deepens as the mass goes up
+          ao.style.opacity = kf(at(p, .360, .580), [[0, 0], [1, 1]]) * (1 - at(p, .700, .724) * .55) +
+                             at(p, .930, .958) * .55;
+          W.framer.style.opacity = at(p, .402, .424) * (1 - at(p, .560, .582));
+          W.framer.__arm.style.transform = "rotate(" + (Math.sin(p * 560) * 42 - 28) + "deg)";
+          var frx = kf(at(p, .41, .56), [[0, 0], [1, 1]]);
+          W.framer.style.transform = "translate(" + (-frx * 90) + "px," + (-frx * 26) + "px)";
+
+          roof.style.opacity = at(p, .556, .578); growUp(roof, at(p, .556, .578));
+          parapet.style.opacity = at(p, .572, .590);
+
+          /* ---- 5 exterior: sheathing, windows, stucco ---- */
+          seq(sheets, .586, .626, .88, function (s, t) { riseIn(s.el, t, 10); });
+          seq(wins, .624, .656, .84, function (w, t) {
+            w.el.style.opacity = t > .02 ? 1 : 0;
+            w.el.style.transform = "scale(" + Math.max(0, back(cl(t))) + ")";
+            w.el.style.transformOrigin = px(w.pos, FP.y1, Z[w.fl] + 5)[0] + "px " + px(w.pos, FP.y1, Z[w.fl] + 5)[1] + "px";
+          });
+          W.glazier.style.opacity = at(p, .618, .636) * (1 - at(p, .652, .668));
+          W.glazier.__arm.style.transform = "rotate(" + (Math.sin(p * 300) * 30 - 34) + "deg)";
+          seq(stuccoP, .648, .700, .90, function (s, t) { s.el.style.opacity = t; });
+          W.plasterer.style.opacity = at(p, .644, .662) * (1 - at(p, .700, .716));
+          W.plasterer.__arm.style.transform = "rotate(" + (Math.sin(p * 500) * 44 - 16) + "deg)";
+          var plx = kf(at(p, .65, .70), [[0, 0], [1, 1]]);
+          W.plasterer.style.transform = "translate(" + plx * 150 + "px," + plx * 40 + "px)";
+
+          /* ---- cutaway: the near walls step back so the camera can get in ---- */
+          var cut = at(p, .690, .716) * (1 - at(p, .930, .952));
+          [L.stucco, L.sheath, L.windows].forEach(function (g) { g.style.opacity = 1 - cut * .93; });
+          var nearWalls = framing.filter(function (f) { return f.wall.near; });
+          nearWalls.forEach(function (f) { f.g.style.opacity = 1 - cut * .72; });
+          L.roof.style.opacity = 1 - cut * .88;
+
+          /* ---- 6 services, insulation, board, floor, paint ---- */
+          ipart.forEach(function (g) { g.style.opacity = at(p, .700, .722); });
+          pipeEls.forEach(function (w) { var t = at(p, .716, .744); w.el.style.strokeDashoffset = (1 - o3(t)) * w.len; w.el.style.opacity = t > 0 ? 1 : 0; });
+          wireEls.forEach(function (w) { var t = at(p, .730, .762); w.el.style.strokeDashoffset = (1 - o3(t)) * w.len; w.el.style.opacity = t > 0 ? 1 : 0; });
+          seq(boxes, .736, .758, .6, function (b, t) { b.style.opacity = t > .02 ? 1 : 0; b.style.transform = "scale(" + Math.max(0, back(cl(t))) + ")"; });
+          W.sparky.style.opacity = at(p, .706, .724) * (1 - at(p, .762, .778));
+          W.sparky.__arm.style.transform = "rotate(" + (Math.sin(p * 460) * 36 - 40) + "deg)";
+
+          seq(batts, .766, .808, .88, function (b, t) { b.style.opacity = t; b.style.transform = "scaleY(" + o3(cl(t)) + ")"; });
+          seq(gyp, .812, .846, .82, function (g, t) { riseIn(g, t, 9); });
+          seq(screws, .822, .858, .93, function (sc, t) { sc.el.style.opacity = t; });
+          W.taper.style.opacity = at(p, .808, .826) * (1 - at(p, .856, .872));
+          W.taper.__arm.style.transform = "rotate(" + (Math.sin(p * 520) * 40 - 22) + "deg)";
+          seq(tiles, .852, .896, .92, function (tl, t) { tl.el.style.opacity = t > .02 ? 1 : 0; tl.el.style.transform = "scale(" + Math.max(0, back(cl(t))) + ")"; });
+
+          seq(painted, .898, .936, .84, function (pf, t) { pf.style.opacity = t; });
+          W.painter.style.opacity = at(p, .892, .910) * (1 - at(p, .938, .952));
+          W.painter.__arm.style.transform = "rotate(" + (Math.sin(p * 380) * 48 - 30) + "deg)";
+          walkG.style.opacity = at(p, .930, .958);
+          drive.style.opacity = at(p, .936, .962);
+          seq(shrubs, .944, .980, .7, function (g, t) {
+            g.style.opacity = t; g.style.transform = "scale(" + Math.max(0, back(cl(t))) + ")";
+            g.style.transformOrigin = "center";
+          });
+          doorG.style.opacity = at(p, .636, .660) * (1 - cut * .93);
+
+          /* ---- 7 handover: the lights go on ----
+             A warm pane sits over the cold one and is faded up, rather than
+             swapping a fill, so it crossfades instead of snapping. */
+          var lit = at(p, .944, .992);
+          wins.forEach(function (w, i) {
+            w.lit.style.opacity = lit * (i === 0 ? 1 : kf(cl((lit * 1.5) - i * 0.06), [[0, 0], [1, 1]]));
+          });
+
+          readout.textContent = "p " + p.toFixed(3) + "   ·   " + beatName(p);
+        }
+
+        var BEATS = [
+          ["Empty lot", .004], ["String lines", .062], ["Excavator in", .118], ["Digging", .175],
+          ["Truck loading", .205], ["Footings", .245], ["Block courses", .300], ["Backfill + slab", .366],
+          ["Floor joists", .400], ["Framing rises", .470], ["Roof on", .570], ["Sheathing", .600],
+          ["Windows in", .638], ["Stucco", .672], ["Rough-in", .740], ["Insulation", .786],
+          ["Drywall", .830], ["Flooring", .872], ["Paint", .906], ["Finished", .980]
+        ];
+        function beatName(p) { var n = BEATS[0][0]; for (var i = 0; i < BEATS.length; i++) if (p >= BEATS[i][1] - .004) n = BEATS[i][0]; return n; }
+
+        /* ---------- harness ---------- */
+        var scrub = document.getElementById("scrub"), readout = document.getElementById("readout"), playBtn = document.getElementById("play");
+        var raf = null, playing = false;
+        scrub.addEventListener("input", function () { stop(); paint(+scrub.value / 1000); });
+        function step() { var v = +scrub.value + .9; if (v > 1000) v = 0; scrub.value = String(v); paint(v / 1000); raf = requestAnimationFrame(step); }
+        function start() { if (playing) return; playing = true; playBtn.textContent = "Pause"; playBtn.setAttribute("aria-pressed", "true"); raf = requestAnimationFrame(step); }
+        function stop() { playing = false; playBtn.textContent = "Play"; playBtn.setAttribute("aria-pressed", "false"); if (raf) cancelAnimationFrame(raf); raf = null; }
+        playBtn.addEventListener("click", function () { playing ? stop() : start(); });
+        var beatsRow = document.getElementById("beats");
+        BEATS.forEach(function (b) { var x = document.createElement("button"); x.textContent = b[0]; x.addEventListener("click", function () { stop(); scrub.value = String(Math.round(b[1] * 1000)); paint(b[1]); }); beatsRow.appendChild(x); });
+        var FR = [["Desktop", 900, 560], ["Laptop", 760, 470], ["Phone", 390, 300], ["9:16", 405, 720]];
+        var framesRow = document.getElementById("frames");
+        function setFrame(w, h) { VW = w; VH = h; scene.setAttribute("width", w); scene.setAttribute("height", h); paint(+scrub.value / 1000); }
+        FR.forEach(function (f, i) {
+          var b = document.createElement("button"); b.textContent = f[0]; b.setAttribute("aria-pressed", String(i === 0));
+          b.addEventListener("click", function () { [].forEach.call(framesRow.children, function (c) { c.setAttribute("aria-pressed", "false"); }); b.setAttribute("aria-pressed", "true"); setFrame(f[1], f[2]); });
+          framesRow.appendChild(b);
+        });
+        window.__build = { paint: paint, beats: BEATS, counts: { blocks: blocks.length, joists: floorsys.reduce(function (n, f) { return n + f.joists.length; }, 0), framing: framing.reduce(function (n, f) { return n + f.parts.length; }, 0), sheets: sheets.length, wins: wins.length, batts: batts.length, gyp: gyp.length, tiles: tiles.length } };
+        setFrame(900, 560); paint(0);
+      })();
+    </script>
+  </body>
+</html>
