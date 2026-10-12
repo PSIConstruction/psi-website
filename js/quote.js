@@ -404,6 +404,13 @@
         botcheck: "",            // honeypot — real visitors never fill this
       };
 
+      // Attribution — this is what separates a paid ad click from an organic
+      // search. psi-tracking.js stored ?gclid= in a cookie on the landing page.
+      const attribution = (window.PSI_attribution && window.PSI_attribution()) || {};
+      payload.gclid = attribution.gclid || "";
+      payload.traffic_source = attribution.traffic_source || "";
+      payload.landing_page = attribution.landing_page || "";
+
       try {
         const res = await fetch(SEND.endpoint, {
           method: "POST",
@@ -411,6 +418,13 @@
           body: JSON.stringify(payload),
         });
         if (!res.ok) throw new Error("HTTP " + res.status);
+
+        // Delivery succeeded. Now record it for the ads account: fire the
+        // Google Ads conversion and write a Lead_Log row carrying the GCLID.
+        // Both are best-effort and cannot affect the delivery above.
+        try { if (window.PSI_fireConversion) window.PSI_fireConversion(); } catch (e) {}
+        try { if (window.PSI_submitLead) window.PSI_submitLead(summary, subject); } catch (e) {}
+
         showConfirmation();
       } catch (err) {
         send.disabled = false;

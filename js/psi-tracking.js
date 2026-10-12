@@ -194,5 +194,16 @@ var PSI = {
     });
   }, true);
 
-  window.PSI_submitLead = submitLead; // in case the form is wired up directly later
+  // Exposed so a form that posts directly (quote.js -> Web3Forms) can still
+  // record the lead for the ads account without going through a mailto.
+  window.PSI_submitLead = submitLead;
+  window.PSI_fireConversion = fireConversion;
+  window.PSI_attribution = function () {
+    return {
+      gclid: getCookie('psi_gclid'),
+      traffic_source: getCookie('psi_source') || 'unknown',
+      landing_page: getCookie('psi_landing') || '',
+      first_seen: getCookie('psi_first_seen') || ''
+    };
+  };
 })();
