@@ -276,6 +276,48 @@
   function renderDone() {
     const summary = buildSummary();
     const flow = state.flowKey ? DATA.flows[state.flowKey] : null;
+    // Sending is the moment the visitor has worked towards, so the review
+    // screen is replaced outright rather than annotated with a status line.
+    function showConfirmation() {
+      const method = (state.intake.contactMethod || "").toLowerCase();
+      const how =
+        method === "call" ? "a phone call"
+        : method === "text" ? "a text"
+        : method === "either" ? "a call or a text"
+        : "email";
+      const when = state.intake.bestTime
+        ? " We have you down as best reached in the " +
+          state.intake.bestTime.toLowerCase() + "."
+        : "";
+
+      root.innerHTML = "";
+      const wrap = el("div", "quote__sent");
+
+      wrap.innerHTML =
+        '<div class="sent__burst" aria-hidden="true">' +
+          Array.from({ length: 14 })
+            .map(function (_, i) { return '<i style="--i:' + i + '"></i>"'; })
+            .join("")
+            .replace(/"/g, "") +
+        '</div>' +
+        '<svg class="sent__tick" viewBox="0 0 52 52" aria-hidden="true">' +
+          '<circle class="sent__tick-ring" cx="26" cy="26" r="24"/>' +
+          '<path class="sent__tick-mark" d="M14 27l8 8 16-16"/>' +
+        '</svg>' +
+        '<h3 class="sent__title">Message delivered to PSI</h3>' +
+        '<p class="sent__lead">Expect an answer within 24 hours, by ' + how + "." + when + '</p>' +
+        '<p class="sent__thanks">Thanks for the detail you put in — it means we can come back to you ' +
+          'with real numbers rather than a guess. We appreciate the opportunity to quote your project.</p>' +
+        (state.intake.photos
+          ? '<p class="sent__note">Reply to our email with your photos and we will add them to the file.</p>'
+          : "") +
+        '<p class="sent__note">Something urgent in the meantime? Call us on ' +
+          '<a href="tel:5703388774">570-338-8<span class="tel-psi">PSI</span>&nbsp;(774)</a>.</p>';
+
+      root.appendChild(wrap);
+      wrap.scrollIntoView({ block: "center", behavior: "smooth" });
+    }
+
     const subject =
       "Quote Request — " +
       (flow ? flow.title : state.gatewayChoice) +
@@ -369,10 +411,7 @@
           body: JSON.stringify(payload),
         });
         if (!res.ok) throw new Error("HTTP " + res.status);
-        send.textContent = "Message sent ✓";
-        status.textContent =
-          "Thanks — your request is with PSI. We answer most requests the same business day." +
-          (state.intake.photos ? " Reply to our email with your photos and we will add them to the file." : "");
+        showConfirmation();
       } catch (err) {
         send.disabled = false;
         send.textContent = "Send to PSI";

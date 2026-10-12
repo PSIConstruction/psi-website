@@ -4170,3 +4170,83 @@ section[id],
 .shots__arrow--next { right: 12px; }
 
 .shots__hint { margin: 12px 0 0; font-size: 12.5px; color: var(--muted); }
+
+/* ---------------- Quote: the sent confirmation ----------------
+   Replaces the review screen once the request is away. The tick draws
+   itself and a short burst fires behind it — enough to feel like an
+   arrival without turning into a cartoon. All of it is motion, so it is
+   switched off entirely under prefers-reduced-motion. */
+.quote__sent {
+  position: relative;
+  max-width: 620px;
+  margin: 0 auto;
+  padding: 44px 24px 8px;
+  text-align: center;
+}
+.sent__tick { width: 84px; height: 84px; display: block; margin: 0 auto 18px; }
+.sent__tick-ring {
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 2.5;
+  stroke-dasharray: 151;
+  stroke-dashoffset: 151;
+  animation: sentRing 520ms cubic-bezier(.65,0,.45,1) forwards;
+}
+.sent__tick-mark {
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: 36;
+  stroke-dashoffset: 36;
+  animation: sentMark 320ms cubic-bezier(.65,0,.45,1) 420ms forwards;
+}
+@keyframes sentRing { to { stroke-dashoffset: 0; } }
+@keyframes sentMark { to { stroke-dashoffset: 0; } }
+
+/* Confetti. Each piece gets its angle and delay from --i, so there is no
+   per-piece markup to maintain. */
+.sent__burst {
+  position: absolute;
+  top: 70px; left: 50%;
+  width: 0; height: 0;
+  pointer-events: none;
+}
+.sent__burst i {
+  position: absolute;
+  width: 7px; height: 11px;
+  background: var(--accent);
+  opacity: 0;
+  transform: rotate(calc(var(--i) * 25.7deg)) translateY(0);
+  animation: sentPop 900ms cubic-bezier(.2,.7,.3,1) calc(560ms + var(--i) * 18ms) forwards;
+}
+.sent__burst i:nth-child(3n)   { background: var(--navy); }
+.sent__burst i:nth-child(4n)   { background: #e8b53f; }
+.sent__burst i:nth-child(5n)   { width: 6px; height: 6px; border-radius: 50%; }
+@keyframes sentPop {
+  0%   { opacity: 1; transform: rotate(calc(var(--i) * 25.7deg)) translateY(0) scale(.6); }
+  70%  { opacity: 1; }
+  100% { opacity: 0; transform: rotate(calc(var(--i) * 25.7deg)) translateY(-118px) scale(1); }
+}
+
+.sent__title {
+  margin: 0 0 10px;
+  font-size: clamp(22px, 3vw, 30px);
+  letter-spacing: -0.02em;
+}
+.sent__lead { margin: 0 auto 14px; max-width: 46ch; font-size: 16.5px; line-height: 1.6; }
+.sent__thanks {
+  margin: 0 auto 16px;
+  max-width: 50ch;
+  color: var(--muted);
+  font-size: 15px;
+  line-height: 1.65;
+}
+.sent__note { margin: 0 auto 8px; max-width: 50ch; color: var(--muted); font-size: 14.5px; }
+.sent__note a { color: inherit; font-weight: 600; }
+
+@media (prefers-reduced-motion: reduce) {
+  .sent__tick-ring, .sent__tick-mark { animation: none; stroke-dashoffset: 0; }
+  .sent__burst { display: none; }
+}
