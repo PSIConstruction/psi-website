@@ -10,6 +10,15 @@
    ============================================================ */
 (() => {
   "use strict";
+  // Where the request is posted. A form relay is used because the site is
+  // static — GitHub Pages cannot run server code of its own. Swapping the
+  // provider is a one-line change here.
+  const SEND = {
+    endpoint: window.PSI_FORM_ENDPOINT || "https://api.web3forms.com/submit",
+    accessKey: window.PSI_FORM_KEY || "",
+    to: "info@psiconstructionpa.com",
+  };
+
   const DATA = window.PSI_QUOTE;
   const root = document.getElementById("quoteApp");
   if (!root || !DATA) return;
@@ -277,10 +286,10 @@
     const p = el("p", "body-copy");
     p.style.margin = "0 auto 18px";
     p.textContent =
-      "Review the summary below, then send it to us. Your email app will open pre-filled" +
+      "Review the summary below, then send it straight to us — no email app needed." +
       (state.intake.photos
-        ? " — please attach your selected photos before sending."
-        : ".");
+        ? " We will ask for your photos in our reply."
+        : "");
     done.appendChild(p);
     root.appendChild(done);
 
@@ -306,15 +315,75 @@
         copyBtn.textContent = "Copied ✓";
       });
     });
-    const send = el("a", "btn", "Send to PSI");
-    send.href =
-      "mailto:info@psiconstructionpa.com?subject=" +
-      encodeURIComponent(subject) +
-      "&body=" +
-      encodeURIComponent(summary);
+    const send = el("button", "btn", "Send to PSI");
+    send.type = "button";
+
+    const status = el("p", "quote__status");
+    status.setAttribute("role", "status");
+    status.setAttribute("aria-live", "polite");
+    status.style.margin = "10px 0 0";
+
+    // Last resort only: if the relay cannot be reached, the visitor still has a
+    // way to get the request to us rather than losing everything they typed.
+    function mailtoFallback() {
+      const href =
+        "mailto:" + SEND.to +
+        "?subject=" + encodeURIComponent(subject) +
+        "&body=" + encodeURIComponent(summary);
+      status.innerHTML =
+        "We could not reach the server. " +
+        '<a href="' + href + '">Open this in your email app</a> ' +
+        "or call us on 570-338-8774 — your summary is above, and Copy Summary puts it on your clipboard.";
+    }
+
+    send.addEventListener("click", async () => {
+      if (send.disabled) return;
+      send.disabled = true;
+      send.textContent = "Sending…";
+      status.textContent = "";
+
+      const payload = {
+        access_key: SEND.accessKey,
+        subject: subject,
+        from_name: state.intake.name || "Website quote request",
+        // Sent by our own verified sender; replyto points at the visitor so
+        // hitting Reply in the inbox goes straight back to them. Sending *as*
+        // their address would fail SPF/DKIM and land in spam.
+        replyto: state.intake.email || "",
+        name: state.intake.name || "",
+        email: state.intake.email || "",
+        phone: state.intake.phone || "",
+        address: state.intake.address || "",
+        contact_method: state.intake.contactMethod || "",
+        best_time: state.intake.bestTime || "",
+        heard: state.intake.heard || "",
+        project: flow ? flow.title : state.gatewayChoice,
+        message: summary,
+        botcheck: "",            // honeypot — real visitors never fill this
+      };
+
+      try {
+        const res = await fetch(SEND.endpoint, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Accept: "application/json" },
+          body: JSON.stringify(payload),
+        });
+        if (!res.ok) throw new Error("HTTP " + res.status);
+        send.textContent = "Message sent ✓";
+        status.textContent =
+          "Thanks — your request is with PSI. We answer most requests the same business day." +
+          (state.intake.photos ? " Reply to our email with your photos and we will add them to the file." : "");
+      } catch (err) {
+        send.disabled = false;
+        send.textContent = "Send to PSI";
+        mailtoFallback();
+      }
+    });
+
     btns.append(copyBtn, send);
     controls.appendChild(btns);
     root.appendChild(controls);
+    root.appendChild(status);
   }
 
   render();
