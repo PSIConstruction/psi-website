@@ -26,6 +26,10 @@ var PSI = {
   ADS_CONVERSION_ID:    'AW-17854404861',
   ADS_CONVERSION_LABEL: 'AW-17854404861/amrCCL2gn_IcEP2x0sFC',
 
+  // Google Ads conversion action "Website click-to-call", account 434-715-7897.
+  // Fires when a visitor taps a tel: link anywhere on the site.
+  ADS_CALL_LABEL:       'AW-17854404861/Yu6TCPiJ05sdEP2x0sFC',
+
   // GA4 property "psiconstructionpa.com", Eastern time.
   GA4_MEASUREMENT_ID: 'G-85V8X6P3CR'
 };
@@ -192,6 +196,13 @@ var PSI = {
       event_category: 'contact',
       event_label: getCookie('psi_source') || 'unknown'
     });
+    if (!isPlaceholder(PSI.ADS_CALL_LABEL)) {
+      gtag('event', 'conversion', {
+        send_to: PSI.ADS_CALL_LABEL,
+        value: 1.0,
+        currency: 'USD'
+      });
+    }
   }, true);
 
   // Exposed so a form that posts directly (quote.js -> Web3Forms) can still
