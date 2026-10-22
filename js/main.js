@@ -222,6 +222,10 @@
   // Those pins are styled differently and open a detail view.
   const hasCase = (p) => Array.isArray(p.gallery) && p.gallery.length > 0;
 
+  // What the public sees for a project. `name` holds the street address and is
+  // kept only so we can tell which pin is which — it is never rendered.
+  const label = (p) => p.title || p.type || "PSI project";
+
   const pinIcon = (active, isCase) => L.divIcon({
     className: "",
     html: `<div class="pin${active ? " pin--active" : ""}${isCase ? " pin--case" : ""}"></div>`,
@@ -239,12 +243,11 @@
   const markers = projects.map((p, i) => {
     const m = L.marker([p.lat, p.lng], { icon: pinIcon(false, hasCase(p)) }).addTo(map);
     m.bindPopup(hasCase(p)
-      ? `<strong>${p.name}</strong><br>` +
-        (p.type ? `<em style="color:#d60000;font-style:normal;font-weight:600">${p.type}</em><br>` : "") +
+      ? `<strong>${label(p)}</strong><br>` +
         `${p.city}` +
         (p.desc ? `<span style="display:block;margin-top:6px;max-width:240px">${p.desc}</span>` : "") +
         `<button class="case__open" data-project="${i}" data-open="${i}">See these photos &rarr;</button>`
-      : `<strong>${p.name}</strong><br>${p.city}`);
+      : `<strong>${label(p)}</strong><br>${p.city}`);
     m.on("click", () => select(i, "map"));
     return m;
   });
@@ -307,10 +310,10 @@
       b2.className = "shot";
       b2.dataset.shot = k;
       b2.innerHTML = `
-        <img loading="lazy" src="${sh.src}" alt="${sh.cap || sh.p.type || "PSI project"}">
+        <img loading="lazy" src="${sh.src}" alt="${sh.cap || label(sh.p)}">
         ${sh.phase ? `<span class="shot__phase shot__phase--${sh.phase}">${sh.phase}</span>` : ""}
         <span class="shot__cap">
-          <strong>${sh.p.type || sh.p.city}</strong>
+          <strong>${label(sh.p)}</strong>
           ${sh.cap ? `<span>${sh.cap}</span>` : ""}
         </span>`;
       wall.appendChild(b2);
@@ -421,13 +424,16 @@
       : (p.img ? [{ src: p.img, cap: p.caption, phase: null }] : []);
     if (!list.length) return;
     vReturn = document.activeElement;
-    viewer.querySelector(".viewer__eyebrow").textContent = p.type || "Previous project";
-    viewer.querySelector(".viewer__title").textContent = p.name;
+    // Town above, project type as the heading. The eyebrow used to carry the
+    // type and the heading the street address; with the address gone they
+    // would otherwise print the same words twice.
+    viewer.querySelector(".viewer__eyebrow").textContent = p.city || "Previous project";
+    viewer.querySelector(".viewer__title").textContent = label(p);
     viewer.querySelector(".viewer__desc").textContent = p.desc || "";
     vRail.innerHTML = list.map((g) => `
       <figure class="viewer__fig">
         <div class="viewer__imgwrap">
-          <img src="${g.src}" alt="${g.cap || p.name}">
+          <img src="${g.src}" alt="${g.cap || label(p)}">
           ${g.phase ? `<span class="viewer__phase viewer__phase--${g.phase}">${g.phase}</span>` : ""}
           ${g.cap ? `<figcaption class="viewer__cap">${g.cap}</figcaption>` : ""}
         </div>

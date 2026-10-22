@@ -1,45 +1,31 @@
 /* ============================================================
    PSI Previous Projects — source data
-   Addresses & municipalities: "Kingston-PA-Construction-Property-List"
-   (Kingston, PA Construction · submitted by Sadya Liberov, June 9 2026).
-   55 Reynolds Street: filed permit set (TGL Engineering) in
-   "3D WALKTHROUGH/424-426 Rutter (filed plans).pdf" — filed under the
-   property's former address, 424-426 Rutter Avenue, before rezoning.
-   Its map pin keeps the Esri PointAddress returned for the Rutter
-   address: that is the authoritative rooftop point for this building,
-   whereas "55 Reynolds St" resolves only to an interpolated
-   StreetAddress.
+
+   `name` holds the site address. It is NOT shown anywhere on the site:
+   every rendered label comes from `title` instead, so visitors see
+   "Basement Renovation" rather than a client's street address. The
+   address stays here only so we can tell which map pin is which.
+   If you add a project, give it a `title` or it will fall back to the
+   generic "PSI project".
 
    Coordinates (Aug 2026) come from the Esri World Geocoder, which
    returned Addr_type=PointAddress — an authoritative parcel/rooftop
-   point — at score 99-100 for every address below.
-
-   The previous values were TIGER street-line interpolation via
-   Nominatim: OSM publishes almost no real address points in Kingston
-   (1 of 32 matched an actual record), so those pins were estimates
-   placed along the street, typically 15-50 m out and occasionally far
-   worse. 50 Reynolds Street was 141 m off and reported wrong by the
-   owner, which is what prompted the re-sourcing.
-
-   Not independently cross-checked: the Census geocoder blocks
-   automated requests, and OSM building coverage here is too sparse to
-   test the points against footprints. Esri is a single source.
-   Photos: PSI photo library (representative PSI portfolio photography).
+   point rather than an interpolated guess along the street.
    ============================================================ */
 window.PSI_PROJECTS = [
   {
     name: "55 Reynolds Street",
+    title: "New Construction — 3-Story Residence",
     city: "Kingston, PA 18704",
     lat: 41.265253, lng: -75.889529,
     id: "corner-new-build",
     type: "New Construction — 3-Story Residence",
-    desc: "New three-story residence at the corner of Rutter Avenue and Reynolds Street — 4,752 sq ft, Residential (R-1), built to the 2018 IRC/IBC. Originally addressed 424–426 Rutter Avenue; re-addressed to 55 Reynolds Street on rezoning. Featured in the aerial opener on this page.",
+    desc: "New three-storey residence on a corner lot \u2014 4,752 sq ft, Residential (R-1), built to the 2018 IRC/IBC. Featured in the aerial opener on this page.",
     img: "https://psiconstructionpa.com/assets/photos/55-reynolds/55reynolds-45-612c0de4.jpg",
     caption: "The finished house",
-    plans: "assets/plans/424-426-Rutter-filed-plans.pdf",
     gallery: [
-      { src: "https://psiconstructionpa.com/assets/photos/55-reynolds/55reynolds-01-baa15124.jpg", phase: "before", cap: "October 2025 — the corner lot before work, Rutter Avenue at Reynolds Street" },
-      { src: "https://psiconstructionpa.com/assets/photos/55-reynolds/55reynolds-02-a247d9c2.jpg", phase: "before", cap: "The site from the Reynolds Street sidewalk" },
+      { src: "https://psiconstructionpa.com/assets/photos/55-reynolds/55reynolds-01-baa15124.jpg", phase: "before", cap: "October 2025 — the corner lot before work" },
+      { src: "https://psiconstructionpa.com/assets/photos/55-reynolds/55reynolds-02-a247d9c2.jpg", phase: "before", cap: "The site from the sidewalk" },
       { src: "https://psiconstructionpa.com/assets/photos/55-reynolds/55reynolds-03-524232cb.jpg", phase: "foundation", cap: "Precast foundation walls set, stone base inside" },
       { src: "https://psiconstructionpa.com/assets/photos/55-reynolds/55reynolds-04-f4e736d3.jpg", phase: "framing", cap: "Inside the basement, the first floor framed overhead" },
       { src: "https://psiconstructionpa.com/assets/photos/55-reynolds/55reynolds-05-09252989.jpg", phase: "framing", cap: "Steel basement walls and the first partitions" },
@@ -85,7 +71,8 @@ window.PSI_PROJECTS = [
       { src: "https://psiconstructionpa.com/assets/photos/55-reynolds/55reynolds-45-612c0de4.jpg", phase: "exterior", cap: "August 2026 — finished, landscaped and handed over" },
     ]
   },
-  { name: "50 Reynolds Street",  city: "Kingston, PA", lat: 41.2657563, lng: -75.8895245,
+  { name: "50 Reynolds Street",
+    title: "Small Shower Enlarged \u2192 Walk-In",  city: "Kingston, PA", lat: 41.2657563, lng: -75.8895245,
     id: "shower-closet-merge",
     type: "Small Shower Enlarged \u2192 Walk-In",
     desc: "A cramped corner shower rebuilt at nearly double the footprint by taking in the closet next door.",
@@ -98,7 +85,8 @@ window.PSI_PROJECTS = [
       { src: "assets/photos/50-reynolds/50reynolds-after-02-full.jpg", phase: "after", cap: "The full enlarged enclosure \u2014 built-in bench, hand shower, lit niche" },
       { src: "assets/photos/50-reynolds/50reynolds-after-03-niche.jpg", phase: "after", cap: "Penny-round mosaic carried from the niche onto the shower floor" }
     ] },
-  { name: "289 Reynolds Street", city: "Kingston, PA", lat: 41.262829, lng: -75.8873066,
+  { name: "289 Reynolds Street",
+    title: "Water Damage Restoration", city: "Kingston, PA", lat: 41.262829, lng: -75.8873066,
     id: "water-damage-reynolds",
     type: "Water Damage Restoration",
     desc: "A house taken back to framing after water damage \u2014 ceilings and walls opened, insulation and wiring renewed, then boarded, floored and finished throughout.",
@@ -126,7 +114,8 @@ window.PSI_PROJECTS = [
       { src: "assets/photos/289-reynolds/289reynolds-19-7491ef3b.jpg", phase: "after", cap: "The living room finished — fireplace, trim and new floor" },
     ]
   },
-  { name: "554 Warren Avenue",   city: "Kingston, PA", lat: 41.2646423, lng: -75.8836466,
+  { name: "554 Warren Avenue",
+    title: "Basement Renovation",   city: "Kingston, PA", lat: 41.2646423, lng: -75.8836466,
     id: "basement-finish-warren",
     type: "Basement Renovation",
     desc: "An unfinished basement turned into finished living space \u2014 bedrooms, a full bathroom with a tiled tub surround, new flooring and lighting throughout.",
@@ -141,8 +130,10 @@ window.PSI_PROJECTS = [
       { src: "assets/photos/554-warren/554warren-06-43608cc5.jpg", phase: "after", cap: "The finished bathroom — tub, vanity and arched mirror in place" },
       { src: "assets/photos/554-warren/554warren-07-5a667f25.jpg", phase: "after", cap: "The new stair down into the finished basement" },
     ] },
-  { name: "453 Warren Avenue",   city: "Kingston, PA", lat: 41.2629624, lng: -75.8861046 },
-  { name: "417 Warren Avenue",   city: "Kingston, PA", lat: 41.2625177, lng: -75.8871484,
+  { name: "453 Warren Avenue",
+    title: "PSI project",   city: "Kingston, PA", lat: 41.2629624, lng: -75.8861046 },
+  { name: "417 Warren Avenue",
+    title: "Second-Storey Addition \u0026 First-Floor Renovation",   city: "Kingston, PA", lat: 41.2625177, lng: -75.8871484,
     id: "addition-and-first-floor",
     type: "Second-Storey Addition \u0026 First-Floor Renovation",
     desc: "A full second storey built onto a single-storey house \u2014 framed, sheathed, roofed and sided \u2014 with the first floor renovated underneath it.",
@@ -185,8 +176,10 @@ window.PSI_PROJECTS = [
       { src: "assets/photos/417-warren/417warren-34.jpg", phase: "after", cap: "Frameless glass shower complete" },
       { src: "assets/photos/417-warren/417warren-35.jpg", phase: "after", cap: "The second bathroom finished" }
     ] },
-  { name: "505 Warren Avenue",   city: "Kingston, PA", lat: 41.2635724, lng: -75.885076 },
-  { name: "192 James Street",    city: "Kingston, PA", lat: 41.2645332, lng: -75.885262,
+  { name: "505 Warren Avenue",
+    title: "PSI project",   city: "Kingston, PA", lat: 41.2635724, lng: -75.885076 },
+  { name: "192 James Street",
+    title: "Porch Enclosure \u2192 Master Bathroom",    city: "Kingston, PA", lat: 41.2645332, lng: -75.885262,
     id: "porch-to-master-bath",
     type: "Porch Enclosure \u2192 Master Bathroom",
     desc: "An exterior porch off the master bedroom, enclosed and converted into the master bathroom, with heated tile floors.",
@@ -200,9 +193,12 @@ window.PSI_PROJECTS = [
       { src: "assets/photos/192-james/192james-after-04-doorway.jpg", phase: "after", cap: "Full-height tile carried through to the bedroom doorway" },
       { src: "assets/photos/192-james/192james-after-05-mirror.jpg",  phase: "after", cap: "Quartz top with undermount basin" }
     ] },
-  { name: "194 James Street",    city: "Kingston, PA", lat: 41.2644226, lng: -75.8851439 },
-  { name: "145 James Street",    city: "Kingston, PA", lat: 41.2653089, lng: -75.8867047 },
-  { name: "225 James Street",    city: "Kingston, PA", lat: 41.2634984, lng: -75.8845569,
+  { name: "194 James Street",
+    title: "PSI project",    city: "Kingston, PA", lat: 41.2644226, lng: -75.8851439 },
+  { name: "145 James Street",
+    title: "PSI project",    city: "Kingston, PA", lat: 41.2653089, lng: -75.8867047 },
+  { name: "225 James Street",
+    title: "Exterior Room Addition",    city: "Kingston, PA", lat: 41.2634984, lng: -75.8845569,
     id: "exterior-room-addition",
     type: "Exterior Room Addition",
     desc: "A new room built onto the house \u2014 framed, roofed and sheathed from the ground up, then finished inside with the original brick left exposed.",
@@ -222,7 +218,8 @@ window.PSI_PROJECTS = [
       { src: "assets/photos/225-james/225james-11.jpg", phase: "after", cap: "The room complete, looking back toward the entry" },
       { src: "assets/photos/225-james/225james-12.jpg", phase: "after", cap: "Recessed lighting against the exposed brick" }
     ] },
-  { name: "378 Rutter Avenue",   city: "Kingston, PA", lat: 41.2643452, lng: -75.8909416,
+  { name: "378 Rutter Avenue",
+    title: "Fire Rebuild \u2014 Whole House",   city: "Kingston, PA", lat: 41.2643452, lng: -75.8909416,
     id: "fire-rebuild",
     type: "Fire Rebuild \u2014 Whole House",
     desc: "A house lost to fire and rebuilt in full \u2014 structure, stair, floors, kitchen and baths, finished throughout.",
@@ -255,7 +252,8 @@ window.PSI_PROJECTS = [
       { src: "assets/photos/378-rutter/378rutter-14.jpg", phase: "after", cap: "Stair and landing with trim complete" },
       { src: "assets/photos/378-rutter/378rutter-15.jpg", phase: "after", cap: "The top floor finished under the new roofline" }
     ] },
-  { name: "580 Rutter Avenue",   city: "Kingston, PA", lat: 41.2674966, lng: -75.8853806,
+  { name: "580 Rutter Avenue",
+    title: "Full Gut \u2014 Duplex to Single-Family",   city: "Kingston, PA", lat: 41.2674966, lng: -75.8853806,
     id: "duplex-to-single-family",
     type: "Full Gut \u2014 Duplex to Single-Family",
     desc: "A large gut renovation turning a two-unit duplex back into a single-family home \u2014 stripped to the framing throughout, re-framed, then tiled, decked and fitted out.",
@@ -282,9 +280,12 @@ window.PSI_PROJECTS = [
       { src: "assets/photos/580-rutter/580rutter-12.jpg", phase: "kitchen", cap: "Kitchen cabinets set and appliances landed, floor still under protection" },
       { src: "assets/photos/580-rutter/580rutter-13.jpg", phase: "kitchen", cap: "The kitchen from the far end, uppers hung and island in" }
     ] },
-  { name: "615 Charles Avenue",  city: "Kingston, PA", lat: 41.2684404, lng: -75.8850129 },
-  { name: "610 Charles Avenue",  city: "Kingston, PA", lat: 41.2687324, lng: -75.8855237 },
-  { name: "586 Charles Avenue",  city: "Kingston, PA", lat: 41.2682876, lng: -75.8860182,
+  { name: "615 Charles Avenue",
+    title: "PSI project",  city: "Kingston, PA", lat: 41.2684404, lng: -75.8850129 },
+  { name: "610 Charles Avenue",
+    title: "PSI project",  city: "Kingston, PA", lat: 41.2687324, lng: -75.8855237 },
+  { name: "586 Charles Avenue",
+    title: "Garage Converted to Two Apartments",  city: "Kingston, PA", lat: 41.2682876, lng: -75.8860182,
     id: "garage-to-two-apartments",
     type: "Garage Converted to Two Apartments",
     desc: "A detached garage taken back to its block shell and rebuilt as two self-contained apartments \u2014 new slab, framing, stair, kitchens, bathrooms and finishes throughout.",
@@ -322,7 +323,8 @@ window.PSI_PROJECTS = [
       { src: "assets/photos/586-charles/586charles-29.jpg", phase: "after", cap: "Living space with new windows and floor" },
       { src: "assets/photos/586-charles/586charles-30.jpg", phase: "after", cap: "Vanity and mirror in the second unit" }
     ] },
-  { name: "549 Charles Avenue",  city: "Kingston, PA", lat: 41.2676552, lng: -75.8867356,
+  { name: "549 Charles Avenue",
+    title: "Bathroom Renovation, Primary Bath Addition \u0026 Stair Railing",  city: "Kingston, PA", lat: 41.2676552, lng: -75.8867356,
     id: "two-baths-and-railing",
     type: "Bathroom Renovation, Primary Bath Addition \u0026 Stair Railing",
     desc: "An existing bathroom taken back to the studs and rebuilt, a new primary bathroom added off the bedroom, and the stair railing replaced.",
@@ -353,7 +355,8 @@ window.PSI_PROJECTS = [
       { src: "assets/photos/549-charles/549charles-22.jpg", phase: "railing", cap: "The rebuilt railing running the full flight" },
       { src: "assets/photos/549-charles/549charles-23.jpg", phase: "railing", cap: "Railing and newel seen from the landing" }
     ] },
-  { name: "841 Nandy Drive",     city: "Kingston, PA", lat: 41.2673916, lng: -75.8766291,
+  { name: "841 Nandy Drive",
+    title: "Home Renovation \u0026 Basement Finish",     city: "Kingston, PA", lat: 41.2673916, lng: -75.8766291,
     id: "renovation-and-basement-finish",
     type: "Home Renovation \u0026 Basement Finish",
     desc: "A large first-floor renovation combined with a full basement finish \u2014 the house stripped back and rebuilt above, and an unfinished basement turned into bedrooms, bathrooms and living space.",
@@ -397,16 +400,26 @@ window.PSI_PROJECTS = [
       { src: "assets/photos/841-nandy/841nandy-35.jpg", phase: "after", cap: "Another finished bedroom, daylight from the new window" },
       { src: "assets/photos/841-nandy/841nandy-36.jpg", phase: "after", cap: "Twin beds in a finished basement bedroom" }
     ] },
-  { name: "836 Nandy Drive",     city: "Kingston, PA", lat: 41.2674656, lng: -75.8771667 },
-  { name: "597 Gibson Avenue",   city: "Kingston, PA", lat: 41.2657666, lng: -75.8832229 },
-  { name: "663 Gibson Avenue",   city: "Kingston, PA", lat: 41.266847, lng: -75.8812817 },
-  { name: "230 Butler Street",   city: "Kingston, PA", lat: 41.2628665, lng: -75.8851358 },
-  { name: "141 Butler Street",   city: "Kingston, PA", lat: 41.2645456, lng: -75.8875422 },
-  { name: "55 Butler Street",    city: "Kingston, PA", lat: 41.266377, lng: -75.8892908 },
-  { name: "790 Market Street",   city: "Kingston, PA", lat: 41.263591, lng: -75.8992154 },
-  { name: "59 Parry Street",     city: "Luzerne, PA 18709", lat: 41.285194, lng: -75.898548 },
-  { name: "250 Courtdale Avenue",city: "Courtdale, PA", lat: 41.2796392, lng: -75.9115148 },
-  { name: "139 Third Avenue",    city: "Kingston, PA", lat: 41.2568152, lng: -75.8857917,
+  { name: "836 Nandy Drive",
+    title: "PSI project",     city: "Kingston, PA", lat: 41.2674656, lng: -75.8771667 },
+  { name: "597 Gibson Avenue",
+    title: "PSI project",   city: "Kingston, PA", lat: 41.2657666, lng: -75.8832229 },
+  { name: "663 Gibson Avenue",
+    title: "PSI project",   city: "Kingston, PA", lat: 41.266847, lng: -75.8812817 },
+  { name: "230 Butler Street",
+    title: "PSI project",   city: "Kingston, PA", lat: 41.2628665, lng: -75.8851358 },
+  { name: "141 Butler Street",
+    title: "PSI project",   city: "Kingston, PA", lat: 41.2645456, lng: -75.8875422 },
+  { name: "55 Butler Street",
+    title: "PSI project",    city: "Kingston, PA", lat: 41.266377, lng: -75.8892908 },
+  { name: "790 Market Street",
+    title: "PSI project",   city: "Kingston, PA", lat: 41.263591, lng: -75.8992154 },
+  { name: "59 Parry Street",
+    title: "PSI project",     city: "Luzerne, PA 18709", lat: 41.285194, lng: -75.898548 },
+  { name: "250 Courtdale Avenue",
+    title: "PSI project",city: "Courtdale, PA", lat: 41.2796392, lng: -75.9115148 },
+  { name: "139 Third Avenue",
+    title: "Commercial Bathroom Gut \u2014 Two Bathrooms",    city: "Kingston, PA", lat: 41.2568152, lng: -75.8857917,
     id: "commercial-two-bath-gut",
     type: "Commercial Bathroom Gut \u2014 Two Bathrooms",
     desc: "A commercial remodel of two bathrooms off a shared hallway, taken back to the studs and floor joists and rebuilt \u2014 re-framed, re-plumbed, waterproofed and fully tiled.",
@@ -434,8 +447,10 @@ window.PSI_PROJECTS = [
       { src: "assets/photos/139-third/139third-19.jpg", phase: "after", cap: "The second bathroom complete — vanity, mirror and fixtures in place" },
       { src: "assets/photos/139-third/139third-20.jpg", phase: "after", cap: "Frameless glass on the walk-in shower, hallway beyond" }
     ] },
-  { name: "117 North Gates Avenue", city: "Kingston, PA", lat: 41.2576975, lng: -75.8880323 },
-  { name: "569 Meadowland Avenue", city: "Kingston, PA", lat: 41.2640038, lng: -75.8824097,
+  { name: "117 North Gates Avenue",
+    title: "PSI project", city: "Kingston, PA", lat: 41.2576975, lng: -75.8880323 },
+  { name: "569 Meadowland Avenue",
+    title: "Basement Renovation", city: "Kingston, PA", lat: 41.2640038, lng: -75.8824097,
     id: "basement-finish-meadowland",
     type: "Basement Renovation",
     desc: "An unfinished basement rebuilt into finished living space \u2014 new stair, drywall throughout, lighting, flooring and built-in shelving.",
@@ -453,10 +468,14 @@ window.PSI_PROJECTS = [
       { src: "assets/photos/569-meadowland/569meadowland-09.jpg", phase: "after", cap: "New flooring run the length of the room" },
       { src: "assets/photos/569-meadowland/569meadowland-10.jpg", phase: "after", cap: "The hallway through to the stair, finished" }
     ] },
-  { name: "102 Westminster Street", city: "Wilkes-Barre, PA", lat: 41.235764, lng: -75.904863 },
-  { name: "80 North Washington Street", city: "Wilkes-Barre, PA", lat: 41.2458296, lng: -75.8793543 },
-  { name: "320 Pacific Avenue",  city: "West Pittston, PA", lat: 41.326214, lng: -75.8079539 },
-  { name: "110 Barber Street",   city: "Exeter, PA", lat: 41.3198988, lng: -75.8219443 }
+  { name: "102 Westminster Street",
+    title: "PSI project", city: "Wilkes-Barre, PA", lat: 41.235764, lng: -75.904863 },
+  { name: "80 North Washington Street",
+    title: "PSI project", city: "Wilkes-Barre, PA", lat: 41.2458296, lng: -75.8793543 },
+  { name: "320 Pacific Avenue",
+    title: "PSI project",  city: "West Pittston, PA", lat: 41.326214, lng: -75.8079539 },
+  { name: "110 Barber Street",
+    title: "PSI project",   city: "Exeter, PA", lat: 41.3198988, lng: -75.8219443 }
 ];
 
 window.PSI_OFFICE = {
