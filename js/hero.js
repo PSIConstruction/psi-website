@@ -435,10 +435,16 @@
       targetFloat = readyPrefix;
     }
 
-    // Exponential chase: framerate-independent, sub-frame accurate.
-    const k = 1 - Math.exp(-CONFIG.smoothing * dt);
-    currentFloat += (targetFloat - currentFloat) * k;
-    if (Math.abs(targetFloat - currentFloat) < 0.02) currentFloat = targetFloat;
+    if (startedPortrait) {
+      // Touch scrolling is already continuous; smoothing here only lags the
+      // image behind the thumb and costs extra frames to settle.
+      currentFloat = targetFloat;
+    } else {
+      // Exponential chase: framerate-independent, sub-frame accurate.
+      const k = 1 - Math.exp(-CONFIG.smoothing * dt);
+      currentFloat += (targetFloat - currentFloat) * k;
+      if (Math.abs(targetFloat - currentFloat) < 0.02) currentFloat = targetFloat;
+    }
 
     const want = Math.round(currentFloat);
     const idx = sequential
@@ -473,12 +479,23 @@
   let rafId = 0;
   let inView = true;
 
+  // True only while the loop is parked. Resetting the clock on every scroll
+  // event — which is what this did at first — drove dt to nearly zero, so the
+  // exponential chase advanced by almost nothing for as long as a finger was
+  // moving and then lurched when it stopped.
+  let staleClock = true;
+
   function frame(now) {
     rafId = 0;
     if (dead) return;
+    if (staleClock) {
+      lastT = now;
+      staleClock = false;
+    }
     const dt = Math.min(0.05, (now - lastT) / 1000);
     lastT = now;
     if (stepOnce(dt)) schedule();
+    else staleClock = true;      // parked: next wake starts a fresh clock
   }
 
   function schedule() {
@@ -487,9 +504,6 @@
   }
 
   function wake() {
-    // Reset the clock so a frame after a long idle does not integrate a huge
-    // dt and jump the scrub.
-    lastT = performance.now();
     schedule();
   }
 
