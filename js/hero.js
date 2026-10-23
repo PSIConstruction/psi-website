@@ -301,7 +301,10 @@
   function resize() {
     // Cap backing store: sequence frames are 1920px wide, so >2x their
     // density buys nothing and costs memory on Retina displays.
-    dpr = Math.min(window.devicePixelRatio || 1, 2);
+    // Cap against the source, not the screen. The phone frames are 750px
+    // wide, so a 2x store on a 3x display redraws detail that was never in
+    // the image — pure fill cost on the weakest GPUs we serve.
+    dpr = Math.min(window.devicePixelRatio || 1, startedPortrait ? 1.5 : 2);
     cw = canvas.clientWidth;
     ch = canvas.clientHeight;
     const bw = Math.round(cw * dpr);
@@ -337,7 +340,9 @@
       Math.max(0, CONFIG.focalY * dh - (ch * dpr) / 2),
     );
     ctx.imageSmoothingEnabled = true;
-    ctx.imageSmoothingQuality = "high";
+    // "high" is a multi-tap resample. On a phone the frame is drawn close to
+    // 1:1 so it buys nothing visible and costs real milliseconds per frame.
+    ctx.imageSmoothingQuality = startedPortrait ? "low" : "high";
     ctx.drawImage(img, dx, dy, dw, dh);
   }
 
@@ -398,6 +403,9 @@
 
   function onFrameArrived(i) {
     growReadyPrefix();
+    // The loop is idle between scrolls now, so an arriving frame has to ask
+    // for a repaint itself.
+    if (typeof schedule === "function") schedule();
     if (loaderBar) {
       loaderBar.style.width = ((readyCount / N) * 100).toFixed(1) + "%";
     }
@@ -407,10 +415,19 @@
     if (Math.abs(i - targetFloat) < 1.5) drawnFrame = -1;
   }
 
+  let lastProgressStr = "";
+
   function stepOnce(dt) {
     const p = scrollProgress();
     progressNow = p;
-    hero.style.setProperty("--hero-progress", p.toFixed(4));
+    // One CSS rule reads this (the hero fade). Writing it every frame
+    // invalidated style on the hero subtree continuously, including long
+    // after the hero had scrolled away.
+    const ps = p.toFixed(3);
+    if (ps !== lastProgressStr) {
+      hero.style.setProperty("--hero-progress", ps);
+      lastProgressStr = ps;
+    }
     targetFloat = frameForProgress(p);
     // Hold at the edge of what has actually loaded rather than skipping onto a
     // distant frame that happens to be ready.
@@ -438,14 +455,63 @@
         drawnFrame = idx;
       }
     }
+
+    // Still settling if the smoothed frame has not caught the target, or if
+    // the target is ahead of what has loaded and more frames are arriving.
+    return (
+      Math.abs(targetFloat - currentFloat) > 0.01 ||
+      (sequential && readyPrefix >= 0 && targetFloat > readyPrefix)
+    );
   }
 
-  function tick(now) {
+  // The old loop called requestAnimationFrame unconditionally for the life of
+  // the page: a layout read, a style write and a possible redraw every frame,
+  // forever, whether or not the hero was on screen. That is what made the rest
+  // of the page feel heavy on a phone. Frames are now scheduled by scrolling
+  // and by the smoothing chase settling, and stop entirely once the hero is
+  // out of view.
+  let rafId = 0;
+  let inView = true;
+
+  function frame(now) {
+    rafId = 0;
     if (dead) return;
     const dt = Math.min(0.05, (now - lastT) / 1000);
     lastT = now;
-    stepOnce(dt);
-    requestAnimationFrame(tick);
+    if (stepOnce(dt)) schedule();
+  }
+
+  function schedule() {
+    if (rafId || dead || !inView) return;
+    rafId = requestAnimationFrame(frame);
+  }
+
+  function wake() {
+    // Reset the clock so a frame after a long idle does not integrate a huge
+    // dt and jump the scrub.
+    lastT = performance.now();
+    schedule();
+  }
+
+  window.addEventListener("scroll", wake, { passive: true });
+
+  if (window.IntersectionObserver) {
+    new IntersectionObserver(
+      (entries) => {
+        inView = entries[0].isIntersecting;
+        if (inView) wake();
+        else if (rafId) {
+          cancelAnimationFrame(rafId);
+          rafId = 0;
+        }
+      },
+      { rootMargin: "200px" },
+    ).observe(hero);
+  }
+
+  // Kept for the debug hook and for callers that want an immediate repaint.
+  function tick(now) {
+    frame(now);
   }
 
   // ------------------------------------------------------------------
@@ -484,14 +550,15 @@
     },
   });
 
-  window.addEventListener("resize", resize, { passive: true });
+  window.addEventListener("resize", () => { resize(); wake(); }, { passive: true });
   resize();
   pump();
   try {
     requestAnimationFrame((t) => {
       if (dead) return;
       resize();
-      requestAnimationFrame(tick);
+      lastT = t;
+      schedule();
     });
   } catch (e) {
     retreat();

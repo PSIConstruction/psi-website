@@ -212,7 +212,20 @@
   const mapEl = document.getElementById("projectMap");
   if (!mapEl || !projects.length || typeof L === "undefined") return;
 
-  const map = L.map(mapEl, { scrollWheelZoom: false });
+  // On a phone the map occupies most of the viewport, so one-finger drag has
+  // to belong to the page or there is no way to scroll past this section.
+  // Panning and pinch-zoom stay available on anything with a real pointer;
+  // on touch the pins are still tappable, which is what the map is for here.
+  const touchPhone =
+    window.matchMedia("(max-width: 900px)").matches &&
+    window.matchMedia("(hover: none)").matches;
+
+  const map = L.map(mapEl, {
+    scrollWheelZoom: false,
+    dragging: !touchPhone,
+    touchZoom: !touchPhone,
+    doubleClickZoom: !touchPhone,
+  });
   L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
     maxZoom: 19,
     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
@@ -320,7 +333,27 @@
     });
   }
 
+  // A tap that starts a scroll must not count as a choice. Opening on click
+  // alone meant swiping down the page over the photographs opened whichever
+  // job happened to be under the thumb.
+  let touchStart = null;
+  let touchMoved = false;
+  wall.addEventListener("touchstart", (e) => {
+    const t = e.touches[0];
+    touchStart = t ? { x: t.clientX, y: t.clientY } : null;
+    touchMoved = false;
+  }, { passive: true });
+  wall.addEventListener("touchmove", (e) => {
+    if (!touchStart) return;
+    const t = e.touches[0];
+    if (!t) return;
+    // 10px of travel in any direction means they were scrolling, not choosing.
+    if (Math.abs(t.clientX - touchStart.x) > 10 ||
+        Math.abs(t.clientY - touchStart.y) > 10) touchMoved = true;
+  }, { passive: true });
+
   wall.addEventListener("click", (e) => {
+    if (touchMoved) { touchMoved = false; return; }
     const item = e.target.closest(".shot");
     if (!item) return;
     const sh = shots[+item.dataset.shot];
