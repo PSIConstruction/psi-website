@@ -321,7 +321,7 @@
   }
 
   // Cover-draw with focal-point bias.
-  function draw(idx) {
+  function drawFrame(idx, alpha) {
     const img = frames[idx];
     if (!img) return;
     const iw = img.width,
@@ -343,7 +343,23 @@
     // "high" is a multi-tap resample. On a phone the frame is drawn close to
     // 1:1 so it buys nothing visible and costs real milliseconds per frame.
     ctx.imageSmoothingQuality = startedPortrait ? "low" : "high";
+    ctx.globalAlpha = alpha === undefined ? 1 : alpha;
     ctx.drawImage(img, dx, dy, dw, dh);
+    ctx.globalAlpha = 1;
+  }
+
+  // Draw a FRACTIONAL position by cross-fading the two frames either side of
+  // it. Twenty-four frames across the runway is one frame per four percent of
+  // the scroll, which the eye reads as a flipbook. Blending turns the same
+  // frames into continuous motion: the base frame is opaque, the next is laid
+  // over it at the fraction between them. Two drawImage calls at most.
+  function drawAt(pos) {
+    const i0 = Math.floor(pos);
+    const f = pos - i0;
+    drawFrame(i0, 1);
+    if (f > 0.015 && i0 + 1 < N && loadState[i0 + 1] === 2) {
+      drawFrame(i0 + 1, f);
+    }
   }
 
   // ------------------------------------------------------------------
@@ -446,6 +462,8 @@
       if (Math.abs(targetFloat - currentFloat) < 0.02) currentFloat = targetFloat;
     }
 
+    // Clamp the fractional position to what has actually loaded, then draw it
+    // as a fraction rather than rounding to the nearest frame.
     const want = Math.round(currentFloat);
     const idx = sequential
       ? Math.min(readyPrefix, Math.max(0, want)) // -1 while nothing has arrived
@@ -456,9 +474,14 @@
         canvasLive = true;
         hero.classList.add("hero--canvas-live");
       }
-      if (idx !== drawnFrame) {
-        draw(idx);
-        drawnFrame = idx;
+      const pos = sequential
+        ? Math.min(readyPrefix, Math.max(0, currentFloat))
+        : idx;
+      // A twentieth of a frame is below what the blend can show, and skipping
+      // those keeps the loop parking instead of redrawing imperceptibly.
+      if (Math.abs(pos - drawnFrame) > 0.05) {
+        drawAt(pos);
+        drawnFrame = pos;
       }
     }
 

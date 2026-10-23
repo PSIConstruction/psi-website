@@ -3164,12 +3164,28 @@ section[id],
      with their caption inside, and the pair treated as a single block
      that the scroll settles onto rather than two tall things the thumb
      has to fight past. */
+  /* Two stops, both of which a fling has to honour.
+
+     scroll-snap-stop: always is the part that matters: without it a fast
+     flick sails straight through a proximity snap point, which is exactly
+     what was happening — people scrolled hard through How We Build and shot
+     past the projects entirely. With it the scroll is required to come to
+     rest at the next snap position it crosses, however hard it was thrown.
+
+     The section stop lands on the heading; this one lands on the panel, so
+     even a visitor who overshoots the heading is stopped with the map and
+     the photographs framed together. */
+  /* Scoped deliberately to this section. Applying it to every section would
+     make the whole page feel like it was catching on something. */
+  #projects {
+    scroll-snap-stop: always;
+  }
+
   .projects__layout {
     gap: 0;
-    /* no snap target of its own: #projects already snaps at section level,
-       and a second point inside it fights the first under proximity. The
-       job here is simply to make the pair fit one screen so that stop
-       lands on the whole panel. */
+    scroll-snap-align: center;
+    scroll-snap-stop: always;
+    scroll-margin-top: 54px;
   }
 
   #projectMap {
