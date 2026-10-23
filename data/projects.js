@@ -1,12 +1,13 @@
 /* ============================================================
    PSI Previous Projects — source data
 
-   `name` holds the site address. It is NOT shown anywhere on the site:
-   every rendered label comes from `title` instead, so visitors see
-   "Basement Renovation" rather than a client's street address. The
-   address stays here only so we can tell which map pin is which.
-   If you add a project, give it a `title` or it will fall back to the
-   generic "PSI project".
+   No client address appears in this file. Every project is labelled by
+   the work; `name` and `title` both carry that label. The map pins keep
+   their real coordinates, so the map is unchanged.
+
+   The address for each project lives in data/addresses.local.json,
+   which is gitignored and never published. That file is the lookup for
+   which pin is which — keep a copy somewhere safe, it is not in git.
 
    Coordinates (Aug 2026) come from the Esri World Geocoder, which
    returned Addr_type=PointAddress — an authoritative parcel/rooftop
@@ -14,7 +15,7 @@
    ============================================================ */
 window.PSI_PROJECTS = [
   {
-    name: "55 Reynolds Street",
+    name: "New Construction — 3-Story Residence",
     title: "New Construction — 3-Story Residence",
     city: "Kingston, PA 18704",
     lat: 41.265253, lng: -75.889529,
@@ -71,7 +72,7 @@ window.PSI_PROJECTS = [
       { src: "https://psiconstructionpa.com/assets/photos/55-reynolds/55reynolds-45-612c0de4.jpg", phase: "exterior", cap: "August 2026 — finished, landscaped and handed over" },
     ]
   },
-  { name: "50 Reynolds Street",
+  { name: "Small Shower Enlarged \u2192 Walk-In",
     title: "Small Shower Enlarged \u2192 Walk-In",  city: "Kingston, PA", lat: 41.2657563, lng: -75.8895245,
     id: "shower-closet-merge",
     type: "Small Shower Enlarged \u2192 Walk-In",
@@ -85,7 +86,7 @@ window.PSI_PROJECTS = [
       { src: "assets/photos/50-reynolds/50reynolds-after-02-full.jpg", phase: "after", cap: "The full enlarged enclosure \u2014 built-in bench, hand shower, lit niche" },
       { src: "assets/photos/50-reynolds/50reynolds-after-03-niche.jpg", phase: "after", cap: "Penny-round mosaic carried from the niche onto the shower floor" }
     ] },
-  { name: "289 Reynolds Street",
+  { name: "Water Damage Restoration",
     title: "Water Damage Restoration", city: "Kingston, PA", lat: 41.262829, lng: -75.8873066,
     id: "water-damage-reynolds",
     type: "Water Damage Restoration",
@@ -114,7 +115,7 @@ window.PSI_PROJECTS = [
       { src: "assets/photos/289-reynolds/289reynolds-19-7491ef3b.jpg", phase: "after", cap: "The living room finished — fireplace, trim and new floor" },
     ]
   },
-  { name: "554 Warren Avenue",
+  { name: "Basement Renovation",
     title: "Basement Renovation",   city: "Kingston, PA", lat: 41.2646423, lng: -75.8836466,
     id: "basement-finish-warren",
     type: "Basement Renovation",
@@ -130,9 +131,9 @@ window.PSI_PROJECTS = [
       { src: "assets/photos/554-warren/554warren-06-43608cc5.jpg", phase: "after", cap: "The finished bathroom — tub, vanity and arched mirror in place" },
       { src: "assets/photos/554-warren/554warren-07-5a667f25.jpg", phase: "after", cap: "The new stair down into the finished basement" },
     ] },
-  { name: "453 Warren Avenue",
+  { name: "PSI project",
     title: "PSI project",   city: "Kingston, PA", lat: 41.2629624, lng: -75.8861046 },
-  { name: "417 Warren Avenue",
+  { name: "Second-Storey Addition \u0026 First-Floor Renovation",
     title: "Second-Storey Addition \u0026 First-Floor Renovation",   city: "Kingston, PA", lat: 41.2625177, lng: -75.8871484,
     id: "addition-and-first-floor",
     type: "Second-Storey Addition \u0026 First-Floor Renovation",
@@ -176,9 +177,9 @@ window.PSI_PROJECTS = [
       { src: "assets/photos/417-warren/417warren-34.jpg", phase: "after", cap: "Frameless glass shower complete" },
       { src: "assets/photos/417-warren/417warren-35.jpg", phase: "after", cap: "The second bathroom finished" }
     ] },
-  { name: "505 Warren Avenue",
+  { name: "PSI project",
     title: "PSI project",   city: "Kingston, PA", lat: 41.2635724, lng: -75.885076 },
-  { name: "192 James Street",
+  { name: "Porch Enclosure \u2192 Master Bathroom",
     title: "Porch Enclosure \u2192 Master Bathroom",    city: "Kingston, PA", lat: 41.2645332, lng: -75.885262,
     id: "porch-to-master-bath",
     type: "Porch Enclosure \u2192 Master Bathroom",
@@ -193,11 +194,11 @@ window.PSI_PROJECTS = [
       { src: "assets/photos/192-james/192james-after-04-doorway.jpg", phase: "after", cap: "Full-height tile carried through to the bedroom doorway" },
       { src: "assets/photos/192-james/192james-after-05-mirror.jpg",  phase: "after", cap: "Quartz top with undermount basin" }
     ] },
-  { name: "194 James Street",
+  { name: "PSI project",
     title: "PSI project",    city: "Kingston, PA", lat: 41.2644226, lng: -75.8851439 },
-  { name: "145 James Street",
+  { name: "PSI project",
     title: "PSI project",    city: "Kingston, PA", lat: 41.2653089, lng: -75.8867047 },
-  { name: "225 James Street",
+  { name: "Exterior Room Addition",
     title: "Exterior Room Addition",    city: "Kingston, PA", lat: 41.2634984, lng: -75.8845569,
     id: "exterior-room-addition",
     type: "Exterior Room Addition",
@@ -218,7 +219,7 @@ window.PSI_PROJECTS = [
       { src: "assets/photos/225-james/225james-11.jpg", phase: "after", cap: "The room complete, looking back toward the entry" },
       { src: "assets/photos/225-james/225james-12.jpg", phase: "after", cap: "Recessed lighting against the exposed brick" }
     ] },
-  { name: "378 Rutter Avenue",
+  { name: "Fire Rebuild \u2014 Whole House",
     title: "Fire Rebuild \u2014 Whole House",   city: "Kingston, PA", lat: 41.2643452, lng: -75.8909416,
     id: "fire-rebuild",
     type: "Fire Rebuild \u2014 Whole House",
@@ -252,7 +253,7 @@ window.PSI_PROJECTS = [
       { src: "assets/photos/378-rutter/378rutter-14.jpg", phase: "after", cap: "Stair and landing with trim complete" },
       { src: "assets/photos/378-rutter/378rutter-15.jpg", phase: "after", cap: "The top floor finished under the new roofline" }
     ] },
-  { name: "580 Rutter Avenue",
+  { name: "Full Gut \u2014 Duplex to Single-Family",
     title: "Full Gut \u2014 Duplex to Single-Family",   city: "Kingston, PA", lat: 41.2674966, lng: -75.8853806,
     id: "duplex-to-single-family",
     type: "Full Gut \u2014 Duplex to Single-Family",
@@ -280,11 +281,11 @@ window.PSI_PROJECTS = [
       { src: "assets/photos/580-rutter/580rutter-12.jpg", phase: "kitchen", cap: "Kitchen cabinets set and appliances landed, floor still under protection" },
       { src: "assets/photos/580-rutter/580rutter-13.jpg", phase: "kitchen", cap: "The kitchen from the far end, uppers hung and island in" }
     ] },
-  { name: "615 Charles Avenue",
+  { name: "PSI project",
     title: "PSI project",  city: "Kingston, PA", lat: 41.2684404, lng: -75.8850129 },
-  { name: "610 Charles Avenue",
+  { name: "PSI project",
     title: "PSI project",  city: "Kingston, PA", lat: 41.2687324, lng: -75.8855237 },
-  { name: "586 Charles Avenue",
+  { name: "Garage Converted to Two Apartments",
     title: "Garage Converted to Two Apartments",  city: "Kingston, PA", lat: 41.2682876, lng: -75.8860182,
     id: "garage-to-two-apartments",
     type: "Garage Converted to Two Apartments",
@@ -323,7 +324,7 @@ window.PSI_PROJECTS = [
       { src: "assets/photos/586-charles/586charles-29.jpg", phase: "after", cap: "Living space with new windows and floor" },
       { src: "assets/photos/586-charles/586charles-30.jpg", phase: "after", cap: "Vanity and mirror in the second unit" }
     ] },
-  { name: "549 Charles Avenue",
+  { name: "Bathroom Renovation, Primary Bath Addition \u0026 Stair Railing",
     title: "Bathroom Renovation, Primary Bath Addition \u0026 Stair Railing",  city: "Kingston, PA", lat: 41.2676552, lng: -75.8867356,
     id: "two-baths-and-railing",
     type: "Bathroom Renovation, Primary Bath Addition \u0026 Stair Railing",
@@ -355,7 +356,7 @@ window.PSI_PROJECTS = [
       { src: "assets/photos/549-charles/549charles-22.jpg", phase: "railing", cap: "The rebuilt railing running the full flight" },
       { src: "assets/photos/549-charles/549charles-23.jpg", phase: "railing", cap: "Railing and newel seen from the landing" }
     ] },
-  { name: "841 Nandy Drive",
+  { name: "Home Renovation \u0026 Basement Finish",
     title: "Home Renovation \u0026 Basement Finish",     city: "Kingston, PA", lat: 41.2673916, lng: -75.8766291,
     id: "renovation-and-basement-finish",
     type: "Home Renovation \u0026 Basement Finish",
@@ -400,25 +401,25 @@ window.PSI_PROJECTS = [
       { src: "assets/photos/841-nandy/841nandy-35.jpg", phase: "after", cap: "Another finished bedroom, daylight from the new window" },
       { src: "assets/photos/841-nandy/841nandy-36.jpg", phase: "after", cap: "Twin beds in a finished basement bedroom" }
     ] },
-  { name: "836 Nandy Drive",
+  { name: "PSI project",
     title: "PSI project",     city: "Kingston, PA", lat: 41.2674656, lng: -75.8771667 },
-  { name: "597 Gibson Avenue",
+  { name: "PSI project",
     title: "PSI project",   city: "Kingston, PA", lat: 41.2657666, lng: -75.8832229 },
-  { name: "663 Gibson Avenue",
+  { name: "PSI project",
     title: "PSI project",   city: "Kingston, PA", lat: 41.266847, lng: -75.8812817 },
-  { name: "230 Butler Street",
+  { name: "PSI project",
     title: "PSI project",   city: "Kingston, PA", lat: 41.2628665, lng: -75.8851358 },
-  { name: "141 Butler Street",
+  { name: "PSI project",
     title: "PSI project",   city: "Kingston, PA", lat: 41.2645456, lng: -75.8875422 },
-  { name: "55 Butler Street",
+  { name: "PSI project",
     title: "PSI project",    city: "Kingston, PA", lat: 41.266377, lng: -75.8892908 },
-  { name: "790 Market Street",
+  { name: "PSI project",
     title: "PSI project",   city: "Kingston, PA", lat: 41.263591, lng: -75.8992154 },
-  { name: "59 Parry Street",
+  { name: "PSI project",
     title: "PSI project",     city: "Luzerne, PA 18709", lat: 41.285194, lng: -75.898548 },
-  { name: "250 Courtdale Avenue",
+  { name: "PSI project",
     title: "PSI project",city: "Courtdale, PA", lat: 41.2796392, lng: -75.9115148 },
-  { name: "139 Third Avenue",
+  { name: "Commercial Bathroom Gut \u2014 Two Bathrooms",
     title: "Commercial Bathroom Gut \u2014 Two Bathrooms",    city: "Kingston, PA", lat: 41.2568152, lng: -75.8857917,
     id: "commercial-two-bath-gut",
     type: "Commercial Bathroom Gut \u2014 Two Bathrooms",
@@ -447,9 +448,9 @@ window.PSI_PROJECTS = [
       { src: "assets/photos/139-third/139third-19.jpg", phase: "after", cap: "The second bathroom complete — vanity, mirror and fixtures in place" },
       { src: "assets/photos/139-third/139third-20.jpg", phase: "after", cap: "Frameless glass on the walk-in shower, hallway beyond" }
     ] },
-  { name: "117 North Gates Avenue",
+  { name: "PSI project",
     title: "PSI project", city: "Kingston, PA", lat: 41.2576975, lng: -75.8880323 },
-  { name: "569 Meadowland Avenue",
+  { name: "Basement Renovation",
     title: "Basement Renovation", city: "Kingston, PA", lat: 41.2640038, lng: -75.8824097,
     id: "basement-finish-meadowland",
     type: "Basement Renovation",
@@ -468,13 +469,13 @@ window.PSI_PROJECTS = [
       { src: "assets/photos/569-meadowland/569meadowland-09.jpg", phase: "after", cap: "New flooring run the length of the room" },
       { src: "assets/photos/569-meadowland/569meadowland-10.jpg", phase: "after", cap: "The hallway through to the stair, finished" }
     ] },
-  { name: "102 Westminster Street",
+  { name: "PSI project",
     title: "PSI project", city: "Wilkes-Barre, PA", lat: 41.235764, lng: -75.904863 },
-  { name: "80 North Washington Street",
+  { name: "PSI project",
     title: "PSI project", city: "Wilkes-Barre, PA", lat: 41.2458296, lng: -75.8793543 },
-  { name: "320 Pacific Avenue",
+  { name: "PSI project",
     title: "PSI project",  city: "West Pittston, PA", lat: 41.326214, lng: -75.8079539 },
-  { name: "110 Barber Street",
+  { name: "PSI project",
     title: "PSI project",   city: "Exeter, PA", lat: 41.3198988, lng: -75.8219443 }
 ];
 
