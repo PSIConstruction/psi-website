@@ -3183,9 +3183,11 @@ section[id],
 
   .projects__layout {
     gap: 0;
-    scroll-snap-align: center;
-    scroll-snap-stop: always;
-    scroll-margin-top: 54px;
+    /* A gentle target for an unhurried scroll. The guaranteed stop is done
+       in script — see armPanelStop in main.js — because neither proximity
+       nor mandatory snapping can both catch a fling and then let go. */
+    scroll-snap-align: start;
+    scroll-margin-top: 58px;
   }
 
   #projectMap {

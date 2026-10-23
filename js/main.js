@@ -288,6 +288,53 @@
     ro.observe(mapEl);
   }
 
+  // ---- the absolute stop on the projects panel (phones) ----
+  // CSS snapping cannot do this job. Proximity lets a fling sail past, and
+  // mandatory refuses to let go afterwards: with the panel as the only
+  // target the scroll was dragged straight back to it every time, so there
+  // was no way to continue down the page at all.
+  //
+  // So the stop is explicit. The first time the panel comes into reach the
+  // scroll is brought to rest with the map and the photographs framed
+  // together, once. After that the page scrolls freely, and the stop re-arms
+  // only after the panel has been left behind.
+  (function armPanelStop() {
+    if (!touchPhone) return;
+    const panel = document.querySelector(".projects__layout");
+    if (!panel) return;
+
+    const NAV = 58;              // the panel sits just under the bar
+    let armed = true;
+    let settling = 0;
+
+    const framedY = () =>
+      Math.round(panel.getBoundingClientRect().top + window.pageYOffset - NAV);
+
+    const update = () => {
+      const r = panel.getBoundingClientRect();
+      const vh = window.innerHeight;
+
+      // Left behind in either direction: ready to catch them next time.
+      if (r.top > vh * 1.1 || r.bottom < -vh * 0.1) {
+        armed = true;
+        return;
+      }
+      if (!armed || Date.now() < settling) return;
+
+      // Far enough in that stopping is clearly the right call, not so far
+      // that the panel has already gone by.
+      if (r.top < vh * 0.65 && r.top > -r.height * 0.5) {
+        armed = false;
+        settling = Date.now() + 700;   // ignore the scrolling we cause
+        window.scrollTo({ top: framedY(), behavior: "smooth" });
+      }
+    };
+
+    window.addEventListener("scroll", update, { passive: true });
+    window.addEventListener("resize", update, { passive: true });
+    update();
+  })();
+
   const wall = document.getElementById("shotWall");
   const hint = document.getElementById("shotHint");
 
