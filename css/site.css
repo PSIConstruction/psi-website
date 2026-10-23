@@ -3159,10 +3159,32 @@ section[id],
     margin-bottom: 14px;
   }
 
+  /* ---- the projects section as one panel on a phone ----
+     Map on top at half the height it had, photographs directly beneath
+     with their caption inside, and the pair treated as a single block
+     that the scroll settles onto rather than two tall things the thumb
+     has to fight past. */
   .projects__layout {
-    gap: 12px;
+    gap: 0;
+    /* no snap target of its own: #projects already snaps at section level,
+       and a second point inside it fights the first under proximity. The
+       job here is simply to make the pair fit one screen so that stop
+       lands on the whole panel. */
   }
 
+  #projectMap {
+    height: 30vh;                 /* was clamp(380px, 56vh, 560px) */
+    min-height: 200px;
+    border-radius: 12px 12px 0 0;
+    border-bottom: 0;
+  }
+
+  .shots-wrap { margin-top: 0; }
+
+  .shots {
+    height: 46vh;                 /* map + photos ≈ one screen */
+    border-radius: 0 0 12px 12px;
+  }
 }
 
 /* ---------------- Where We've Built: the job index ---------------- */

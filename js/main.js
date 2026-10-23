@@ -413,7 +413,10 @@
   // advancing and the pin still lights up so they can follow along — the map
   // just stops moving itself. Ten quiet seconds and it resumes following.
   // Clicking a pin is an explicit request, so that still zooms.
-  const MAP_HOLD = 10000;
+  // On a phone the map cannot be dragged at all, so there is nothing to hold
+  // off for: the ten-second pause existed to stop the slideshow pulling the
+  // map away from someone panning it.
+  const MAP_HOLD = touchPhone ? 0 : 10000;
   let mapHeldUntil = 0;
   const mapHeld = () => Date.now() < mapHeldUntil;
   const holdMap = () => { mapHeldUntil = Date.now() + MAP_HOLD; };
@@ -483,11 +486,37 @@
     vHeldUntil = 0;
     vPlay();
     viewer.querySelector(".viewer__close").focus();
+
+    // One entry, pushed once per opening. Without the guard a visitor who
+    // opened several jobs would need as many back gestures to get out.
+    if (!vHistory) {
+      try {
+        history.pushState({ psiViewer: true }, "");
+        vHistory = true;
+      } catch (e) {
+        vHistory = false;   // private mode and the like: the X still works
+      }
+    }
   }
 
-  function closeViewer() {
+  window.addEventListener("popstate", () => {
+    if (viewer.classList.contains("is-open")) closeViewer(true);
+  });
+
+  // True while the history entry we pushed for the viewer is still on the
+  // stack, so closing by hand can pop it without us then treating that pop as
+  // a second close.
+  let vHistory = false;
+
+  function closeViewer(fromPop) {
     vStop();
     play();
+    if (vHistory && !fromPop) {
+      vHistory = false;
+      history.back();
+    } else if (fromPop) {
+      vHistory = false;
+    }
     viewer.classList.remove("is-open");
     viewer.setAttribute("aria-hidden", "true");
     document.body.classList.remove("viewer-lock");
