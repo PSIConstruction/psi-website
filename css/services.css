@@ -39,10 +39,12 @@
 }
 .svc-hero__body {
   position: relative;
-  padding-top: 120px;
-  padding-bottom: clamp(36px, 6vh, 64px);
+  /* the same gutter the rest of the site uses; without it the copy sat
+     flush against the left edge of the photograph */
+  padding: 120px clamp(20px, 6vw, 96px) clamp(36px, 6vh, 64px);
   max-width: 1180px;
   margin: 0 auto;
+  box-sizing: content-box;
 }
 .svc-hero__eyebrow { color: rgba(255, 255, 255, 0.8); }
 .svc-hero__title {

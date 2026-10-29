@@ -31,6 +31,8 @@ DOMAIN = "https://psiconstructionpa.com"
 SERVICES = [
     {
         "slug": "new-home-construction",
+        "process_title": "How we build a new home",
+        "noun": "new home",
         "flow": "newhome",
         "short": "New homes & custom building",
         "h1": "Custom Home Builders in Kingston & Wilkes-Barre, PA",
@@ -59,6 +61,8 @@ SERVICES = [
     },
     {
         "slug": "home-additions",
+        "process_title": "How we build an addition",
+        "noun": "home addition",
         "flow": "addition",
         "short": "Additions",
         "h1": "Home Addition Contractor — Second Storeys, Bump-Outs & In-Law Suites",
@@ -87,6 +91,8 @@ SERVICES = [
     },
     {
         "slug": "whole-home-renovation",
+        "process_title": "How we run a whole-home renovation",
+        "noun": "whole-home renovation",
         "flow": "whole",
         "short": "Whole-home renovation",
         "h1": "Whole-House Renovation Contractor in Luzerne County, PA",
@@ -115,6 +121,8 @@ SERVICES = [
     },
     {
         "slug": "basement-finishing",
+        "process_title": "How we finish a basement",
+        "noun": "basement",
         "flow": "basement",
         "short": "Basement finishing",
         "h1": "Basement Finishing Contractor — Bedrooms, Baths & Living Space Below Grade",
@@ -143,6 +151,8 @@ SERVICES = [
     },
     {
         "slug": "concrete-foundation",
+        "process_title": "How we form, pour and finish concrete",
+        "noun": "concrete",
         "flow": "concrete",
         "short": "Concrete & foundation work",
         "h1": "Concrete & Foundation Contractor — Slabs, Driveways, Footings & Walls",
@@ -171,6 +181,8 @@ SERVICES = [
     },
     {
         "slug": "design-build",
+        "process_title": "How design–build works",
+        "noun": "design–build",
         "flow": "designbuild",
         "short": "Design–build & general contracting",
         "h1": "Design–Build Contractor & Licensed General Contractor — Luzerne County, PA",
@@ -199,6 +211,8 @@ SERVICES = [
     },
     {
         "slug": "kitchen-remodeling",
+        "process_title": "How we build a kitchen",
+        "noun": "kitchen",
         "flow": "kitchen",
         "short": "Kitchens",
         "h1": "Kitchen Remodel Contractor — Full Gut Renovations to Custom Kitchens",
@@ -227,6 +241,8 @@ SERVICES = [
     },
     {
         "slug": "bathroom-remodeling",
+        "process_title": "How we build a bathroom",
+        "noun": "bathroom",
         "flow": "bathroom",
         "short": "Bathrooms",
         "h1": "Bathroom Remodeling Contractor — Full Baths, Walk-In Showers & Primary Suites",
@@ -255,6 +271,8 @@ SERVICES = [
     },
     {
         "slug": "roofing",
+        "process_title": "How we replace a roof",
+        "noun": "roofing",
         "flow": "roofing",
         "short": "Shingle roofing",
         "h1": "Shingle Roofing Contractor — Replacement & New Roofs in Luzerne County",
@@ -385,7 +403,7 @@ PAGE = """<!doctype html>
           <h1 class="svc-hero__title" id="svcTitle">{h1}</h1>
           <p class="svc-hero__lede">{intro}</p>
           <div class="svc-hero__actions">
-            <a class="btn" href="#quote">Get a {short_lc} quote</a>
+            <a class="btn" href="#quote">Get a {noun} quote</a>
             <a class="svc-hero__phone" href="tel:5703388774">570-338-8<span class="tel-psi">PSI</span> (774)</a>
           </div>
         </div>
@@ -396,7 +414,7 @@ PAGE = """<!doctype html>
       <section class="section svc-process" id="process" aria-labelledby="svcProcessTitle">
         <div class="section__inner">
           <p class="eyebrow">How it goes</p>
-          <h2 class="section__title" id="svcProcessTitle">Our {short_lc} process</h2>
+          <h2 class="section__title" id="svcProcessTitle">{process_title}</h2>
           <ol class="svc-steps">
 {steps}
           </ol>
@@ -419,7 +437,7 @@ PAGE = """<!doctype html>
       <section class="section svc-quote" id="quote" aria-labelledby="svcQuoteTitle">
         <div class="section__inner">
           <p class="eyebrow">Get a quote</p>
-          <h2 class="section__title" id="svcQuoteTitle">Tell us about your {short_lc} project</h2>
+          <h2 class="section__title" id="svcQuoteTitle">Tell us about your {noun} project</h2>
           <p class="lede">A few multiple-choice questions so we show up already knowing the job. Every one has a &ldquo;not sure yet&rdquo; option. Or call &mdash; <a href="tel:5703388774">570-338-8<span class="tel-psi">PSI</span> (774)</a>.</p>
           <div class="contact-box svc-quote__box">
             <div id="quoteApp" data-flow="{flow}"></div>
@@ -482,7 +500,7 @@ def build_pages():
             title=esc(s["title"]), description=esc(s["description"]),
             canonical=f"{DOMAIN}/services/{s['slug']}/",
             hero_src=hero_src, hero_alt=esc(hero_alt),
-            short=esc(s["short"]), short_lc=esc(s["short"].lower()),
+            short=esc(s["short"]), short_lc=esc(s["short"].lower()), noun=esc(s["noun"]), process_title=esc(s["process_title"]),
             h1=esc(s["h1"]), intro=esc(s["intro"]), flow=s["flow"],
             steps=steps, strip=strip,
             nav=NAV.format(R=R), footer=FOOTER.format(R=R),
