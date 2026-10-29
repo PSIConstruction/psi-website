@@ -17,12 +17,21 @@ import os
 import re
 import sys
 
-PAGES = ("index.html", "contact.html", "pin-editor.html")
+import glob
+
+# The three top-level pages plus every generated service landing page.
+PAGES = ("index.html", "contact.html", "pin-editor.html") + tuple(
+    sorted(glob.glob(os.path.join(os.path.dirname(__file__), "..", "services", "*", "index.html")))
+)
 # The stamp may be anything a person typed by hand, so match any query value
 # rather than hex only. Matching hex alone made this pattern fail on
 # "?v=bug12", which silently left those files unstamped and stale in every
 # browser cache for as long as the value stayed there.
-ASSET = re.compile(r'(href|src)="((?:css|js|data)/[^"?]+)(?:\?v=[^"]*)?"')
+#
+# Service pages live two directories down and reference assets as
+# ../../css/site.css, so an optional run of ../ is allowed before the asset
+# path. The digest is taken of the file the path actually resolves to.
+ASSET = re.compile(r'(href|src)="((?:\.\./)*(?:css|js|data)/[^"?]+)(?:\?v=[^"]*)?"')
 
 
 def digest(path):
@@ -41,7 +50,9 @@ def main(root="."):
 
         def stamp(match):
             attr, rel = match.group(1), match.group(2)
-            target = os.path.join(root, rel)
+            # Resolve against the page's own directory, not the site root:
+            # a service page's ../../css/site.css only exists relative to it.
+            target = os.path.normpath(os.path.join(os.path.dirname(page_path), rel))
             if not os.path.exists(target):
                 print("  missing, left alone: %s" % rel)
                 return match.group(0)

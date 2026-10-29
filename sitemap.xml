@@ -1,19 +1,72 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- Two real pages. The redirect stubs for the old site's addresses are
-     deliberately absent: a sitemap is for pages you want indexed, and those
-     exist only to hand a visitor onward and to name their replacement as
-     canonical. -->
+<!-- The home page, the quote page, and one landing page per service.
+     The redirect stubs for the old site's addresses are deliberately
+     absent: they exist only to hand a visitor onward. -->
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
     <loc>https://psiconstructionpa.com/</loc>
-    <lastmod>2026-09-09</lastmod>
+    <lastmod>2026-10-29</lastmod>
     <changefreq>monthly</changefreq>
     <priority>1.0</priority>
   </url>
   <url>
     <loc>https://psiconstructionpa.com/contact.html</loc>
-    <lastmod>2026-09-09</lastmod>
+    <lastmod>2026-10-29</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://psiconstructionpa.com/services/new-home-construction/</loc>
+    <lastmod>2026-10-29</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://psiconstructionpa.com/services/home-additions/</loc>
+    <lastmod>2026-10-29</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://psiconstructionpa.com/services/whole-home-renovation/</loc>
+    <lastmod>2026-10-29</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://psiconstructionpa.com/services/basement-finishing/</loc>
+    <lastmod>2026-10-29</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://psiconstructionpa.com/services/concrete-foundation/</loc>
+    <lastmod>2026-10-29</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://psiconstructionpa.com/services/design-build/</loc>
+    <lastmod>2026-10-29</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://psiconstructionpa.com/services/kitchen-remodeling/</loc>
+    <lastmod>2026-10-29</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://psiconstructionpa.com/services/bathroom-remodeling/</loc>
+    <lastmod>2026-10-29</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://psiconstructionpa.com/services/roofing/</loc>
+    <lastmod>2026-10-29</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.9</priority>
   </url>
 </urlset>

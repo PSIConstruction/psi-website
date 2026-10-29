@@ -439,5 +439,17 @@
     root.appendChild(status);
   }
 
+  // A landing page can open straight onto its own trade, skipping the
+  // gateway. The flow key comes from ?flow= on the URL (an ad can link to
+  // contact.html?flow=kitchen) or from data-flow on the mount point (the
+  // service pages set it). An unknown key just falls back to the gateway.
+  const preset =
+    new URLSearchParams(location.search).get("flow") || root.dataset.flow;
+  if (preset && DATA.flows[preset]) {
+    state.flowKey = preset;
+    state.gatewayChoice = DATA.flows[preset].title;
+    state.stage = "flow";
+  }
+
   render();
 })();

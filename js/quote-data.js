@@ -1268,6 +1268,174 @@ window.PSI_QUOTE = {
       ],
     },
 
+    // ---- Flows that exist for the ad landing pages. Each page opens the
+    // questionnaire straight onto its own flow (quote.js reads ?flow= or
+    // data-flow), so these have to stand alone without the gateway. ----
+    newhome: {
+      title: "New Home Construction",
+      questions: [
+        {
+          q: "Where does the project stand today?",
+          opts: [
+            "I own a lot and I'm ready to build",
+            "I'm under contract on a lot",
+            "Still looking for land",
+            "I have plans already drawn",
+            "Just starting to explore",
+          ],
+        },
+        {
+          q: "What size of home are you thinking?",
+          opts: [
+            "Under 1,500 sqft",
+            "1,500–2,500 sqft",
+            "2,500–3,500 sqft",
+            "3,500+ sqft",
+            "Not sure yet",
+          ],
+        },
+        {
+          q: "How many storeys?",
+          opts: ["Single storey", "Two storeys", "Three storeys", "Not sure yet"],
+        },
+        {
+          q: "Bedrooms and bathrooms?",
+          opts: ["2 bed / 1–2 bath", "3 bed / 2 bath", "4 bed / 2–3 bath", "5+ bed", "Not sure yet"],
+        },
+        {
+          q: "Do you have architectural plans?",
+          opts: [
+            "Yes, stamped and ready to permit",
+            "Yes, but they need revisions",
+            "Sketches or inspiration only",
+            "No — I'd like PSI to handle design",
+          ],
+        },
+        {
+          q: "Is the lot serviced?",
+          opts: [
+            "Yes — water, sewer and power at the street",
+            "Partially",
+            "No, it's raw land",
+            "Not sure",
+          ],
+        },
+        {
+          q: "Basement or slab?",
+          opts: ["Full basement, finished", "Full basement, unfinished", "Slab on grade", "Crawl space", "Not sure yet"],
+        },
+        {
+          q: "Rough budget range?",
+          opts: ["Under $300k", "$300k–$450k", "$450k–$650k", "$650k+", "Prefer to discuss"],
+        },
+        {
+          q: "When would you like to break ground?",
+          opts: ["As soon as permits allow", "Within 6 months", "6–12 months", "Over a year out", "Flexible"],
+        },
+      ],
+    },
+    designbuild: {
+      title: "Design–Build & General Contracting",
+      questions: [
+        {
+          q: "What kind of project is it?",
+          opts: [
+            "A renovation of an existing building",
+            "An addition or extension",
+            "A new build",
+            "A commercial or mixed-use fit-out",
+            "Several things at once",
+            "Not sure how to classify it",
+          ],
+        },
+        {
+          q: "Where are you in the process?",
+          opts: [
+            "I have an idea and need design help",
+            "I have a designer, I need a builder",
+            "I have stamped drawings ready to price",
+            "I have quotes and want another opinion",
+          ],
+        },
+        {
+          q: "Property type?",
+          opts: ["Single-family home", "Duplex or multi-unit", "Commercial", "Mixed-use", "Other"],
+        },
+        {
+          q: "Approximate scale of the work?",
+          opts: ["One or two rooms", "A full floor", "Whole building", "Structural changes involved", "Not sure yet"],
+        },
+        {
+          q: "Will you need permits and engineering handled?",
+          opts: ["Yes, please manage all of it", "I have an engineer already", "Not sure what's required"],
+        },
+        {
+          q: "Rough budget range?",
+          opts: ["Under $50k", "$50k–$150k", "$150k–$400k", "$400k+", "Prefer to discuss"],
+        },
+        {
+          q: "Desired timeline?",
+          opts: ["As soon as possible", "Within 3 months", "3–6 months", "Later this year or next", "Flexible"],
+        },
+      ],
+    },
+    concrete: {
+      title: "Concrete & Foundation Work",
+      questions: [
+        {
+          q: "What are we pouring or building?",
+          opts: [
+            "Driveway",
+            "Patio or walkway",
+            "Garage slab",
+            "Basement or addition foundation",
+            "Retaining wall",
+            "Footings or piers",
+            "Repair of existing concrete",
+            "Something else",
+          ],
+        },
+        {
+          q: "Approximate area?",
+          opts: [
+            "Under 200 sqft",
+            "200–500 sqft",
+            "500–1,000 sqft",
+            "1,000–2,000 sqft",
+            "Over 2,000 sqft",
+            "I'll need help measuring",
+          ],
+        },
+        {
+          q: "Slab thickness or wall height?",
+          opts: ['4" slab (walks, patios)', '5–6" slab (driveways, garages)', "Foundation walls to 8 ft", "Foundation walls over 8 ft", "Not sure — advise me"],
+        },
+        {
+          q: "Is there existing concrete to remove?",
+          opts: ["Yes, needs breaking out and hauling", "Some of it", "No, it's bare ground", "Not sure"],
+        },
+        {
+          q: "Site access for a truck and pump?",
+          opts: ["Easy — direct from the street", "Tight, but a truck can reach", "No truck access, would need pumping", "Not sure"],
+        },
+        {
+          q: "Finish you're after?",
+          opts: ["Broom finish", "Smooth trowel", "Stamped or decorative", "Exposed aggregate", "Whatever's standard"],
+        },
+        {
+          q: "Drainage or grading concerns?",
+          opts: ["Water pools there now", "Slope needs correcting", "No known issues", "Not sure"],
+        },
+        {
+          q: "Rough budget range?",
+          opts: ["Under $5k", "$5k–$15k", "$15k–$40k", "$40k+", "Prefer to discuss"],
+        },
+        {
+          q: "When do you need it done?",
+          opts: ["As soon as weather allows", "Within a month", "1–3 months", "Flexible"],
+        },
+      ],
+    },
     commercial: {
       title: "Commercial Buildout",
       questions: [

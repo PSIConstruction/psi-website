@@ -101,7 +101,11 @@
     },
   ];
 
+  // Only the home page has the reviews rail. The service landing pages load
+  // this file for the nav and the shared behaviour, and without this guard
+  // the first appendChild threw and took the nav wiring down with it.
   const rTrack = document.getElementById("reviewsTrack");
+  if (!rTrack) return;
   reviews.forEach((r) => {
     const card = document.createElement("article");
     card.className = "review-card";

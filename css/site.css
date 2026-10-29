@@ -1459,6 +1459,36 @@ body.viewer-lock {
   z-index: 1;
 }
 
+/* Each card is one link to its service page. The anchor is stretched over
+   the whole card so the entire photograph is the target, and the image,
+   scrim and body inside it are inert so the hover state stays on the card. */
+.cap__link {
+  position: absolute;
+  inset: 0;
+  display: block;
+  color: inherit;
+  text-decoration: none;
+}
+.cap__link .cap__img,
+.cap__link .cap__scrim,
+.cap__link .cap__body { pointer-events: none; }
+.cap__more {
+  display: inline-block;
+  margin-top: 10px;
+  font-size: 12.5px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #ff5a5a;
+  opacity: 0;
+  transform: translateY(4px);
+  transition: opacity 220ms ease, transform 220ms ease;
+}
+.cap:hover .cap__more,
+.cap__link:focus-visible .cap__more { opacity: 1; transform: none; }
+.cap__link:focus-visible { outline: 3px solid var(--accent); outline-offset: -3px; }
+@media (max-width: 760px) { .cap__more { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .cap__more { transition: none; } }
+
 .cap__num {
   display: block;
   margin-bottom: 8px;
