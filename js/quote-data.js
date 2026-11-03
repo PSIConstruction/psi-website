@@ -1454,7 +1454,7 @@ window.PSI_QUOTE = {
     },
     {
       key: "photos",
-      label: "Upload photos of the space or inspiration images (optional)",
+      label: "Upload photos or videos of the space, or inspiration images (optional)",
       type: "file",
     },
   ],
