@@ -14,7 +14,7 @@ set -euo pipefail
 clip=$1; slug=$2; nd=${3:-48}; nm=${4:-24}
 # Env knobs: WEBP_Q / JPG_Q for weight, MX for where the portrait crop sits
 # across the frame (0 = left edge, 0.5 = centred, 1 = right edge).
-WEBP_Q=${WEBP_Q:-70}; JPG_Q=${JPG_Q:-7}; MX=${MX:-0.5}
+WEBP_Q=${WEBP_Q:-70}; JPG_Q=${JPG_Q:-7}; MX=${MX:-0.5}; WIDTH=${WIDTH:-1920}
 root=$(cd "$(dirname "$0")/.." && pwd)
 dd="$root/assets/services/$slug-seq"; md="$root/assets/services/$slug-seq-m"
 rm -rf "$dd" "$md"; mkdir -p "$dd" "$md"
@@ -26,7 +26,7 @@ pick() { python3 -c "
 n=int('$total'); k=int('$1')
 idx=sorted(set(round(i*(n-1)/(k-1)) for i in range(k)))
 print('+'.join('eq(n\\,%d)'%i for i in idx))"; }
-ffmpeg -loglevel error -y -i "$clip" -vf "select='$(pick $nd)',scale=1920:-2" -fps_mode passthrough -frames:v $nd -f image2 -c:v libwebp -quality $WEBP_Q "$dd/frame-%04d.webp"
+ffmpeg -loglevel error -y -i "$clip" -vf "select='$(pick $nd)',scale=$WIDTH:-2" -fps_mode passthrough -frames:v $nd -f image2 -c:v libwebp -quality $WEBP_Q -preset:v photo -compression_level 6 "$dd/frame-%04d.webp"
 ffmpeg -loglevel error -y -i "$clip" -vf "select='$(pick $nm)',crop=ih*3/4:ih:(iw-ih*3/4)*$MX:0,scale=750:1000" -fps_mode passthrough -frames:v $nm -q:v $JPG_Q "$md/m-%03d.jpg"
 cp "$md/m-$(printf %03d $nm).jpg" "$md/final.jpg"
 echo "desktop: $(ls "$dd" | wc -l | tr -d ' ') frames, $(du -sh "$dd" | cut -f1)"

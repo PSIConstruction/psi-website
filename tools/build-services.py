@@ -45,8 +45,8 @@ SERVICES = [
         # the home-page hero (js/hero.js). The still above stays the poster,
         # the social image and what reduced-motion visitors see. Frames are
         # cut from the AI time-lapse by tools/hero-frames-from-video.sh.
-        "hero_seq": {"dir": "assets/services/new-home-seq", "count": 40,
-                     "mobileDir": "assets/services/new-home-seq-m", "mobileCount": 24},
+        "hero_seq": {"dir": "assets/services/new-home-seq", "count": 96,
+                     "mobileDir": "assets/services/new-home-seq-m", "mobileCount": 48},
         "steps": [
             ("Plan & permit", "Drawings and engineering settled, permits filed, budget agreed before a shovel moves."),
             ("Site & foundation", "Lot cleared, excavation to the drawings, footings below frost line and walls up square."),
