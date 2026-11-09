@@ -451,7 +451,7 @@ STEP = """            <li class="svc-step">
 
 CAP = """      <li class="cap{featured}">
         <a class="cap__link" href="services/{slug}/">
-          <img class="cap__img" src="assets/services/svc-{n:02d}.jpg" alt="{alt}" loading="{loading}"{prio} decoding="async" />
+          <img class="cap__img" src="{img}" alt="{alt}" loading="{loading}"{prio} decoding="async" />
           <div class="cap__scrim"></div>
           <div class="cap__body">
             <span class="cap__num">{n}</span>
@@ -589,26 +589,43 @@ def build_pages():
 
 
 def build_cap_images():
-    """One 1500px JPEG per service for the home-page grid, cut from its hero."""
+    """One 1500px JPEG per service for the home-page grid, cut from its hero.
+
+    The file is named with a hash of its contents, like every photograph on
+    the site: GitHub Pages caches for ten minutes and browsers longer, so a
+    changed image under an unchanged name keeps showing the old picture.
+    Stale copies are removed; the names are returned for the grid markup.
+    """
+    import hashlib, glob
     out = os.path.join(ROOT, "assets", "services")
     os.makedirs(out, exist_ok=True)
+    names = []
     for i, s in enumerate(SERVICES, 1):
         src = os.path.join(ROOT, s["hero"][0])
-        dst = os.path.join(out, "svc-%02d.jpg" % i)
+        tmp = os.path.join(out, "svc-%02d.tmp.jpg" % i)
         subprocess.run(["sips", "-s", "format", "jpeg", "-s", "formatOptions", "82",
-                        "-Z", "1500", src, "--out", dst],
+                        "-Z", "1500", src, "--out", tmp],
                        check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-    print("images assets/services/svc-01..%02d.jpg" % len(SERVICES))
+        with open(tmp, "rb") as fh:
+            digest = hashlib.md5(fh.read()).hexdigest()[:8]
+        name = "svc-%02d-%s.jpg" % (i, digest)
+        for old in glob.glob(os.path.join(out, "svc-%02d*.jpg" % i)):
+            if os.path.basename(old) not in (name, os.path.basename(tmp)):
+                os.remove(old)
+        os.replace(tmp, os.path.join(out, name))
+        names.append("assets/services/" + name)
+    print("images assets/services/svc-01..%02d-<hash>.jpg" % len(SERVICES))
+    return names
 
 
-def build_home_grid():
+def build_home_grid(images):
     p = os.path.join(ROOT, "index.html")
     s = open(p).read()
     items = []
     for i, svc in enumerate(SERVICES, 1):
         items.append(CAP.format(
             featured=" cap--featured" if i == 1 else "",
-            slug=svc["slug"], n=i, alt=esc(svc["hero"][1]),
+            slug=svc["slug"], n=i, alt=esc(svc["hero"][1]), img=images[i - 1],
             loading="eager" if i == 1 else "lazy",
             prio=' fetchpriority="high"' if i == 1 else "",
             short=esc(svc["short"]), blurb=esc(svc["cap_blurb"]),
@@ -656,7 +673,7 @@ if __name__ == "__main__":
         for src in [s["hero"][0]] + [x[0] for x in s["strip"]]:
             if not os.path.exists(os.path.join(ROOT, src)):
                 sys.exit("missing photograph: " + src)
-    build_cap_images()
+    images = build_cap_images()
     build_pages()
-    build_home_grid()
+    build_home_grid(images)
     build_sitemap()
