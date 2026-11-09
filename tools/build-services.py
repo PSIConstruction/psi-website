@@ -21,6 +21,9 @@ import re
 import subprocess
 import sys
 
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from service_details import DETAILS  # the long form of every step
+
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 PH = "assets/photos"
 DOMAIN = "https://psiconstructionpa.com"
@@ -76,7 +79,7 @@ SERVICES = [
         "description": "Room additions, second-storey additions, dormers and in-law suites across Luzerne County. PSI designs, permits and builds the addition — tied into your house, not bolted onto it.",
         "keywords": ["home addition contractor", "second story addition", "room addition contractor", "in law suite addition"],
         "intro": "An addition has to look like it was always there and work like it was planned from the start. We handle the structural tie-in, the roofline, the services, and the finishes — a one-storey house gaining a full second floor is a job we have done, start to finish.",
-        "hero": (f"{PH}/417-warren/417warren-06.jpg", "A house seen from the front with its second-storey addition framed and open, mid-build"),
+        "hero": (f"{PH}/417-warren/417warren-06-graded-16fd1394.jpg", "A house seen from the front with its second-storey addition framed and open, mid-build"),
         "steps": [
             ("Feasibility & design", "What the structure can carry, what zoning allows, and drawings that make the new work read as original."),
             ("Permits & engineering", "Stamped plans and the permit in hand before demolition."),
@@ -106,7 +109,7 @@ SERVICES = [
         "description": "Complete home renovation and gut remodels in Kingston, Wilkes-Barre and across Luzerne County. PSI takes a house back to the structure and rebuilds it as one coordinated job.",
         "keywords": ["whole house renovation contractor", "gut renovation contractor", "full house remodel contractor", "complete home renovation"],
         "intro": "A whole-house renovation is a hundred small jobs that have to happen in the right order. We run them as one — demolition, structure, systems, finishes — so the house comes back together without the gaps that happen when five trades are each waiting on the others.",
-        "hero": (f"{PH}/378-rutter/378rutter-15.jpg", "The finished top floor of a whole-house rebuild — new roofline, floors, windows and lighting"),
+        "hero": ("assets/services/stock-wholehome-pexels-40701216.jpg", "A renovated older home — refinished hardwood floors, arched openings, crown moulding and fresh paint throughout"),
         "steps": [
             ("Survey & scope", "Every room walked, every system assessed. A fixed scope and a sequenced plan before anything comes out."),
             ("Strip out", "Back to the framing where it needs to be, no further than it has to be."),
@@ -440,12 +443,24 @@ PAGE = """<!doctype html>
 </html>
 """
 
+# Each step is a <details>: the number, title and one-liner are the always-
+# visible summary; a click opens the full account of the work beneath it.
+# Native <details> so it needs no script and works for keyboard and screen
+# readers; the chevron is CSS.
 STEP = """            <li class="svc-step">
-              <p class="svc-step__n">{n}</p>
-              <div>
-                <h3>{t}</h3>
-                <p class="svc-step__d">{d}</p>
-              </div>
+              <details class="svc-step__details">
+                <summary class="svc-step__summary">
+                  <p class="svc-step__n">{n}</p>
+                  <div class="svc-step__head">
+                    <h3>{t}</h3>
+                    <p class="svc-step__d">{d}</p>
+                  </div>
+                  <span class="svc-step__chev" aria-hidden="true"></span>
+                </summary>
+                <div class="svc-step__more">
+                  <p>{more}</p>
+                </div>
+              </details>
             </li>"""
 
 
@@ -569,7 +584,10 @@ def build_pages():
     R = "../../"
     for i, s in enumerate(SERVICES, 1):
         hero_src, hero_alt = s["hero"]
-        steps = "\n".join(STEP.format(n=n, t=esc(t), d=esc(d)) for n, (t, d) in enumerate(s["steps"], 1))
+        more = DETAILS[s["slug"]]
+        assert len(more) == len(s["steps"]), s["slug"]
+        steps = "\n".join(STEP.format(n=n, t=esc(t), d=esc(d), more=esc(m))
+                          for n, ((t, d), m) in enumerate(zip(s["steps"], more), 1))
         html = PAGE.format(
             R=R, DOMAIN=DOMAIN,
             title=esc(s["title"]), description=esc(s["description"]),

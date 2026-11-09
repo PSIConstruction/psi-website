@@ -5,3 +5,10 @@ stock-basement-pexels-35539079.jpg
   Licence: Pexels License (free for commercial use, no attribution required)
   Used as: hero on /services/basement-finishing/ — our own basement photos were
   phone snapshots with furniture in frame; replace with a PSI photo when one exists.
+
+stock-wholehome-pexels-40701216.jpg
+  Source: https://www.pexels.com/photo/bright-renovated-living-room-in-akron-home-40701216/
+  Licence: Pexels License (free for commercial use, no attribution required)
+  Used as: hero on /services/whole-home-renovation/ — a renovated older house with
+  arched openings and refinished hardwood, closer to the Luzerne County housing
+  stock than any of our finished wide shots. Replace with a PSI photo when one exists.
