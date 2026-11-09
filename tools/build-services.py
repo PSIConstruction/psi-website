@@ -106,7 +106,7 @@ SERVICES = [
         "description": "Complete home renovation and gut remodels in Kingston, Wilkes-Barre and across Luzerne County. PSI takes a house back to the structure and rebuilds it as one coordinated job.",
         "keywords": ["whole house renovation contractor", "gut renovation contractor", "full house remodel contractor", "complete home renovation"],
         "intro": "A whole-house renovation is a hundred small jobs that have to happen in the right order. We run them as one — demolition, structure, systems, finishes — so the house comes back together without the gaps that happen when five trades are each waiting on the others.",
-        "hero": (f"{PH}/378-rutter/378rutter-01.jpg", "A rebuilt front room — new floors, trim and windows throughout"),
+        "hero": (f"{PH}/378-rutter/378rutter-15.jpg", "The finished top floor of a whole-house rebuild — new roofline, floors, windows and lighting"),
         "steps": [
             ("Survey & scope", "Every room walked, every system assessed. A fixed scope and a sequenced plan before anything comes out."),
             ("Strip out", "Back to the framing where it needs to be, no further than it has to be."),
@@ -136,7 +136,7 @@ SERVICES = [
         "description": "Basement build-outs and finishing across Luzerne County: egress, framing, full bathrooms, flooring and lighting. PSI turns unfinished lower levels into real living space.",
         "keywords": ["basement finishing contractor", "basement remodeling contractor", "finish basement contractor", "basement build out contractor"],
         "intro": "A finished basement is the cheapest square footage you will ever add — if it's done right. Moisture handled first, egress to code, a real bathroom, proper insulation and lighting. We've turned bare block-and-joist basements into bedrooms, baths and living rooms people forget are downstairs.",
-        "hero": (f"{PH}/554-warren/554warren-07-5a667f25.jpg", "A new stair descending into a finished basement with plank flooring and recessed lighting"),
+        "hero": ("assets/services/stock-basement-pexels-35539079.jpg", "A bright finished basement — carpet, wainscoting, recessed lighting and daylight windows"),
         "steps": [
             ("Moisture & egress check", "Walls, slab and drainage assessed; egress windows planned where bedrooms are going."),
             ("Layout & permits", "Rooms laid out around the structure and services that can't move. Permit filed."),
@@ -196,7 +196,7 @@ SERVICES = [
         "description": "Licensed general contractor and design-build firm serving Wilkes-Barre, Kingston and the Back Mountain. One contract, one team, from drawings to keys.",
         "keywords": ["design build contractor", "licensed general contractor near me", "general contractor Wilkes-Barre", "general contractor Kingston PA"],
         "intro": "Design-build means one company is responsible for the drawings and for building them — so the budget is real from day one and nobody is pointing at anybody else. We've taken a garage to two apartments and a duplex to a single-family home that way.",
-        "hero": (f"{PH}/586-charles/586charles-18.jpg", "An open-plan kitchen and living space, newly finished inside a converted garage"),
+        "hero": (f"{PH}/580-rutter/580rutter-01.jpg", "A three-storey house under PSI's management, scaffolded for a full conversion"),
         "steps": [
             ("Brief & budget", "What you need, what it should cost, and what the building will allow — settled together."),
             ("Design & engineering", "Drawings developed with the build in mind, engineered and stamped."),
@@ -286,7 +286,7 @@ SERVICES = [
         "description": "Asphalt shingle roof replacement and new roofs in Kingston, Wilkes-Barre and across Luzerne County. Decking, underlayment, flashing and shingles installed by the same crew that builds the house beneath them.",
         "keywords": ["roofing contractor", "shingle roof replacement", "roof replacement near me", "new roof contractor"],
         "intro": "We roof the houses we build, and we re-roof the ones we don't. Decking checked and replaced where it's gone, ice-and-water at the eaves and valleys, flashing done properly at every penetration — then the shingles. The part that keeps the water out is underneath.",
-        "hero": (f"{PH}/378-rutter/378rutter-early-10-dc5e901c.jpg", "A newly completed shingle roof seen from above, on a PSI rebuild"),
+        "hero": (f"{PH}/378-rutter/378rutter-early-09-4d34a6d9.jpg", "A newly laid architectural shingle roof against the sky, on a PSI rebuild"),
         "steps": [
             ("Inspect & quote", "Decking, flashing, ventilation and the age of what's there. A fixed price, not an estimate."),
             ("Tear-off", "Old roofing stripped, decking exposed and checked board by board."),
@@ -415,18 +415,6 @@ PAGE = """<!doctype html>
         </div>
       </section>
 
-      <!-- Our own photographs of this kind of work. -->
-      <section class="section svc-work" aria-labelledby="svcWorkTitle">
-        <div class="section__inner">
-          <p class="eyebrow">From our jobs</p>
-          <h2 class="section__title" id="svcWorkTitle">{short} we have built</h2>
-          <p class="lede">Every photograph here is a PSI job in Luzerne County. <a href="{R}index.html#projects">See all 290+ photographs on the map &rarr;</a></p>
-        </div>
-        <div class="svc-strip" role="list">
-{strip}
-        </div>
-      </section>
-
       <!-- The quote form, opened straight onto this trade. -->
       <section class="section svc-quote" id="quote" aria-labelledby="svcQuoteTitle">
         <div class="section__inner">
@@ -460,10 +448,6 @@ STEP = """            <li class="svc-step">
               </div>
             </li>"""
 
-SHOT = """          <figure class="svc-shot" role="listitem">
-            <img src="{R}{src}" alt="{alt}" loading="lazy" decoding="async" />
-            <figcaption>{alt}</figcaption>
-          </figure>"""
 
 CAP = """      <li class="cap{featured}">
         <a class="cap__link" href="services/{slug}/">
@@ -586,7 +570,6 @@ def build_pages():
     for i, s in enumerate(SERVICES, 1):
         hero_src, hero_alt = s["hero"]
         steps = "\n".join(STEP.format(n=n, t=esc(t), d=esc(d)) for n, (t, d) in enumerate(s["steps"], 1))
-        strip = "\n".join(SHOT.format(R=R, src=src, alt=esc(alt)) for src, alt in s["strip"])
         html = PAGE.format(
             R=R, DOMAIN=DOMAIN,
             title=esc(s["title"]), description=esc(s["description"]),
@@ -595,7 +578,7 @@ def build_pages():
             hero_section=hero_section(s, R), hero_head=hero_head(s, R),
             short=esc(s["short"]), short_lc=esc(s["short"].lower()), noun=esc(s["noun"]), process_title=esc(s["process_title"]),
             h1=esc(s["h1"]), intro=esc(s["intro"]), flow=s["flow"],
-            steps=steps, strip=strip,
+            steps=steps,
             nav=NAV.format(R=R), footer=FOOTER.format(R=R),
         )
         out = os.path.join(ROOT, "services", s["slug"])

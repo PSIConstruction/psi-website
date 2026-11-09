@@ -1,0 +1,7 @@
+Stock photographs used on the service pages (everything else on the site is PSI's own work).
+
+stock-basement-pexels-35539079.jpg
+  Source: https://www.pexels.com/photo/spacious-modern-basement-with-natural-light-35539079/
+  Licence: Pexels License (free for commercial use, no attribution required)
+  Used as: hero on /services/basement-finishing/ — our own basement photos were
+  phone snapshots with furniture in frame; replace with a PSI photo when one exists.
