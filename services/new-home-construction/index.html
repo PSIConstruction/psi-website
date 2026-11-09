@@ -16,7 +16,12 @@
     <meta property="og:url" content="https://psiconstructionpa.com/services/new-home-construction/" />
     <link rel="preload" as="image" href="../../assets/photos/55-reynolds/55reynolds-45-612c0de4.jpg" fetchpriority="high" />
     <link rel="stylesheet" href="../../css/site.css?v=38a58ef2" />
-    <link rel="stylesheet" href="../../css/services.css?v=71cfe8a7" />
+    <link rel="stylesheet" href="../../css/services.css?v=27c9308c" />
+    <script>
+      window.PSI_HERO = { base: "../../", dir: "assets/services/new-home-seq", count: 40,
+        mobileDir: "assets/services/new-home-seq-m", mobileCount: 24, mobileFinal: "assets/services/new-home-seq-m/final.jpg" };
+    </script>
+    <script src="../../js/hero.js?v=5ba8bd46" defer></script>
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
@@ -65,30 +70,28 @@
     </nav>
 
     <main>
-      <!-- Hero: one real photograph of our work, the trade named plainly. -->
-      <section class="svc-hero" aria-labelledby="svcTitle">
-        <video class="svc-hero__img svc-hero__video" poster="../../assets/photos/55-reynolds/55reynolds-45-612c0de4.jpg" width="1280" height="720" muted playsinline autoplay preload="metadata" aria-label="A newly completed three-storey home with black-framed windows, finished landscaping and a fenced yard">
-          <source src="../../assets/services/svc-01-build.mp4" type="video/mp4" />
-          <img class="svc-hero__img" src="../../assets/photos/55-reynolds/55reynolds-45-612c0de4.jpg" alt="A newly completed three-storey home with black-framed windows, finished landscaping and a fenced yard" width="1600" height="1200" fetchpriority="high" decoding="async" />
-        </video>
-        <script>
-          // Honour reduced-motion and data-saver: leave the poster up.
-          (function () {
-            var v = document.querySelector(".svc-hero__video");
-            if (!v) return;
-            var still = matchMedia("(prefers-reduced-motion: reduce)").matches ||
-                        (navigator.connection && navigator.connection.saveData);
-            if (still) { v.removeAttribute("autoplay"); v.pause(); v.innerHTML = v.lastElementChild.outerHTML; v.load(); }
-          })();
-        </script>
-        <div class="svc-hero__scrim" aria-hidden="true"></div>
-        <div class="svc-hero__body section__inner">
-          <p class="eyebrow svc-hero__eyebrow">PSI Construction · Kingston &amp; Wilkes-Barre, PA</p>
-          <h1 class="svc-hero__title" id="svcTitle">Custom Home Builders in Kingston &amp; Wilkes-Barre, PA</h1>
-          <p class="svc-hero__lede">A new home is the one project where every decision is yours. We take it from a bare corner lot to a finished, landscaped house — plans, permits, excavation, foundation, framing and every finish — with one team answerable for all of it.</p>
-          <div class="svc-hero__actions">
-            <a class="btn" href="#quote">Get a new home quote</a>
-            <a class="svc-hero__phone" href="tel:5703388774">570-338-8<span class="tel-psi">PSI</span> (774)</a>
+      <section class="hero hero--svc" id="hero" aria-label="A newly completed three-storey home with black-framed windows, finished landscaping and a fenced yard">
+        <div class="hero__viewport">
+          <picture>
+            <source media="(orientation: portrait)" srcset="../../assets/services/new-home-seq-m/m-001.jpg" />
+            <img class="hero__poster" id="heroPoster" src="../../assets/services/new-home-seq/frame-0001.webp" alt="A newly completed three-storey home with black-framed windows, finished landscaping and a fenced yard" decoding="async" fetchpriority="high" />
+          </picture>
+          <canvas class="hero__canvas" id="heroCanvas" aria-hidden="true"></canvas>
+          <div class="hero__overlay" id="heroOverlay">
+            <p class="hero__eyebrow">PSI Construction &middot; Kingston &amp; Wilkes-Barre, PA</p>
+            <h1 class="hero__title" id="svcTitle">Custom Home Builders in Kingston &amp; Wilkes-Barre, PA</h1>
+            <p class="hero__tagline">A new home is the one project where every decision is yours. We take it from a bare corner lot to a finished, landscaped house — plans, permits, excavation, foundation, framing and every finish — with one team answerable for all of it.</p>
+            <div class="svc-hero__actions">
+              <a class="btn" href="#quote">Get a new home quote</a>
+              <a class="svc-hero__phone" href="tel:5703388774">570-338-8<span class="tel-psi">PSI</span> (774)</a>
+            </div>
+            <div class="hero__scrollcue" aria-hidden="true">
+              <span class="hero__scrollcue-label">Scroll</span>
+              <span class="hero__scrollcue-line"></span>
+            </div>
+          </div>
+          <div class="hero__loader" id="heroLoader" aria-hidden="true">
+            <span class="hero__loader-bar" id="heroLoaderBar"></span>
           </div>
         </div>
       </section>

@@ -41,10 +41,12 @@ SERVICES = [
         "keywords": ["custom home builder", "home builders near me", "new home construction contractor"],
         "intro": "A new home is the one project where every decision is yours. We take it from a bare corner lot to a finished, landscaped house — plans, permits, excavation, foundation, framing and every finish — with one team answerable for all of it.",
         "hero": (f"{PH}/55-reynolds/55reynolds-45-612c0de4.jpg", "A newly completed three-storey home with black-framed windows, finished landscaping and a fenced yard"),
-        # Optional: a short silent clip that plays once over the still and
-        # holds on its last frame. The still above stays the poster, the
-        # social image and what reduced-motion visitors see.
-        "hero_video": "assets/services/svc-01-build.mp4",
+        # Optional: a scroll-scrubbed frame sequence, the same mechanism as
+        # the home-page hero (js/hero.js). The still above stays the poster,
+        # the social image and what reduced-motion visitors see. Frames are
+        # cut from the AI time-lapse by tools/hero-frames-from-video.sh.
+        "hero_seq": {"dir": "assets/services/new-home-seq", "count": 40,
+                     "mobileDir": "assets/services/new-home-seq-m", "mobileCount": 24},
         "steps": [
             ("Plan & permit", "Drawings and engineering settled, permits filed, budget agreed before a shovel moves."),
             ("Site & foundation", "Lot cleared, excavation to the drawings, footings below frost line and walls up square."),
@@ -371,6 +373,7 @@ PAGE = """<!doctype html>
     <link rel="preload" as="image" href="{R}{hero_src}" fetchpriority="high" />
     <link rel="stylesheet" href="{R}css/site.css" />
     <link rel="stylesheet" href="{R}css/services.css" />
+{hero_head}
     <script type="application/ld+json">
     {{
       "@context": "https://schema.org",
@@ -398,20 +401,7 @@ PAGE = """<!doctype html>
   <body class="svc-page">
 {nav}
     <main>
-      <!-- Hero: one real photograph of our work, the trade named plainly. -->
-      <section class="svc-hero" aria-labelledby="svcTitle">
-{hero_media}
-        <div class="svc-hero__scrim" aria-hidden="true"></div>
-        <div class="svc-hero__body section__inner">
-          <p class="eyebrow svc-hero__eyebrow">PSI Construction · Kingston &amp; Wilkes-Barre, PA</p>
-          <h1 class="svc-hero__title" id="svcTitle">{h1}</h1>
-          <p class="svc-hero__lede">{intro}</p>
-          <div class="svc-hero__actions">
-            <a class="btn" href="#quote">Get a {noun} quote</a>
-            <a class="svc-hero__phone" href="tel:5703388774">570-338-8<span class="tel-psi">PSI</span> (774)</a>
-          </div>
-        </div>
-      </section>
+{hero_section}
 
       <!-- The process for this trade. Same shape as How We Build on the home
            page, written for this kind of job. -->
@@ -523,6 +513,74 @@ def hero_media(s, R):
     return HERO_IMG.format(R=R, src=src, alt=esc(alt))
 
 
+# The still-photo hero: one real photograph of our work, the trade named plainly.
+HERO_STILL = '''      <section class="svc-hero" aria-labelledby="svcTitle">
+{hero_media}
+        <div class="svc-hero__scrim" aria-hidden="true"></div>
+        <div class="svc-hero__body section__inner">
+          <p class="eyebrow svc-hero__eyebrow">PSI Construction · Kingston &amp; Wilkes-Barre, PA</p>
+          <h1 class="svc-hero__title" id="svcTitle">{h1}</h1>
+          <p class="svc-hero__lede">{intro}</p>
+          <div class="svc-hero__actions">
+            <a class="btn" href="#quote">Get a {noun} quote</a>
+            <a class="svc-hero__phone" href="tel:5703388774">570-338-8<span class="tel-psi">PSI</span> (774)</a>
+          </div>
+        </div>
+      </section>'''
+
+# The scroll-scrubbed hero: the home page's markup, with this trade's copy in
+# the overlay. The ids are what js/hero.js looks for; window.PSI_HERO (set in
+# the page head) tells it which frames to draw and where they live.
+HERO_SCRUB = '''      <section class="hero hero--svc" id="hero" aria-label="{alt}">
+        <div class="hero__viewport">
+          <picture>
+            <source media="(orientation: portrait)" srcset="{R}{mobileDir}/m-001.jpg" />
+            <img class="hero__poster" id="heroPoster" src="{R}{dir}/frame-0001.webp" alt="{alt}" decoding="async" fetchpriority="high" />
+          </picture>
+          <canvas class="hero__canvas" id="heroCanvas" aria-hidden="true"></canvas>
+          <div class="hero__overlay" id="heroOverlay">
+            <p class="hero__eyebrow">PSI Construction &middot; Kingston &amp; Wilkes-Barre, PA</p>
+            <h1 class="hero__title" id="svcTitle">{h1}</h1>
+            <p class="hero__tagline">{intro}</p>
+            <div class="svc-hero__actions">
+              <a class="btn" href="#quote">Get a {noun} quote</a>
+              <a class="svc-hero__phone" href="tel:5703388774">570-338-8<span class="tel-psi">PSI</span> (774)</a>
+            </div>
+            <div class="hero__scrollcue" aria-hidden="true">
+              <span class="hero__scrollcue-label">Scroll</span>
+              <span class="hero__scrollcue-line"></span>
+            </div>
+          </div>
+          <div class="hero__loader" id="heroLoader" aria-hidden="true">
+            <span class="hero__loader-bar" id="heroLoaderBar"></span>
+          </div>
+        </div>
+      </section>'''
+
+# Head snippet for the scrub hero: frame set for hero.js, then the module.
+HERO_SCRUB_HEAD = '''    <script>
+      window.PSI_HERO = {{ base: "{R}", dir: "{dir}", count: {count},
+        mobileDir: "{mobileDir}", mobileCount: {mobileCount}, mobileFinal: "{mobileDir}/final.jpg" }};
+    </script>
+    <script src="{R}js/hero.js" defer></script>'''
+
+
+def hero_section(s, R):
+    src, alt = s["hero"]
+    seq = s.get("hero_seq")
+    if seq:
+        return HERO_SCRUB.format(R=R, alt=esc(alt), h1=esc(s["h1"]), intro=esc(s["intro"]),
+                                 noun=esc(s["noun"]), dir=seq["dir"], mobileDir=seq["mobileDir"])
+    return HERO_STILL.format(hero_media=hero_media(s, R), h1=esc(s["h1"]), intro=esc(s["intro"]), noun=esc(s["noun"]))
+
+
+def hero_head(s, R):
+    seq = s.get("hero_seq")
+    if not seq:
+        return ""
+    return HERO_SCRUB_HEAD.format(R=R, **seq)
+
+
 def build_pages():
     R = "../../"
     for i, s in enumerate(SERVICES, 1):
@@ -533,7 +591,8 @@ def build_pages():
             R=R, DOMAIN=DOMAIN,
             title=esc(s["title"]), description=esc(s["description"]),
             canonical=f"{DOMAIN}/services/{s['slug']}/",
-            hero_src=hero_src, hero_alt=esc(hero_alt), hero_media=hero_media(s, R),
+            hero_src=hero_src, hero_alt=esc(hero_alt),
+            hero_section=hero_section(s, R), hero_head=hero_head(s, R),
             short=esc(s["short"]), short_lc=esc(s["short"].lower()), noun=esc(s["noun"]), process_title=esc(s["process_title"]),
             h1=esc(s["h1"]), intro=esc(s["intro"]), flow=s["flow"],
             steps=steps, strip=strip,

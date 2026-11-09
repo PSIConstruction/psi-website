@@ -14,10 +14,36 @@
   // ------------------------------------------------------------------
   // Configuration (kept in one place; frame data injected at build time)
   // ------------------------------------------------------------------
+  // Which frame set this page scrubs. The home page uses the defaults (the
+  // 193-frame aerial plus its 24-frame portrait cut); a service page sets
+  // window.PSI_HERO before this script to point at its own sequence and at
+  // the right relative root, since it lives two directories down.
+  const SEQ = Object.assign(
+    {
+      base: "",
+      dir: "assets/hero-sequence",
+      prefix: "frame-",
+      pad: 4,
+      ext: "webp",
+      count: window.HERO_FRAME_COUNT || 0, // set by frames-manifest.js
+      mobileDir: "assets/hero-mobile-seq",
+      mobilePrefix: "m-",
+      mobilePad: 3,
+      mobileExt: "jpg",
+      mobileCount: 24,
+      mobileFinal: "assets/hero-mobile-seq/final.jpg",
+    },
+    window.PSI_HERO || {},
+  );
+  const seqPath = (i) =>
+    `${SEQ.base}${SEQ.dir}/${SEQ.prefix}${String(i + 1).padStart(SEQ.pad, "0")}.${SEQ.ext}`;
+  const mobilePath = (i) =>
+    `${SEQ.base}${SEQ.mobileDir}/${SEQ.mobilePrefix}${String(i + 1).padStart(SEQ.mobilePad, "0")}.${SEQ.mobileExt}`;
+  const mobileFinal = SEQ.base + SEQ.mobileFinal;
+
   const CONFIG = {
-    frameCount: window.HERO_FRAME_COUNT || 0, // set by frames-manifest.js
-    framePath: (i) =>
-      `assets/hero-sequence/frame-${String(i + 1).padStart(4, "0")}.webp`,
+    frameCount: SEQ.count,
+    framePath: seqPath,
     scrollLengthVh: 340, // virtual scroll runway for the pinned hero
     settleTailPct: 0.06, // last 6% of scroll holds the final frame
     // Normalised focal point of the house in the source frames.
@@ -66,7 +92,7 @@
       window.matchMedia("(max-width: 760px) and (orientation: portrait)")
         .matches
     ) {
-      poster.src = "assets/hero-mobile-seq/final.jpg";
+      poster.src = mobileFinal;
     } else if (CONFIG.frameCount > 0) {
       poster.src = CONFIG.framePath(CONFIG.frameCount - 1);
       poster.style.objectPosition = "50% 50%";
@@ -94,9 +120,8 @@
   );
   const startedPortrait = portraitPhone.matches;
   if (startedPortrait) {
-    CONFIG.frameCount = 24;
-    CONFIG.framePath = (i) =>
-      `assets/hero-mobile-seq/m-${String(i + 1).padStart(3, "0")}.jpg`;
+    CONFIG.frameCount = SEQ.mobileCount;
+    CONFIG.framePath = mobilePath;
     CONFIG.scrollLengthVh = 200; // a shorter runway suits a thumb
     CONFIG.focalX = 0.5;
     CONFIG.focalY = 0.5; // frames are already composed; no bias needed
@@ -121,8 +146,8 @@
       // The still must match the viewport it retreats into, not the
       // orientation the page happened to load in.
       const still = portraitPhone.matches
-        ? "assets/hero-mobile-seq/final.jpg"
-        : "assets/hero-sequence/frame-0193.webp";
+        ? mobileFinal
+        : seqPath(SEQ.count - 1);
       // Inside a <picture>, a matching <source> beats img.src outright, so
       // setting src alone did nothing on a portrait phone — the browser kept
       // painting whatever the portrait <source> pointed at. Update the source

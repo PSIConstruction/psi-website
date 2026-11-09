@@ -78,6 +78,26 @@
 }
 .svc-hero__phone .tel-psi { color: #ff5a5a; }
 
+/* ---------------- scroll-scrubbed hero ---------------- */
+/* The home-page hero markup carrying a service's copy. The overlay there is
+   pointer-events: none because nothing in it is clickable; here the quote
+   button and phone number are, so only those take pointer events, and the
+   long H1 is sized to fit beside them. */
+.hero--svc .hero__title { font-size: clamp(30px, 4.6vw, 54px); line-height: 1.05; max-width: 18ch; }
+.hero--svc .hero__tagline { max-width: 62ch; font-size: clamp(16px, 1.6vw, 19px); line-height: 1.55; font-family: inherit; font-style: normal; color: rgba(255, 255, 255, 0.92); }
+.hero--svc .svc-hero__actions { margin-top: 22px; pointer-events: auto; }
+.hero--svc .hero__scrollcue { margin-top: 28px; }
+/* the copy fades with scroll on the home page; keep that, but never let the
+   button vanish while it is still the thing to click */
+.hero--svc .hero__overlay { opacity: 1; }
+.hero--svc .hero__eyebrow, .hero--svc .hero__title, .hero--svc .hero__tagline, .hero--svc .hero__scrollcue {
+  opacity: calc(1 - var(--hero-progress, 0) * 2.6);
+}
+.hero--svc .svc-hero__actions { opacity: calc(1 - var(--hero-progress, 0) * 1.4); }
+@media (max-width: 760px) {
+  .hero--svc .hero__scrollcue { display: none; }
+}
+
 /* ---------------- process ---------------- */
 .svc-steps {
   list-style: none;
