@@ -76,7 +76,7 @@ SERVICES = [
         "description": "Room additions, second-storey additions, dormers and in-law suites across Luzerne County. PSI designs, permits and builds the addition — tied into your house, not bolted onto it.",
         "keywords": ["home addition contractor", "second story addition", "room addition contractor", "in law suite addition"],
         "intro": "An addition has to look like it was always there and work like it was planned from the start. We handle the structural tie-in, the roofline, the services, and the finishes — a one-storey house gaining a full second floor is a job we have done, start to finish.",
-        "hero": (f"{PH}/417-warren/417warren-27.jpg", "A house with a newly built second-storey addition, siding complete and trimmed"),
+        "hero": (f"{PH}/417-warren/417warren-06.jpg", "A house seen from the front with its second-storey addition framed and open, mid-build"),
         "steps": [
             ("Feasibility & design", "What the structure can carry, what zoning allows, and drawings that make the new work read as original."),
             ("Permits & engineering", "Stamped plans and the permit in hand before demolition."),
