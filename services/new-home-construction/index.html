@@ -16,7 +16,7 @@
     <meta property="og:url" content="https://psiconstructionpa.com/services/new-home-construction/" />
     <link rel="preload" as="image" href="../../assets/photos/55-reynolds/55reynolds-45-612c0de4.jpg" fetchpriority="high" />
     <link rel="stylesheet" href="../../css/site.css?v=38a58ef2" />
-    <link rel="stylesheet" href="../../css/services.css?v=ad18e096" />
+    <link rel="stylesheet" href="../../css/services.css?v=71cfe8a7" />
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
@@ -67,7 +67,20 @@
     <main>
       <!-- Hero: one real photograph of our work, the trade named plainly. -->
       <section class="svc-hero" aria-labelledby="svcTitle">
-        <img class="svc-hero__img" src="../../assets/photos/55-reynolds/55reynolds-45-612c0de4.jpg" alt="A newly completed three-storey home with black-framed windows, finished landscaping and a fenced yard" width="1600" height="1200" fetchpriority="high" decoding="async" />
+        <video class="svc-hero__img svc-hero__video" poster="../../assets/photos/55-reynolds/55reynolds-45-612c0de4.jpg" width="1280" height="720" muted playsinline autoplay preload="metadata" aria-label="A newly completed three-storey home with black-framed windows, finished landscaping and a fenced yard">
+          <source src="../../assets/services/svc-01-build.mp4" type="video/mp4" />
+          <img class="svc-hero__img" src="../../assets/photos/55-reynolds/55reynolds-45-612c0de4.jpg" alt="A newly completed three-storey home with black-framed windows, finished landscaping and a fenced yard" width="1600" height="1200" fetchpriority="high" decoding="async" />
+        </video>
+        <script>
+          // Honour reduced-motion and data-saver: leave the poster up.
+          (function () {
+            var v = document.querySelector(".svc-hero__video");
+            if (!v) return;
+            var still = matchMedia("(prefers-reduced-motion: reduce)").matches ||
+                        (navigator.connection && navigator.connection.saveData);
+            if (still) { v.removeAttribute("autoplay"); v.pause(); v.innerHTML = v.lastElementChild.outerHTML; v.load(); }
+          })();
+        </script>
         <div class="svc-hero__scrim" aria-hidden="true"></div>
         <div class="svc-hero__body section__inner">
           <p class="eyebrow svc-hero__eyebrow">PSI Construction · Kingston &amp; Wilkes-Barre, PA</p>

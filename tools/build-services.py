@@ -41,6 +41,10 @@ SERVICES = [
         "keywords": ["custom home builder", "home builders near me", "new home construction contractor"],
         "intro": "A new home is the one project where every decision is yours. We take it from a bare corner lot to a finished, landscaped house — plans, permits, excavation, foundation, framing and every finish — with one team answerable for all of it.",
         "hero": (f"{PH}/55-reynolds/55reynolds-45-612c0de4.jpg", "A newly completed three-storey home with black-framed windows, finished landscaping and a fenced yard"),
+        # Optional: a short silent clip that plays once over the still and
+        # holds on its last frame. The still above stays the poster, the
+        # social image and what reduced-motion visitors see.
+        "hero_video": "assets/services/svc-01-build.mp4",
         "steps": [
             ("Plan & permit", "Drawings and engineering settled, permits filed, budget agreed before a shovel moves."),
             ("Site & foundation", "Lot cleared, excavation to the drawings, footings below frost line and walls up square."),
@@ -396,7 +400,7 @@ PAGE = """<!doctype html>
     <main>
       <!-- Hero: one real photograph of our work, the trade named plainly. -->
       <section class="svc-hero" aria-labelledby="svcTitle">
-        <img class="svc-hero__img" src="{R}{hero_src}" alt="{hero_alt}" width="1600" height="1200" fetchpriority="high" decoding="async" />
+{hero_media}
         <div class="svc-hero__scrim" aria-hidden="true"></div>
         <div class="svc-hero__body section__inner">
           <p class="eyebrow svc-hero__eyebrow">PSI Construction · Kingston &amp; Wilkes-Barre, PA</p>
@@ -489,6 +493,36 @@ def esc(s):
     return s.replace("&", "&amp;").replace('"', "&quot;")
 
 
+HERO_IMG = '''        <img class="svc-hero__img" src="{R}{src}" alt="{alt}" width="1600" height="1200" fetchpriority="high" decoding="async" />'''
+
+# The video sits where the still would and is sized by the same rules. It
+# is muted and inline so phones autoplay it; it does not loop, so the page
+# settles on the finished house rather than snapping back to the empty lot.
+# The still inside is what anyone without video (or with reduced motion,
+# see the script) gets. Dimensions match the clip, 16:9.
+HERO_VIDEO = '''        <video class="svc-hero__img svc-hero__video" poster="{R}{src}" width="1280" height="720" muted playsinline autoplay preload="metadata" aria-label="{alt}">
+          <source src="{R}{video}" type="video/mp4" />
+          <img class="svc-hero__img" src="{R}{src}" alt="{alt}" width="1600" height="1200" fetchpriority="high" decoding="async" />
+        </video>
+        <script>
+          // Honour reduced-motion and data-saver: leave the poster up.
+          (function () {{
+            var v = document.querySelector(".svc-hero__video");
+            if (!v) return;
+            var still = matchMedia("(prefers-reduced-motion: reduce)").matches ||
+                        (navigator.connection && navigator.connection.saveData);
+            if (still) {{ v.removeAttribute("autoplay"); v.pause(); v.innerHTML = v.lastElementChild.outerHTML; v.load(); }}
+          }})();
+        </script>'''
+
+
+def hero_media(s, R):
+    src, alt = s["hero"]
+    if s.get("hero_video"):
+        return HERO_VIDEO.format(R=R, src=src, alt=esc(alt), video=s["hero_video"])
+    return HERO_IMG.format(R=R, src=src, alt=esc(alt))
+
+
 def build_pages():
     R = "../../"
     for i, s in enumerate(SERVICES, 1):
@@ -499,7 +533,7 @@ def build_pages():
             R=R, DOMAIN=DOMAIN,
             title=esc(s["title"]), description=esc(s["description"]),
             canonical=f"{DOMAIN}/services/{s['slug']}/",
-            hero_src=hero_src, hero_alt=esc(hero_alt),
+            hero_src=hero_src, hero_alt=esc(hero_alt), hero_media=hero_media(s, R),
             short=esc(s["short"]), short_lc=esc(s["short"].lower()), noun=esc(s["noun"]), process_title=esc(s["process_title"]),
             h1=esc(s["h1"]), intro=esc(s["intro"]), flow=s["flow"],
             steps=steps, strip=strip,

@@ -30,6 +30,9 @@
   object-fit: cover;
   object-position: center;
 }
+/* A hero clip is laid out exactly like the still; the browser keeps the
+   poster up until the first frame decodes, so there is no flash. */
+.svc-hero__video { background: var(--navy); }
 .svc-hero__scrim {
   position: absolute;
   inset: 0;
