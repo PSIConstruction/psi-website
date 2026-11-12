@@ -44,12 +44,10 @@ SERVICES = [
         "keywords": ["custom home builder", "home builders near me", "new home construction contractor"],
         "intro": "A new home is the one project where every decision is yours. We take it from a bare corner lot to a finished, landscaped house — plans, permits, excavation, foundation, framing and every finish — with one team answerable for all of it.",
         "hero": (f"{PH}/55-reynolds/55reynolds-45-612c0de4.jpg", "A newly completed three-storey home with black-framed windows, finished landscaping and a fenced yard"),
-        # Optional: a scroll-scrubbed frame sequence, the same mechanism as
-        # the home-page hero (js/hero.js). The still above stays the poster,
-        # the social image and what reduced-motion visitors see. Frames are
-        # cut from the AI time-lapse by tools/hero-frames-from-video.sh.
-        "hero_seq": {"dir": "assets/services/new-home-seq", "count": 96,
-                     "mobileDir": "assets/services/new-home-seq-m", "mobileCount": 48},
+        # A "hero_seq" here (frames cut by tools/hero-frames-from-video.sh)
+        # would make this a scroll-scrubbed hero like the home page. Tried
+        # with the 55 Reynolds drone reveal and taken out again: on a phone
+        # the moving frame read as confusing. One still, same as the card.
         "steps": [
             ("Plan & permit", "Drawings and engineering settled, permits filed, budget agreed before a shovel moves."),
             ("Site & foundation", "Lot cleared, excavation to the drawings, footings below frost line and walls up square."),
