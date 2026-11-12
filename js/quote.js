@@ -19,6 +19,17 @@
     to: "info@psiconstructionpa.com",
   };
 
+  // Photos and videos go to PSI's own cloud storage (Supabase, bucket
+  // "quote-uploads"). Visitors can only ADD files there — never list, read
+  // others' files, or delete. Each submission gets its own random folder, and
+  // the lead email carries a link to every file.
+  const MEDIA = {
+    url: window.PSI_MEDIA_URL || "https://lyjqdbgwleahdxhvuhgk.supabase.co",
+    key: window.PSI_MEDIA_KEY || "sb_publishable_emHmzeMvkUlEGZx8l02ZdA_olvWkmlv",
+    bucket: "quote-uploads",
+    maxBytes: 50 * 1024 * 1024, // storage plan's per-file ceiling
+  };
+
   const DATA = window.PSI_QUOTE;
   const root = document.getElementById("quoteApp");
   if (!root || !DATA) return;
@@ -31,6 +42,7 @@
     answers: [], // [{q, a}]
     keyed: {}, // answers by question id (for skip logic)
     intake: {},
+    files: [], // File objects picked in the photos field
   };
 
   function activeQuestions() {
@@ -197,7 +209,7 @@
         input.type = f.type;
         if (f.type === "file") {
           input.multiple = true;
-          input.accept = "image/*";
+          input.accept = "image/*,video/*";
         }
       }
       input.id = "qf_" + f.key;
@@ -231,9 +243,10 @@
         const input = document.getElementById("qf_" + f.key);
         if (!input) return;
         if (f.type === "file") {
-          state.intake[f.key] = Array.from(input.files || [])
-            .map((x) => x.name)
-            .join(", ");
+          state.files = Array.from(input.files || []);
+          state.intake[f.key] = state.files.length
+            ? state.files.length + " file(s) attached"
+            : "";
         } else {
           state.intake[f.key] = input.value.trim();
         }
@@ -265,7 +278,6 @@
       bestTime: "Best time to reach",
       heard: "How they heard about PSI",
       notes: "Notes",
-      photos: "Photos to attach",
     };
     Object.keys(labels).forEach((k) => {
       if (state.intake[k]) lines.push(labels[k] + ": " + state.intake[k]);
@@ -308,8 +320,10 @@
         '<p class="sent__lead">Expect an answer within 24 hours, by ' + how + "." + when + '</p>' +
         '<p class="sent__thanks">Thanks for the detail you put in — it means we can come back to you ' +
           'with real numbers rather than a guess. We appreciate the opportunity to quote your project.</p>' +
-        (state.intake.photos
-          ? '<p class="sent__note">Reply to our email with your photos and we will add them to the file.</p>'
+        (state.mediaMissed && state.mediaMissed.length
+          ? '<p class="sent__note">' + state.mediaMissed.length + ' file(s) were too large or did not upload (' +
+            state.mediaMissed.map(escapeHtml).join(", ") +
+            '). Please email them to <a href="mailto:sam@psiconstructionpa.com">sam@psiconstructionpa.com</a>.</p>'
           : "") +
         '<p class="sent__note">Something urgent in the meantime? Call us on ' +
           '<a href="tel:5703388774">570-338-8<span class="tel-psi">PSI</span>&nbsp;(774)</a>.</p>';
@@ -329,8 +343,8 @@
     p.style.margin = "0 auto 18px";
     p.textContent =
       "Review the summary below, then send it straight to us — no email app needed." +
-      (state.intake.photos
-        ? " We will ask for your photos in our reply."
+      (state.files.length
+        ? " Your " + state.files.length + " photo/video file(s) upload when you press Send."
         : "");
     done.appendChild(p);
     root.appendChild(done);
@@ -381,8 +395,36 @@
     send.addEventListener("click", async () => {
       if (send.disabled) return;
       send.disabled = true;
+      let media = { links: [], missed: [] };
+      if (state.files.length) {
+        try {
+          media = await uploadMedia(state.files, (i, n) => {
+            send.textContent = "Uploading " + i + " of " + n + "…";
+          });
+        } catch (e) {
+          media = { links: [], missed: state.files.map((f) => f.name) };
+        }
+      }
+      state.mediaMissed = media.missed;
+      send.disabled = false;
+      await sendRequest(media);
+    });
+
+    async function sendRequest(media) {
+      if (send.disabled) return;
+      send.disabled = true;
       send.textContent = "Sending…";
       status.textContent = "";
+
+      let message = summary;
+      if (media.links.length) {
+        message += "\n\n— Photos & videos (" + media.links.length + ") —\n" +
+          media.links.map((l, i) => (i + 1) + ". " + l).join("\n");
+      }
+      if (media.missed.length) {
+        message += "\n\nCould NOT upload (too large or failed) — ask the client to email: " +
+          media.missed.join(", ");
+      }
 
       const payload = {
         access_key: SEND.accessKey,
@@ -400,7 +442,7 @@
         best_time: state.intake.bestTime || "",
         heard: state.intake.heard || "",
         project: flow ? flow.title : state.gatewayChoice,
-        message: summary,
+        message: message,
         botcheck: "",            // honeypot — real visitors never fill this
       };
 
@@ -423,7 +465,7 @@
         // Google Ads conversion and write a Lead_Log row carrying the GCLID.
         // Both are best-effort and cannot affect the delivery above.
         try { if (window.PSI_fireConversion) window.PSI_fireConversion(); } catch (e) {}
-        try { if (window.PSI_submitLead) window.PSI_submitLead(summary, subject); } catch (e) {}
+        try { if (window.PSI_submitLead) window.PSI_submitLead(message, subject); } catch (e) {}
 
         showConfirmation();
       } catch (err) {
@@ -431,12 +473,83 @@
         send.textContent = "Send to PSI";
         mailtoFallback();
       }
-    });
+    }
 
     btns.append(copyBtn, send);
     controls.appendChild(btns);
     root.appendChild(controls);
     root.appendChild(status);
+  }
+
+  // ---------------- Photo / video upload ----------------
+  function escapeHtml(t) {
+    return String(t).replace(/[&<>"']/g, (c) =>
+      ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
+  }
+
+  function randomId() {
+    if (window.crypto && crypto.randomUUID) return crypto.randomUUID();
+    return Date.now().toString(36) + Math.random().toString(36).slice(2, 12);
+  }
+
+  // Phone photos are often 4–12 MB. Shrinking them to ~2400px keeps them
+  // sharp enough to estimate from while uploading several times faster on
+  // mobile data. Anything the browser cannot decode (e.g. HEIC outside
+  // Safari) is sent as-is.
+  function shrinkImage(file) {
+    return new Promise((resolve) => {
+      if (!/^image\/(jpeg|png|webp|heic|heif)$/i.test(file.type) || file.size < 1.5 * 1024 * 1024) {
+        return resolve(file);
+      }
+      const url = URL.createObjectURL(file);
+      const img = new Image();
+      img.onload = () => {
+        const max = 2400;
+        const scale = Math.min(1, max / Math.max(img.naturalWidth, img.naturalHeight));
+        const c = document.createElement("canvas");
+        c.width = Math.round(img.naturalWidth * scale);
+        c.height = Math.round(img.naturalHeight * scale);
+        c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
+        URL.revokeObjectURL(url);
+        c.toBlob((b) => {
+          if (!b || b.size >= file.size) return resolve(file);
+          resolve(new File([b], file.name.replace(/\.[^.]+$/, "") + ".jpg", { type: "image/jpeg" }));
+        }, "image/jpeg", 0.85);
+      };
+      img.onerror = () => { URL.revokeObjectURL(url); resolve(file); };
+      img.src = url;
+    });
+  }
+
+  async function uploadMedia(files, onProgress) {
+    const folder = "submissions/" + new Date().toISOString().slice(0, 10) + "-" + randomId();
+    const links = [];
+    const missed = [];
+    for (let i = 0; i < files.length; i++) {
+      onProgress(i + 1, files.length);
+      let f = files[i];
+      try {
+        if (f.type.startsWith("image/")) f = await shrinkImage(f);
+        if (f.size > MEDIA.maxBytes) { missed.push(files[i].name); continue; }
+        const safe = (f.name || "file").replace(/[^A-Za-z0-9._-]+/g, "_").slice(-80);
+        const path = folder + "/" + String(i + 1).padStart(2, "0") + "-" + safe;
+        const res = await fetch(MEDIA.url + "/storage/v1/object/" + MEDIA.bucket + "/" + path, {
+          method: "POST",
+          headers: {
+            apikey: MEDIA.key,
+            Authorization: "Bearer " + MEDIA.key,
+            "Content-Type": f.type || "application/octet-stream",
+            "x-upsert": "false",
+          },
+          body: f,
+        });
+        if (!res.ok) throw new Error("HTTP " + res.status);
+        links.push(MEDIA.url + "/storage/v1/object/public/" + MEDIA.bucket + "/" + path);
+      } catch (e) {
+        missed.push(files[i].name);
+      }
+    }
+    return { links, missed };
   }
 
   // A landing page can open straight onto its own trade, skipping the
