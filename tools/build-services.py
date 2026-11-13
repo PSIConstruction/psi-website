@@ -416,6 +416,17 @@ PAGE = """<!doctype html>
         </div>
       </section>
 
+      <!-- Every photograph from our documented jobs, this trade's first.
+           Markup is filled in by js/work-reel.js from data/work-reel.js. -->
+      <section class="section section--navy svc-reel" id="work" aria-labelledby="svcReelTitle">
+        <div class="section__inner">
+          <p class="eyebrow">Work we&rsquo;ve done</p>
+          <h2 class="section__title" id="svcReelTitle">From our jobs</h2>
+          <p class="lede">Swipe through the photographs. Tap one to see the whole job, start to finish.</p>
+        </div>
+        <div id="workReel" data-lead="{reel_lead}"></div>
+      </section>
+
       <!-- The quote form, opened straight onto this trade. -->
       <section class="section svc-quote" id="quote" aria-labelledby="svcQuoteTitle">
         <div class="section__inner">
@@ -437,6 +448,9 @@ PAGE = """<!doctype html>
     <script src="{R}js/main.js" defer></script>
     <script src="{R}js/quote-data.js" defer></script>
     <script src="{R}js/quote.js" defer></script>
+    <script src="{R}data/work-reel.js" defer></script>
+    <script src="{R}js/work-reel.js" defer></script>
+    <script src="{R}js/psi-tracking.js" defer></script>
   </body>
 </html>
 """
@@ -578,6 +592,24 @@ def hero_head(s, R):
     return HERO_SCRUB_HEAD.format(R=R, **seq)
 
 
+# Which documented jobs lead the work reel on each page: the ones that are
+# this kind of work. Ids are from data/projects.js; everything else follows.
+REEL_LEAD = {
+    "new-home-construction": ["corner-new-build", "fire-rebuild"],
+    "home-additions": ["addition-and-first-floor", "exterior-room-addition", "porch-to-master-bath"],
+    "whole-home-renovation": ["duplex-to-single-family", "renovation-and-basement-finish",
+                              "fire-rebuild", "garage-to-two-apartments"],
+    "basement-finishing": ["basement-finish-warren", "basement-finish-meadowland",
+                           "renovation-and-basement-finish", "water-damage-reynolds"],
+    "concrete-foundation": ["corner-new-build", "garage-to-two-apartments"],
+    "design-build": ["corner-new-build", "addition-and-first-floor", "duplex-to-single-family"],
+    "kitchen-remodeling": ["renovation-and-basement-finish", "fire-rebuild", "corner-new-build"],
+    "bathroom-remodeling": ["shower-closet-merge", "porch-to-master-bath", "two-baths-and-railing",
+                            "commercial-two-bath-gut", "basement-finish-warren"],
+    "roofing": ["addition-and-first-floor", "fire-rebuild", "exterior-room-addition"],
+}
+
+
 def build_pages():
     R = "../../"
     for i, s in enumerate(SERVICES, 1):
@@ -594,7 +626,7 @@ def build_pages():
             hero_section=hero_section(s, R), hero_head=hero_head(s, R),
             short=esc(s["short"]), short_lc=esc(s["short"].lower()), noun=esc(s["noun"]), process_title=esc(s["process_title"]),
             h1=esc(s["h1"]), intro=esc(s["intro"]), flow=s["flow"],
-            steps=steps,
+            steps=steps, reel_lead=",".join(REEL_LEAD[s["slug"]]),
             nav=NAV.format(R=R), footer=FOOTER.format(R=R),
         )
         out = os.path.join(ROOT, "services", s["slug"])
@@ -689,6 +721,8 @@ if __name__ == "__main__":
         for src in [s["hero"][0]] + [x[0] for x in s["strip"]]:
             if not os.path.exists(os.path.join(ROOT, src)):
                 sys.exit("missing photograph: " + src)
+    import build_work_reel
+    build_work_reel.build()
     images = build_cap_images()
     build_pages()
     build_home_grid(images)
