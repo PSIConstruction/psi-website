@@ -13,12 +13,18 @@
   var hero = document.querySelector(".svc-hero--pan");
   if (!hero) return;
   if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  var nav = document.querySelector(".nav");
+  var stage = hero.querySelector(".svc-hero__stage");
   var frame = 0;
   function update() {
     frame = 0;
+    // The stage sits under the sticky nav, so it is a viewport minus that.
+    var navH = nav ? nav.offsetHeight : 0;
+    if (nav) hero.style.setProperty("--nav-h", navH + "px");
     var r = hero.getBoundingClientRect();
-    var travel = r.height - window.innerHeight;
-    var p = travel > 0 ? -r.top / travel : 1;
+    var travel = r.height - (stage ? stage.offsetHeight : window.innerHeight);
+    // 0 while the hero's top is still under the nav, 1 as the stage unsticks.
+    var p = travel > 0 ? (navH - r.top) / travel : 1;
     p = p < 0 ? 0 : p > 1 ? 1 : p;
     hero.style.setProperty("--pan", p.toFixed(4));
   }
