@@ -359,3 +359,80 @@
     scroll-behavior: auto;
   }
 }
+
+/* ---------------- pan hero: scrolled through a tall photograph ----------------
+   The section is two screens tall; its stage sticks to the top while the
+   section scrolls by. --pan (0..1, set by js/hero-pan.js) slides the
+   photograph up so the top of the picture is seen first and the bottom
+   last, and lifts the copy in over the final stretch. With no script the
+   default of 1 shows the finished state. */
+.svc-hero--pan {
+  --pan: 1;
+  display: block;
+  /* the base hero clips; a clipping ancestor stops the stage sticking */
+  overflow: visible;
+  min-height: 0;
+  height: 200vh;
+  height: 200svh;
+}
+.svc-hero--pan .svc-hero__stage {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  height: 100svh;
+  display: grid;
+  align-items: end;
+  overflow: hidden;
+}
+.svc-hero--pan .svc-hero__img {
+  /* The photograph at its own proportions (portrait, 3:4) so the pan runs
+     from its top edge to its bottom edge; on a narrow screen that would be
+     shorter than the viewport, so it is at least 1.4 screens tall and
+     cropped at the sides instead. */
+  --img-h: max(140vh, calc(100vw * 4 / 3));
+  --img-h: max(140svh, calc(100vw * 4 / 3));
+  height: var(--img-h);
+  object-position: 50% 50%;
+  transform: translateY(calc(var(--pan) * (100vh - var(--img-h))));
+  transform: translateY(calc(var(--pan) * (100svh - var(--img-h))));
+  will-change: transform;
+}
+.svc-hero--pan .svc-hero__scrim {
+  opacity: calc(0.15 + var(--pan) * 0.85);
+}
+.svc-hero--pan .svc-hero__body {
+  --in: clamp(0, (var(--pan) - 0.55) / 0.4, 1);
+  opacity: var(--in);
+  transform: translateY(calc((1 - var(--in)) * 48px));
+}
+.svc-hero--pan .svc-hero__cue {
+  position: absolute;
+  left: 50%;
+  bottom: 22px;
+  transform: translateX(-50%);
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 12px;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  opacity: calc(1 - var(--pan) * 4);
+  pointer-events: none;
+}
+.svc-hero--pan .svc-hero__cue::after {
+  content: "";
+  display: block;
+  width: 1px;
+  height: 34px;
+  margin: 10px auto 0;
+  background: rgba(255, 255, 255, 0.7);
+  animation: svc-cue 1.6s ease-in-out infinite;
+}
+@keyframes svc-cue {
+  0%, 100% { transform: scaleY(0.3); transform-origin: top; opacity: 0.4; }
+  50% { transform: scaleY(1); transform-origin: top; opacity: 1; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .svc-hero--pan { height: auto; min-height: clamp(520px, 78vh, 760px); }
+  .svc-hero--pan .svc-hero__stage { position: relative; height: auto; min-height: clamp(520px, 78vh, 760px); }
+  .svc-hero--pan .svc-hero__img { height: 100%; transform: none; }
+  .svc-hero--pan .svc-hero__cue { display: none; }
+}

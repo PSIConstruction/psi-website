@@ -258,6 +258,8 @@ SERVICES = [
         "keywords": ["bathroom remodeling contractors", "full bathroom remodel", "bathroom renovation contractors", "master bathroom renovation"],
         "intro": "Bathrooms fail at the waterproofing, years later, where you can't see it. So that is where we spend the care — substrate, membrane, slope — before a single tile goes on. The finish is the part you see; the part you don't is why it lasts.",
         "hero": (f"{PH}/50-reynolds/50reynolds-after-02-full.jpg", "An enlarged walk-in shower — built-in bench, hand shower, lit niche and charcoal tile"),
+        # Portrait photograph: scrolled through from the rain head down to the pebble floor.
+        "hero_pan": True,
         "steps": [
             ("Plan & select", "Layout, fixtures, tile and lighting chosen together so they fit each other and the room."),
             ("Demolition", "Down to the studs where needed; the floor rebuilt from the structure if it has to carry tile."),
@@ -539,6 +541,25 @@ HERO_STILL = '''      <section class="svc-hero" aria-labelledby="svcTitle">
         </div>
       </section>'''
 
+# A tall photograph the page scrolls through: the top of the picture first,
+# the bottom last, the copy arriving at the end. Same body as the still.
+HERO_PAN = '''      <section class="svc-hero svc-hero--pan" aria-labelledby="svcTitle">
+        <div class="svc-hero__stage">
+{hero_media}
+          <div class="svc-hero__scrim" aria-hidden="true"></div>
+          <div class="svc-hero__body section__inner">
+            <p class="eyebrow svc-hero__eyebrow">PSI Construction · Kingston &amp; Wilkes-Barre, PA</p>
+            <h1 class="svc-hero__title" id="svcTitle">{h1}</h1>
+            <p class="svc-hero__lede">{intro}</p>
+            <div class="svc-hero__actions">
+              <a class="btn" href="#quote">Get a {noun} quote</a>
+              <a class="svc-hero__phone" href="tel:5703388774">570-338-8<span class="tel-psi">PSI</span> (774)</a>
+            </div>
+          </div>
+          <p class="svc-hero__cue" aria-hidden="true">Scroll</p>
+        </div>
+      </section>'''
+
 # The scroll-scrubbed hero: the home page's markup, with this trade's copy in
 # the overlay. The ids are what js/hero.js looks for; window.PSI_HERO (set in
 # the page head) tells it which frames to draw and where they live.
@@ -582,14 +603,17 @@ def hero_section(s, R):
     if seq:
         return HERO_SCRUB.format(R=R, alt=esc(alt), h1=esc(s["h1"]), intro=esc(s["intro"]),
                                  noun=esc(s["noun"]), dir=seq["dir"], mobileDir=seq["mobileDir"])
-    return HERO_STILL.format(hero_media=hero_media(s, R), h1=esc(s["h1"]), intro=esc(s["intro"]), noun=esc(s["noun"]))
+    tpl = HERO_PAN if s.get("hero_pan") else HERO_STILL
+    return tpl.format(hero_media=hero_media(s, R), h1=esc(s["h1"]), intro=esc(s["intro"]), noun=esc(s["noun"]))
 
 
 def hero_head(s, R):
     seq = s.get("hero_seq")
-    if not seq:
-        return ""
-    return HERO_SCRUB_HEAD.format(R=R, **seq)
+    if seq:
+        return HERO_SCRUB_HEAD.format(R=R, **seq)
+    if s.get("hero_pan"):
+        return '    <script src="{R}js/hero-pan.js" defer></script>'.format(R=R)
+    return ""
 
 
 # Which documented jobs lead the work reel on each page: the ones that are
