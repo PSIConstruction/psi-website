@@ -34,10 +34,8 @@
   };
   const order = D.photos.map((_, k) => k)
     .sort((a, b) => rank(D.photos[a][0]) - rank(D.photos[b][0]) || a - b);
-  // The reel opens on the job's second photograph, so its first one is
-  // already on the left and there are photographs either side from the
-  // start rather than an empty edge.
-  const START = D.photos.length > 1 ? 1 : 0;
+  // The reel opens with the job's first photograph flush against the left
+  // edge; whichever slide that leaves nearest the middle is the big one.
 
   // ---- markup ----
   root.classList.add("reel");
@@ -80,10 +78,9 @@
   let railW = 0;
   function measure() {
     railW = rail.clientWidth;
-    // Pad the ends so the first and last photograph can sit in the middle.
-    const first = slides[0].offsetWidth;
+    // Pad the far end so the last photograph can still reach the middle;
+    // the near end has none, so the strip starts at its first photograph.
     const last = slides[N - 1].offsetWidth;
-    rail.style.paddingLeft = Math.max(0, (railW - first) / 2) + "px";
     rail.style.paddingRight = Math.max(0, (railW - last) / 2) + "px";
     centres = slides.map((s) => s.offsetLeft + s.offsetWidth / 2);
   }
@@ -136,9 +133,9 @@
   const relayout = () => {
     clearTimeout(resizeT);
     resizeT = setTimeout(() => {
-      const keep = current < 0 ? START : current;
+      const keep = current;
       measure();
-      goTo(keep, false);
+      if (keep > 0) goTo(keep, false);
       schedule();
     }, 80);
   };
@@ -151,7 +148,6 @@
     window.addEventListener("resize", relayout);
   }
   measure();
-  goTo(START, false);
   paint();
 
   // ---- advancing on its own ----
@@ -167,7 +163,8 @@
   const reduced = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   function tick() {
     if (!onScreen || Date.now() < heldUntil || document.body.classList.contains("viewer-lock")) return;
-    goTo(current >= N - 1 ? START : current + 1);
+    if (current >= N - 1) rail.scrollTo({ left: 0, behavior: "smooth" });
+    else goTo(current + 1);
   }
   function play() { if (!timer && !reduced) timer = setInterval(tick, HOLD); }
   function stop() { if (timer) { clearInterval(timer); timer = null; } }

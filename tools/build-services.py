@@ -78,6 +78,7 @@ SERVICES = [
         "keywords": ["home addition contractor", "second story addition", "room addition contractor", "in law suite addition"],
         "intro": "An addition has to look like it was always there and work like it was planned from the start. We handle the structural tie-in, the roofline, the services, and the finishes — a one-storey house gaining a full second floor is a job we have done, start to finish.",
         "hero": (f"{PH}/417-warren/417warren-06-graded-16fd1394.jpg", "A house seen from the front with its second-storey addition framed and open, mid-build"),
+        "hero_pan": True,   # portrait: scrolled through top to bottom
         "steps": [
             ("Feasibility & design", "What the structure can carry, what zoning allows, and drawings that make the new work read as original."),
             ("Permits & engineering", "Stamped plans and the permit in hand before demolition."),
@@ -198,6 +199,7 @@ SERVICES = [
         "keywords": ["design build contractor", "licensed general contractor near me", "general contractor Wilkes-Barre", "general contractor Kingston PA"],
         "intro": "Design-build means one company is responsible for the drawings and for building them — so the budget is real from day one and nobody is pointing at anybody else. We've taken a garage to two apartments and a duplex to a single-family home that way.",
         "hero": (f"{PH}/580-rutter/580rutter-01.jpg", "A three-storey house under PSI's management, scaffolded for a full conversion"),
+        "hero_pan": True,   # portrait: scrolled through top to bottom
         "steps": [
             ("Brief & budget", "What you need, what it should cost, and what the building will allow — settled together."),
             ("Design & engineering", "Drawings developed with the build in mind, engineered and stamped."),
@@ -290,6 +292,7 @@ SERVICES = [
         "keywords": ["roofing contractor", "shingle roof replacement", "roof replacement near me", "new roof contractor"],
         "intro": "We roof the houses we build, and we re-roof the ones we don't. Decking checked and replaced where it's gone, ice-and-water at the eaves and valleys, flashing done properly at every penetration — then the shingles. The part that keeps the water out is underneath.",
         "hero": (f"{PH}/378-rutter/378rutter-early-09-4d34a6d9.jpg", "A newly laid architectural shingle roof against the sky, on a PSI rebuild"),
+        "hero_pan": True,   # portrait: scrolled through top to bottom
         "steps": [
             ("Inspect & quote", "Decking, flashing, ventilation and the age of what's there. A fixed price, not an estimate."),
             ("Tear-off", "Old roofing stripped, decking exposed and checked board by board."),

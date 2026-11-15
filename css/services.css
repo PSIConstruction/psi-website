@@ -226,6 +226,10 @@
   opacity: 0.55;
   will-change: transform, opacity;
 }
+/* The first photograph snaps to the left edge, the rest to the middle. */
+.reel__slide:first-child {
+  scroll-snap-align: start;
+}
 .reel__slide img {
   display: block;
   width: 100%;
