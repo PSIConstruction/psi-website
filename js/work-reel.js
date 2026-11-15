@@ -32,15 +32,12 @@
     const k = lead.indexOf(projects[pi].id);
     return k < 0 ? lead.length : k;
   };
-  let order = D.photos.map((_, k) => k)
+  const order = D.photos.map((_, k) => k)
     .sort((a, b) => rank(D.photos[a][0]) - rank(D.photos[b][0]) || a - b);
-  // Start in the middle of the story, not at its first page: the last few
-  // photographs of the strip are moved in front of the first, so the reel
-  // opens with this page's job in the middle and finished work peeking in
-  // from the left. The counter still reads 1 at the opening photograph.
-  const TAIL = Math.min(8, order.length - 1);
-  order = order.slice(-TAIL).concat(order.slice(0, -TAIL));
-  const START = TAIL;
+  // The reel opens on the job's second photograph, so its first one is
+  // already on the left and there are photographs either side from the
+  // start rather than an empty edge.
+  const START = D.photos.length > 1 ? 1 : 0;
 
   // ---- markup ----
   root.classList.add("reel");
@@ -67,7 +64,7 @@
     b.dataset.n = n;
     b.style.setProperty("--ar", ph[2] + " / " + ph[3]);
     b.innerHTML = `<img src="${D.dir}${ph[1]}" alt="${(ph[5] || label(ph[0])).replace(/"/g, "&quot;")}" `
-      + `loading="${Math.abs(n - START) < 5 ? "eager" : "lazy"}" decoding="async" width="${ph[2]}" height="${ph[3]}">`
+      + `loading="${n < 6 ? "eager" : "lazy"}" decoding="async" width="${ph[2]}" height="${ph[3]}">`
       + (ph[4] ? `<span class="reel__phase reel__phase--${ph[4]}">${ph[4]}</span>` : "");
     rail.appendChild(b);
     return b;
@@ -122,7 +119,7 @@
       const ph = photoAt(best);
       capJob.textContent = label(ph[0]);
       capText.textContent = ph[5] || "";
-      count.textContent = (((best - START) % N + N) % N + 1) + " / " + N;
+      count.textContent = (best + 1) + " / " + N;
     }
   }
   const schedule = () => { if (!frame) frame = requestAnimationFrame(paint); };
@@ -157,6 +154,38 @@
   goTo(START, false);
   paint();
 
+  // ---- advancing on its own ----
+  // Every few seconds the next photograph slides to the middle, but only
+  // while the reel is on screen and nobody is handling it: any touch,
+  // wheel, drag or arrow press holds it off for ten seconds. At the end it
+  // starts over.
+  const HOLD = 4000;
+  const NUDGE_HOLD = 10000;
+  let timer = null;
+  let heldUntil = 0;
+  let onScreen = false;
+  const reduced = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  function tick() {
+    if (!onScreen || Date.now() < heldUntil || document.body.classList.contains("viewer-lock")) return;
+    goTo(current >= N - 1 ? START : current + 1);
+  }
+  function play() { if (!timer && !reduced) timer = setInterval(tick, HOLD); }
+  function stop() { if (timer) { clearInterval(timer); timer = null; } }
+  const hold = () => { heldUntil = Date.now() + NUDGE_HOLD; };
+  rail.addEventListener("pointerdown", hold, { passive: true });
+  rail.addEventListener("touchstart", hold, { passive: true });
+  rail.addEventListener("wheel", hold, { passive: true });
+  rail.addEventListener("keydown", hold);
+  if ("IntersectionObserver" in window) {
+    new IntersectionObserver((entries) => {
+      onScreen = entries.some((e) => e.isIntersecting);
+      if (onScreen) play(); else stop();
+    }, { threshold: 0.4 }).observe(root);
+  } else {
+    onScreen = true;
+    play();
+  }
+
   // ---- choosing ----
   // A tap that turns into a swipe is scrolling, not choosing. Without this,
   // flicking the strip on a phone opened whichever job was under the thumb.
@@ -182,7 +211,7 @@
   });
   root.addEventListener("click", (e) => {
     const st = e.target.closest("[data-step]");
-    if (st) return goTo(current + +st.dataset.step);
+    if (st) { hold(); return goTo(current + +st.dataset.step); }
     if (e.target.closest("[data-open]")) openViewer(current);
   });
   rail.addEventListener("keydown", (e) => {
