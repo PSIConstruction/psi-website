@@ -32,8 +32,15 @@
     const k = lead.indexOf(projects[pi].id);
     return k < 0 ? lead.length : k;
   };
-  const order = D.photos.map((_, k) => k)
+  let order = D.photos.map((_, k) => k)
     .sort((a, b) => rank(D.photos[a][0]) - rank(D.photos[b][0]) || a - b);
+  // Start in the middle of the story, not at its first page: the last few
+  // photographs of the strip are moved in front of the first, so the reel
+  // opens with this page's job in the middle and finished work peeking in
+  // from the left. The counter still reads 1 at the opening photograph.
+  const TAIL = Math.min(8, order.length - 1);
+  order = order.slice(-TAIL).concat(order.slice(0, -TAIL));
+  const START = TAIL;
 
   // ---- markup ----
   root.classList.add("reel");
@@ -60,7 +67,7 @@
     b.dataset.n = n;
     b.style.setProperty("--ar", ph[2] + " / " + ph[3]);
     b.innerHTML = `<img src="${D.dir}${ph[1]}" alt="${(ph[5] || label(ph[0])).replace(/"/g, "&quot;")}" `
-      + `loading="${n < 6 ? "eager" : "lazy"}" decoding="async" width="${ph[2]}" height="${ph[3]}">`
+      + `loading="${Math.abs(n - START) < 5 ? "eager" : "lazy"}" decoding="async" width="${ph[2]}" height="${ph[3]}">`
       + (ph[4] ? `<span class="reel__phase reel__phase--${ph[4]}">${ph[4]}</span>` : "");
     rail.appendChild(b);
     return b;
@@ -115,7 +122,7 @@
       const ph = photoAt(best);
       capJob.textContent = label(ph[0]);
       capText.textContent = ph[5] || "";
-      count.textContent = (best + 1) + " / " + N;
+      count.textContent = (((best - START) % N + N) % N + 1) + " / " + N;
     }
   }
   const schedule = () => { if (!frame) frame = requestAnimationFrame(paint); };
@@ -132,7 +139,7 @@
   const relayout = () => {
     clearTimeout(resizeT);
     resizeT = setTimeout(() => {
-      const keep = Math.max(0, current);
+      const keep = current < 0 ? START : current;
       measure();
       goTo(keep, false);
       schedule();
@@ -147,7 +154,7 @@
     window.addEventListener("resize", relayout);
   }
   measure();
-  goTo(0, false);
+  goTo(START, false);
   paint();
 
   // ---- choosing ----
