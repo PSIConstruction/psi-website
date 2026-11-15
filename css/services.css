@@ -400,7 +400,10 @@
   --img-h: max(calc(var(--stage-h) * 1.4), calc(100vw * 4 / 3));
   height: var(--img-h);
   object-position: 50% 50%;
-  transform: translateY(calc(var(--pan) * (var(--stage-h) - var(--img-h))));
+  /* --pan-start (set on the section) is how far down the picture the pan
+     opens; the scroll covers the rest of the way to the bottom edge. */
+  --at: calc(var(--pan-start, 0) + var(--pan) * (1 - var(--pan-start, 0)));
+  transform: translateY(calc(var(--at) * (var(--stage-h) - var(--img-h))));
   will-change: transform;
 }
 .svc-hero--pan .svc-hero__scrim {
