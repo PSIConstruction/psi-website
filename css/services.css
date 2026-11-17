@@ -372,27 +372,28 @@
   }
 }
 
-/* ---------------- pan hero: scrolled through a tall photograph ----------------
-   The section is two screens tall; its stage sticks to the top while the
-   section scrolls by. --pan (0..1, set by js/hero-pan.js) slides the
-   photograph up so the top of the picture is seen first and the bottom
-   last, and lifts the copy in over the final stretch. With no script the
-   default of 1 shows the finished state. */
-.svc-hero--pan {
+/* ---------------- reveal hero: the photograph first, the copy on scroll ----------------
+   The section is taller than the screen; its stage sticks under the nav
+   while the section scrolls by, and --pan (0..1, set by js/hero-pan.js)
+   lifts the copy in over the later part of that scroll. On a
+   .svc-hero--pan page the photograph also slides up, top edge to bottom
+   edge, over the whole scroll. With no script --pan defaults to 1 and the
+   finished state simply shows. */
+.svc-hero--reveal {
   --pan: 1;
-  /* The nav is sticky and sits above the hero in the flow, so a stage of
-     one full viewport would run that much off the bottom. The nav's
-     height is measured by js/hero-pan.js; 78px is its desktop size. */
-  --nav-h: 78px;
+  --travel: 0.6;               /* screens of scroll beyond the stage */
   --stage-h: calc(100vh - var(--nav-h));
   --stage-h: calc(100svh - var(--nav-h));
   display: block;
   /* the base hero clips; a clipping ancestor stops the stage sticking */
   overflow: visible;
   min-height: 0;
-  height: calc(var(--stage-h) * 2);
+  height: calc(var(--stage-h) * (1 + var(--travel)));
 }
-.svc-hero--pan .svc-hero__stage {
+.svc-hero--pan {
+  --travel: 1;
+}
+.svc-hero--reveal .svc-hero__stage {
   position: sticky;
   top: var(--nav-h);
   height: var(--stage-h);
@@ -414,15 +415,15 @@
   transform: translateY(calc(var(--at) * (var(--stage-h) - var(--img-h))));
   will-change: transform;
 }
-.svc-hero--pan .svc-hero__scrim {
-  opacity: calc(0.15 + var(--pan) * 0.85);
+.svc-hero--reveal .svc-hero__scrim {
+  opacity: calc(0.1 + var(--pan) * 0.9);
 }
-.svc-hero--pan .svc-hero__body {
-  --in: clamp(0, (var(--pan) - 0.55) / 0.4, 1);
+.svc-hero--reveal .svc-hero__body {
+  --in: clamp(0, (var(--pan) - 0.4) / 0.45, 1);
   opacity: var(--in);
   transform: translateY(calc((1 - var(--in)) * 48px));
 }
-.svc-hero--pan .svc-hero__cue {
+.svc-hero--reveal .svc-hero__cue {
   position: absolute;
   left: 50%;
   bottom: 22px;
@@ -434,22 +435,50 @@
   opacity: calc(1 - var(--pan) * 4);
   pointer-events: none;
 }
-.svc-hero--pan .svc-hero__cue::after {
+.svc-hero--reveal .svc-hero__cue::after {
   content: "";
   display: block;
   width: 1px;
   height: 34px;
   margin: 10px auto 0;
-  background: rgba(255, 255, 255, 0.7);
+  background: currentColor;
+  opacity: 0.7;
   animation: svc-cue 1.6s ease-in-out infinite;
 }
 @keyframes svc-cue {
   0%, 100% { transform: scaleY(0.3); transform-origin: top; opacity: 0.4; }
   50% { transform: scaleY(1); transform-origin: top; opacity: 1; }
 }
+
+/* The quote button is the one thing meant to pop on every page. */
+.svc-hero .btn {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+.svc-hero .btn:hover {
+  background: #b00000;
+  border-color: #b00000;
+}
+
+/* Lettering over a pale photograph: navy and ink on a cream fade, so the
+   words read against a white house or a bright room. */
+.svc-hero--light {
+  color: var(--ink);
+}
+.svc-hero--light .svc-hero__scrim {
+  background:
+    linear-gradient(to top, rgba(247, 246, 243, 0.96) 0%, rgba(247, 246, 243, 0.78) 40%, rgba(247, 246, 243, 0) 100%);
+}
+.svc-hero--light .svc-hero__eyebrow { color: var(--navy); }
+.svc-hero--light .svc-hero__title { color: var(--navy); }
+.svc-hero--light .svc-hero__lede { color: #2b3137; }
+.svc-hero--light .svc-hero__phone { color: var(--ink); }
+.svc-hero--light .svc-hero__phone .tel-psi { color: var(--accent); }
+.svc-hero--light .svc-hero__cue { color: rgba(16, 18, 20, 0.75); }
+
 @media (prefers-reduced-motion: reduce) {
-  .svc-hero--pan { height: auto; min-height: clamp(520px, 78vh, 760px); }
-  .svc-hero--pan .svc-hero__stage { position: relative; top: 0; height: auto; min-height: clamp(520px, 78vh, 760px); }
+  .svc-hero--reveal { height: auto; min-height: clamp(520px, 78vh, 760px); }
+  .svc-hero--reveal .svc-hero__stage { position: relative; top: 0; height: auto; min-height: clamp(520px, 78vh, 760px); }
   .svc-hero--pan .svc-hero__img { height: 100%; transform: none; }
-  .svc-hero--pan .svc-hero__cue { display: none; }
+  .svc-hero--reveal .svc-hero__cue { display: none; }
 }

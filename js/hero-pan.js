@@ -23,7 +23,7 @@
   measureNav();
   window.addEventListener("resize", measureNav);
 
-  var hero = document.querySelector(".svc-hero--pan");
+  var hero = document.querySelector(".svc-hero--reveal");
   if (!hero) return;
   if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
   var stage = hero.querySelector(".svc-hero__stage");

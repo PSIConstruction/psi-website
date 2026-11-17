@@ -107,7 +107,7 @@ SERVICES = [
         "description": "Complete home renovation and gut remodels in Kingston, Wilkes-Barre and across Luzerne County. PSI takes a house back to the structure and rebuilds it as one coordinated job.",
         "keywords": ["whole house renovation contractor", "gut renovation contractor", "full house remodel contractor", "complete home renovation"],
         "intro": "A whole-house renovation is a hundred small jobs that have to happen in the right order. We run them as one — demolition, structure, systems, finishes — so the house comes back together without the gaps that happen when five trades are each waiting on the others.",
-        "hero": ("assets/services/stock-wholehome-pexels-40701216.jpg", "A renovated older home — refinished hardwood floors, arched openings, crown moulding and fresh paint throughout"),
+        "hero": ("assets/services/wholehome-foyer-634ad096.jpg", "A renovated foyer — new oak stair with white balusters, built-in bench, cased opening to the front room and dark-stained floors throughout"),
         "steps": [
             ("Survey & scope", "Every room walked, every system assessed. A fixed scope and a sequenced plan before anything comes out."),
             ("Strip out", "Back to the framing where it needs to be, no further than it has to be."),
@@ -528,23 +528,10 @@ def hero_media(s, R):
 
 
 # The still-photo hero: one real photograph of our work, the trade named plainly.
-HERO_STILL = '''      <section class="svc-hero" aria-labelledby="svcTitle">
-{hero_media}
-        <div class="svc-hero__scrim" aria-hidden="true"></div>
-        <div class="svc-hero__body section__inner">
-          <p class="eyebrow svc-hero__eyebrow">PSI Construction · Kingston &amp; Wilkes-Barre, PA</p>
-          <h1 class="svc-hero__title" id="svcTitle">{h1}</h1>
-          <p class="svc-hero__lede">{intro}</p>
-          <div class="svc-hero__actions">
-            <a class="btn" href="#quote">Get a {noun} quote</a>
-            <a class="svc-hero__phone" href="tel:5703388774">570-338-8<span class="tel-psi">PSI</span> (774)</a>
-          </div>
-        </div>
-      </section>'''
-
-# A tall photograph the page scrolls through: the top of the picture first,
-# the bottom last, the copy arriving at the end. Same body as the still.
-HERO_PAN = '''      <section class="svc-hero svc-hero--pan" style="--pan-start: {pan_start}" aria-labelledby="svcTitle">
+# Every hero is the whole first screen with nothing on it but the
+# photograph; the copy rises in as the page scrolls past. On a page with
+# hero_pan the photograph itself also pans down over that scroll.
+HERO = '''      <section class="svc-hero svc-hero--reveal{pan_class}{tone_class}" style="--pan-start: {pan_start}" aria-labelledby="svcTitle">
         <div class="svc-hero__stage">
 {hero_media}
           <div class="svc-hero__scrim" aria-hidden="true"></div>
@@ -561,6 +548,18 @@ HERO_PAN = '''      <section class="svc-hero svc-hero--pan" style="--pan-start: 
         </div>
       </section>'''
 
+# Lettering colour by photograph: "light" photographs (a white house, a
+# cream foyer) get navy and ink over a pale fade; everything else keeps
+# white over the dark fade. The quote button is red on every page.
+HERO_TONE = {
+    "new-home-construction": "light",
+    "whole-home-renovation": "light",
+    "basement-finishing": "light",
+    "kitchen-remodeling": "light",
+}
+
+# A tall photograph the page scrolls through: the top of the picture first,
+# the bottom last, the copy arriving at the end. Same body as the still.
 # The scroll-scrubbed hero: the home page's markup, with this trade's copy in
 # the overlay. The ids are what js/hero.js looks for; window.PSI_HERO (set in
 # the page head) tells it which frames to draw and where they live.
@@ -605,11 +604,12 @@ def hero_section(s, R):
         return HERO_SCRUB.format(R=R, alt=esc(alt), h1=esc(s["h1"]), intro=esc(s["intro"]),
                                  noun=esc(s["noun"]), dir=seq["dir"], mobileDir=seq["mobileDir"])
     pan = s.get("hero_pan")
-    if pan:
-        # True means from the very top; a number is how far down (0..1) to open.
-        return HERO_PAN.format(hero_media=hero_media(s, R), h1=esc(s["h1"]), intro=esc(s["intro"]),
-                               noun=esc(s["noun"]), pan_start=0 if pan is True else pan)
-    return HERO_STILL.format(hero_media=hero_media(s, R), h1=esc(s["h1"]), intro=esc(s["intro"]), noun=esc(s["noun"]))
+    tone = HERO_TONE.get(s["slug"], "dark")
+    return HERO.format(hero_media=hero_media(s, R), h1=esc(s["h1"]), intro=esc(s["intro"]), noun=esc(s["noun"]),
+                       pan_class=" svc-hero--pan" if pan else "",
+                       tone_class=" svc-hero--light" if tone == "light" else "",
+                       # True means from the very top; a number is how far down (0..1) to open.
+                       pan_start=0 if pan is True or not pan else pan)
 
 
 def hero_head(s, R):
