@@ -56,6 +56,32 @@
     return (state.flowKey ? activeQuestions().length : 0) + 1;
   }
 
+  // ---------------- Drop-off instrumentation ----------------
+  // Records how far each visitor gets through the questionnaire so the
+  // abandonment point is visible in GA4. Fires once per step per visit:
+  // going Back and forward again does not double-count, so the event counts
+  // read as a clean funnel (how many reached Q1, Q2, Q3 ...).
+  // Measurement only. It changes nothing a visitor sees or has to answer.
+  let furthestStep = -1;
+
+  function track(name, params) {
+    try {
+      if (typeof window.gtag === "function") window.gtag("event", name, params || {});
+    } catch (e) {}
+  }
+
+  function trackStep(stepNum, name, extra) {
+    if (stepNum <= furthestStep) return;
+    furthestStep = stepNum;
+    const p = {
+      step_number: stepNum,
+      total_steps: totalSteps(),
+      flow: state.flowKey || state.gatewayChoice || "none",
+    };
+    if (extra) Object.keys(extra).forEach((k) => (p[k] = extra[k]));
+    track(name, p);
+  }
+
   function render() {
     root.innerHTML = "";
     if (state.stage === "gateway") return renderGateway();
@@ -103,6 +129,7 @@
 
   // ---------------- Gateway (Q0) ----------------
   function renderGateway() {
+    trackStep(0, "quote_open");
     root.appendChild(progressBlock(0, 1, "Let's scope your project"));
     root.appendChild(el("h3", "quote__q", DATA.gateway.q));
     root.appendChild(
@@ -138,6 +165,7 @@
     const q = qs[state.qIndex];
     const total = totalSteps();
 
+    trackStep(state.qIndex + 1, "quote_step", { question: String(q.q).slice(0, 90) });
     root.appendChild(progressBlock(state.qIndex + 1, total));
     root.appendChild(el("h3", "quote__q", q.q));
     if (q.note) root.appendChild(el("p", "quote__note", "(" + q.note + ")"));
@@ -186,6 +214,7 @@
           : "Last step — how do we reach you?",
       ),
     );
+    trackStep(total, "quote_intake");
     root.appendChild(el("h3", "quote__q", "Almost done — contact details"));
 
     const form = el("form", "quote__form");
@@ -466,6 +495,7 @@
         // Both are best-effort and cannot affect the delivery above.
         try { if (window.PSI_fireConversion) window.PSI_fireConversion(); } catch (e) {}
         try { if (window.PSI_submitLead) window.PSI_submitLead(message, subject); } catch (e) {}
+        track("quote_submit", { flow: state.flowKey || "none", steps_completed: furthestStep });
 
         showConfirmation();
       } catch (err) {
