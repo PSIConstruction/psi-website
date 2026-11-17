@@ -64,10 +64,43 @@
   // Measurement only. It changes nothing a visitor sees or has to answer.
   let furthestStep = -1;
 
+  // The first question renders before the Google tag has finished loading, so
+  // events are queued and flushed as soon as gtag exists. Without this the
+  // opening step is silently lost and the funnel has no denominator.
+  const pendingEvents = [];
+  let flushTimer = null;
+  let flushTries = 0;
+
+  function flushEvents() {
+    if (typeof window.gtag !== "function") return;
+    while (pendingEvents.length) {
+      const e = pendingEvents.shift();
+      try {
+        window.gtag("event", e[0], e[1]);
+      } catch (err) {}
+    }
+    if (flushTimer) {
+      clearInterval(flushTimer);
+      flushTimer = null;
+    }
+  }
+
   function track(name, params) {
-    try {
-      if (typeof window.gtag === "function") window.gtag("event", name, params || {});
-    } catch (e) {}
+    pendingEvents.push([name, params || {}]);
+    flushEvents();
+    if (pendingEvents.length && !flushTimer) {
+      flushTries = 0;
+      flushTimer = setInterval(() => {
+        flushTries++;
+        flushEvents();
+        if (flushTries > 20 && flushTimer) {
+          // Tag never arrived (blocker, offline). Stop trying and drop them.
+          clearInterval(flushTimer);
+          flushTimer = null;
+          pendingEvents.length = 0;
+        }
+      }, 500);
+    }
   }
 
   function trackStep(stepNum, name, extra) {
