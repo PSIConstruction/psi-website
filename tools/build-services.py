@@ -616,9 +616,8 @@ def hero_head(s, R):
     seq = s.get("hero_seq")
     if seq:
         return HERO_SCRUB_HEAD.format(R=R, **seq)
-    if s.get("hero_pan"):
-        return '    <script src="{R}js/hero-pan.js" defer></script>'.format(R=R)
-    return ""
+    # Measures the nav for every hero; drives the pan where there is one.
+    return '    <script src="{R}js/hero-pan.js" defer></script>'.format(R=R)
 
 
 # Which documented jobs lead the work reel on each page: the ones that are
