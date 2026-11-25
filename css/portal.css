@@ -490,3 +490,12 @@
   .pmodal__close, .pmodal__foot, .sigpad__hint { display: none !important; }
   .paper { margin: 0; border: 0; }
 }
+
+/* phones: contract / paid / balance as three rows, not three cramped columns */
+@media (max-width: 640px) {
+  .pay__figs { grid-template-columns: 1fr; gap: 6px; text-align: left; }
+  .pay__figs > div { display: flex; justify-content: space-between; align-items: baseline; }
+  .pay__figs span { margin: 0; }
+  .pay__row { flex-direction: column; gap: 8px; }
+  .pay__row-side { display: flex; justify-content: space-between; align-items: center; width: 100%; }
+}

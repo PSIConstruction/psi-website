@@ -200,7 +200,7 @@
   // ---------------- who is on the paper ----------------
   // Office address as published on the site. The homeowner is made up.
   const PSI = { name: "PSI Construction, LLC", lines: ["190 Wyoming St.", "Wilkes-Barre, PA 18705", "(570) 338-8774", "PA HIC Reg. #213035"], phone: "(570) 338-8774", web: "www.psiconstructionpa.com", email: "info@psiconstructionpa.com" };
-  const OWNER = { name: "Sample Homeowner", lines: ["Sample project address", "Kingston, PA 18704"] };
+  const OWNER = { name: "Sample Client", lines: ["Sample project address", "Kingston, PA 18704"] };
   const PROJECT = "Second-storey addition & first-floor renovation";
 
   // ---------------- messages ----------------
@@ -519,7 +519,7 @@
       <p>Fixed price of ${money2(CONTRACT.total)} with the allowances listed in the portal. Deposit on signing, five progress payments at milestones, final on completion. Any change to scope is priced as a change order and signed by the Owner before the work is done.</p>
       <p class="paper__sec">Warranty</p>
       <p>Two years on workmanship; manufacturers' warranties passed through.</p>
-      <div class="paper__sign"><div><p class="paper__lbl">Owner</p><div class="paper__sigline paper__sigline--script">Sample Homeowner</div><span>${esc(OWNER.name)}</span><small>Signed · ${esc(fmt(CONTRACT.signed, { month: "long", day: "numeric", year: "numeric" }))}</small></div><div><p class="paper__lbl">PSI Construction, LLC</p><div class="paper__sigline paper__sigline--script">Sam Liberow</div><span>Sam Liberow, Co-Owner</span><small>${esc(fmt(CONTRACT.signed, { month: "long", day: "numeric", year: "numeric" }))}</small></div></div>
+      <div class="paper__sign"><div><p class="paper__lbl">Owner</p><div class="paper__sigline paper__sigline--script">Sample Client</div><span>${esc(OWNER.name)}</span><small>Signed · ${esc(fmt(CONTRACT.signed, { month: "long", day: "numeric", year: "numeric" }))}</small></div><div><p class="paper__lbl">PSI Construction, LLC</p><div class="paper__sigline paper__sigline--script">PSI Construction</div><span>PSI Construction, LLC</span><small>${esc(fmt(CONTRACT.signed, { month: "long", day: "numeric", year: "numeric" }))}</small></div></div>
       ${docFoot("Contract")}</div></div><div class="pmodal__foot">${printBtn()}</div>`;
 
     if (key.startsWith("co:")) {
@@ -537,8 +537,8 @@
       <div class="paper__box"><p class="paper__box-head">Price</p><div class="paper__box-body"><div class="paper__item"><span>Item 1 (fixed)</span><span>${money2(c.amount)}</span></div><div class="paper__item paper__item--total"><strong>Change Order No. ${n} total</strong><strong>${money2(c.amount)}</strong></div></div></div>
       <div class="paper__box"><p class="paper__box-head">Acceptance and Signatures</p><div class="paper__box-body"><p>By signing below, the Owner approves Change Order No. ${n} and the scope above.</p>
         <div class="paper__sign">
-          <div><p class="paper__lbl">Owner</p>${st === "approved" ? (sig ? h`<div class="paper__sigline"><img src="${sig.data}" alt="Owner signature"></div>` : h`<div class="paper__sigline paper__sigline--script">Sample Homeowner</div>`) : st === "declined" ? h`<div class="paper__sigline"><em>Declined</em></div>` : h`<div class="sigpad"><canvas id="sigPad" width="520" height="150" aria-label="Sign here"></canvas><p class="sigpad__hint">Sign here with your mouse or finger</p></div>`}<span>${esc(OWNER.name)}</span><small>${st === "approved" ? "Signed in the portal · " + esc(fmt(when, { month: "long", day: "numeric", year: "numeric" })) : ""}</small></div>
-          <div><p class="paper__lbl">PSI Construction, LLC</p><div class="paper__sigline paper__sigline--script">Sam Liberow</div><span>Sam Liberow, Co-Owner</span><small>${esc(fmt(c.when, { month: "long", day: "numeric", year: "numeric" }))}</small></div>
+          <div><p class="paper__lbl">Owner</p>${st === "approved" ? (sig ? h`<div class="paper__sigline"><img src="${sig.data}" alt="Owner signature"></div>` : h`<div class="paper__sigline paper__sigline--script">Sample Client</div>`) : st === "declined" ? h`<div class="paper__sigline"><em>Declined</em></div>` : h`<div class="sigpad"><canvas id="sigPad" width="520" height="150" aria-label="Sign here"></canvas><p class="sigpad__hint">Sign here with your mouse or finger</p></div>`}<span>${esc(OWNER.name)}</span><small>${st === "approved" ? "Signed in the portal · " + esc(fmt(when, { month: "long", day: "numeric", year: "numeric" })) : ""}</small></div>
+          <div><p class="paper__lbl">PSI Construction, LLC</p><div class="paper__sigline paper__sigline--script">PSI Construction</div><span>PSI Construction, LLC</span><small>${esc(fmt(c.when, { month: "long", day: "numeric", year: "numeric" }))}</small></div>
         </div>
         ${st === "pending" ? h`<div class="pmodal__foot pmodal__foot--left"><button type="button" class="doc__btn" data-sig-clear>Clear</button><button type="button" class="doc__btn" data-co="${c.id}" data-set="declined">Decline</button><button type="button" class="doc__btn doc__btn--go" data-sign="${c.id}">Sign and approve</button></div>` : ""}
       </div></div>
