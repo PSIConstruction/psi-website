@@ -263,7 +263,11 @@
 .sch__day.is-past { background: var(--soft); }
 .sch__dayname { margin: 0 0 6px; font-size: 12px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
 .sch__dayname b { display: block; font-size: 15px; color: var(--ink); letter-spacing: 0; }
-.sch__item { margin: 0 0 6px; padding: 6px 8px; border-radius: 4px; font-size: 13px; line-height: 1.35; background: #e6eef9; border-left: 3px solid #1f4f8f; }
+.sch__item { margin: 0 0 6px; padding: 6px 8px; border-radius: 4px; font-size: 13px; line-height: 1.35; background: #e6eef9; border-left: 3px solid #1f4f8f; overflow-wrap: anywhere; }
+.sch__none { margin: 0; font-size: 13px; color: var(--muted); }
+.sch__week--3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.sch__week--3 .sch__day { min-height: 0; padding: 12px; }
+.sch__week--3 .sch__item { font-size: 14px; padding: 8px 10px; }
 .sch__item--done { background: #e3f3e8; border-color: var(--ok); }
 .sch__item--up { background: var(--soft); border-color: #b9b5ad; }
 .sch__item--insp { background: #fdeedd; border-color: var(--warn); }
@@ -284,6 +288,7 @@
 }
 @media (max-width: 520px) {
   .sch__week { grid-template-columns: 1fr 1fr; }
+  .sch__week--3 { grid-template-columns: 1fr; }
 }
 
 /* decisions */

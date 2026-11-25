@@ -129,30 +129,30 @@
   // ---------------- schedule ----------------
   // Per week: items placed on days (0 = Mon … 5 = Sat).
   const SCHEDULE = {
-    1: [[0, "Measured survey", "done"], [1, "Drawings started", "done"], [4, "Drawings issued for review", "done"]],
-    2: [[0, "Engineering review", "done"], [2, "Stamped drawings received", "done"], [3, "Permit application filed", "done"], [4, "Permit issued", "done"]],
-    3: [[0, "Site set-up, protection, dumpster", "done"], [1, "Roof demolition", "done"], [2, "Roof demolition", "done"], [3, "Temporary cover on", "done"]],
-    4: [[0, "Lumber delivery", "done"], [1, "Floor system", "done"], [2, "Subfloor", "done"], [3, "Exterior walls", "done"], [4, "Exterior walls", "done"]],
-    5: [[0, "Interior partitions", "done"], [1, "Partitions, chimney detail", "done"], [2, "Rafters and ridge", "done"], [3, "Framing inspection 10am", "insp"], [4, "Roof sheathing", "done"]],
-    6: [[0, "Roof sheathing", "done"], [1, "Underlayment, ice-and-water", "now"], [2, "Underlayment", "now"], [3, "Shingles delivered", "up"], [4, "Shingles on", "up"], [5, "Shingles on (half day)", "up"]],
-    7: [[0, "Flashing and gutters", "up"], [1, "House wrap", "up"], [2, "Windows set", "up"], [3, "Windows, exterior doors", "up"], [3, "Decision due: bathroom tile", "you"], [4, "Dry-in check", "up"]],
-    8: [[0, "Electrical rough-in", "up"], [1, "Electrical rough-in", "up"], [2, "Plumbing rough-in", "up"], [3, "HVAC extended", "up"], [4, "Rough inspections", "insp"], [4, "Decision due: windows", "you"]],
-    9: [[0, "Insulation", "up"], [1, "Insulation", "up"], [2, "Insulation inspection", "insp"], [3, "Drywall delivered", "up"], [4, "Drywall hung", "up"]],
-    10: [[0, "Drywall hung", "up"], [1, "Decision due: siding colour", "you"], [1, "Taping", "up"], [2, "Taping", "up"], [3, "Sanding", "up"], [4, "Primer", "up"]],
-    11: [[0, "Siding", "up"], [1, "Siding", "up"], [2, "Siding", "up"], [3, "Trim, soffit, fascia", "up"], [4, "Exterior paint", "up"]],
-    12: [[0, "Bathroom waterproofing", "up"], [1, "Tile", "up"], [2, "Tile", "up"], [3, "Tile", "up"], [4, "Grout", "up"]],
-    13: [[0, "Paint", "up"], [1, "Paint", "up"], [2, "Paint", "up"], [3, "Flooring delivered", "up"], [4, "Flooring", "up"]],
-    14: [[0, "Flooring", "up"], [1, "Interior doors", "up"], [2, "Trim", "up"], [3, "Trim", "up"], [4, "Trim paint", "up"]],
-    15: [[0, "Plumbing fixtures", "up"], [1, "Lighting fixtures", "up"], [2, "Built-in cabinetry", "up"], [3, "Built-in cabinetry", "up"], [4, "Final inspection", "insp"]],
-    16: [[0, "Punch list", "up"], [1, "Punch list", "up"], [2, "Final clean", "up"], [3, "Walk-through with you", "you"]],
+    1: [[0, "Measured survey of the existing house", "done"], [1, "Drawings in progress (office)", "done"], [2, "Drawings in progress (office)", "done"], [3, "Drawings in progress (office)", "done"], [4, "Drawings issued for your review", "done"]],
+    2: [[0, "Engineering review", "done"], [2, "Stamped drawings received", "done"], [2, "Permit application filed", "done"], [4, "Permit issued", "done"]],
+    3: [[0, "Site set-up: fencing, dumpster, floor protection", "done"], [1, "Roof demolition", "done"], [2, "Roof demolition finished; temporary cover on", "done"], [3, "Lumber delivered 7am; floor system laid out", "done"], [4, "Floor joists hung on the new beam", "done"]],
+    4: [[0, "Joists and blocking finished", "done"], [1, "Subfloor glued and screwed", "done"], [2, "Exterior walls framed and stood", "done"], [3, "Exterior walls finished; sheathing started", "done"], [4, "Sheathing and bracing", "done"]],
+    5: [[0, "Interior partitions laid out and framed", "done"], [1, "Partitions finished; chimney detail", "done"], [2, "Rafters and ridge beam set", "done"], [3, "Framing inspection 10am", "insp"], [3, "Roof sheathing, rear slope", "done"], [4, "Roof sheathing, front slope", "done"]],
+    6: [[0, "Roof sheathing finished; ridge vent cut in", "done"], [1, "Ice-and-water at the eaves; underlayment", "now"], [2, "Underlayment finished; shingles delivered 1pm", "now"], [3, "Shingles, rear slope", "up"], [4, "Shingles, front slope; ridge cap", "up"]],
+    7: [[0, "Flashing, drip edge and gutters", "up"], [1, "House wrap and flashing tape", "up"], [2, "Windows delivered and set", "up"], [3, "Windows finished; exterior doors hung", "up"], [3, "Decision due: bathroom tile", "you"], [4, "Dry-in check; electrician walk-through", "up"]],
+    8: [[0, "Electrical rough-in", "up"], [1, "Electrical rough-in; plumbing rough-in starts", "up"], [2, "Plumbing rough-in", "up"], [3, "HVAC extended to the new floor", "up"], [4, "Rough inspections (electrical, plumbing, mechanical)", "insp"], [4, "Decision due: interior doors & hardware", "you"]],
+    9: [[0, "Insulation", "up"], [1, "Insulation and vapour barrier", "up"], [1, "Decision due: siding colour", "you"], [2, "Insulation inspection; drywall delivered", "insp"], [3, "Drywall hung", "up"], [4, "Drywall hung", "up"]],
+    10: [[0, "Drywall finished; taping starts", "up"], [1, "Taping, first coat", "up"], [2, "Second coat", "up"], [3, "Sanding", "up"], [4, "Primer; siding delivered", "up"]],
+    11: [[0, "Siding", "up"], [1, "Siding", "up"], [2, "Siding finished", "up"], [3, "Trim, soffit and fascia", "up"], [4, "Exterior trim paint; tile delivered", "up"]],
+    12: [[0, "Bathroom waterproofing", "up"], [1, "Tile, main bath", "up"], [2, "Tile, main bath finished; second bath started", "up"], [3, "Tile, second bath", "up"], [4, "Grout and seal", "up"]],
+    13: [[0, "Paint, bedrooms", "up"], [1, "Paint, hall and bathrooms", "up"], [2, "Paint finished; flooring delivered to acclimate", "up"], [3, "Flooring, bedrooms", "up"], [4, "Flooring, bedrooms finished", "up"]],
+    14: [[0, "Flooring, hall and closets", "up"], [1, "Interior doors hung", "up"], [2, "Casing and base", "up"], [3, "Casing and base finished", "up"], [4, "Trim paint", "up"]],
+    15: [[0, "Plumbing fixtures set", "up"], [1, "Lighting fixtures and devices", "up"], [2, "Built-in cabinetry", "up"], [3, "Built-in cabinetry finished; glass shower set", "up"], [4, "Final inspection", "insp"]],
+    16: [[0, "Punch list", "up"], [1, "Punch list finished", "up"], [2, "Final clean", "up"], [3, "Walk-through with you", "you"]],
   };
 
   // ---------------- decisions ----------------
   const DECISIONS = [
     { id: "tile", title: "Bathroom tile selection", due: NEXT_THU, text: "Both upstairs bathrooms. The tile order takes ten working days, and tiling starts in week 12 — this is the last day we can order without moving the schedule. Samples are at the house, in the hall.",
       opts: [{ k: "a", name: "Carrara-look porcelain 12×24", note: "Within allowance", delta: 0 }, { k: "b", name: "Charcoal slate-look porcelain 12×24", note: "Within allowance", delta: 0 }, { k: "c", name: "Handmade-look white subway + hex floor", note: "Over allowance", delta: 1140 }] },
-    { id: "windows", title: "Window style & exterior colour", due: FRI_2W, text: "Six windows on the new floor. The order is placed the Monday after this date, five-week lead time, set in week 7 of the plan.",
-      opts: [{ k: "a", name: "Double-hung, white exterior", note: "Matches the existing", delta: 0 }, { k: "b", name: "Double-hung, black exterior", note: "Upgrade", delta: 860 }, { k: "c", name: "Casement, black exterior", note: "Upgrade", delta: 1420 }] },
+    { id: "doors", title: "Interior doors & hardware", due: FRI_2W, text: "Five doors on the new floor plus the hall closet. Ordered the Monday after this date, four-week lead time, hung in week 14. The hardware finish should match the bathroom fixtures you chose.",
+      opts: [{ k: "a", name: "Two-panel shaker, white, satin nickel levers", note: "Within allowance", delta: 0 }, { k: "b", name: "Two-panel shaker, white, matte black levers", note: "Within allowance", delta: 0 }, { k: "c", name: "Solid-core five-panel, matte black levers", note: "Over allowance", delta: 1180 }] },
     { id: "siding", title: "Siding colour for the addition", due: TUE_3W, text: "Vinyl siding, matched profile to the existing first floor. Two sample boards are clipped to the front wall so you can see them in the morning and evening light.",
       opts: [{ k: "a", name: "Match existing — Clay", note: "No change", delta: 0 }, { k: "b", name: "Whole house re-sided — Slate Grey", note: "Change order", delta: 7900 }] },
   ];
@@ -282,8 +282,8 @@
           <p class="card__link"><button type="button" data-tab-go="updates">All daily updates &rarr;</button></p>
         </div>
         <div class="card card--8">
-          <p class="card__title">This week <small>· ${esc(fmt(addDays(START, (week - 1) * 7)))} – ${esc(fmt(addDays(START, (week - 1) * 7 + 5)))}</small></p>
-          ${renderWeek(week, true)}
+          <p class="card__title">Next three days on site</p>
+          ${renderDays(3)}
           <p class="card__link"><button type="button" data-tab-go="schedule">Full 16-week schedule &rarr;</button></p>
         </div>
         <div class="card card--4">
@@ -334,6 +334,20 @@
       </article>`).join("")}
     </div>`;
 
+  // Today and the next working days, each with everything planned for it.
+  function renderDays(count) {
+    const days = [];
+    let d = today;
+    while (days.length < count) { if (d.getDay() !== 0 && d.getDay() !== 6) days.push(d); d = addDays(d, 1); }
+    return h`<div class="sch__week sch__week--${count}">${days.map((date) => {
+      const week = weekOf(date), di = Math.round((date - monday(date)) / DAY);
+      const items = (SCHEDULE[week] || []).filter((it) => it[0] === di);
+      const cls = date.getTime() === today.getTime() ? "is-today" : "";
+      return h`<div class="sch__day ${cls}"><p class="sch__dayname">${esc(fmt(date, { weekday: "long" }))}<b>${esc(fmt(date, { month: "short", day: "numeric" }))}</b></p>${items.length ? items.map((it) => h`<p class="sch__item ${kind(it[2])}">${esc(it[1])}</p>`).join("") : '<p class="sch__none">No work scheduled</p>'}</div>`;
+    }).join("")}</div>`;
+  }
+  const kind = (k) => k === "done" ? "sch__item--done" : k === "insp" ? "sch__item--insp" : k === "you" ? "sch__item--you" : k === "up" ? "sch__item--up" : "";
+
   function renderWeek(week, compact) {
     const mon = addDays(START, (week - 1) * 7);
     const names = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
@@ -341,10 +355,7 @@
     return h`<div class="sch__week">${names.map((n, d) => {
       const date = addDays(mon, d);
       const cls = date.getTime() === today.getTime() ? "is-today" : date < today ? "is-past" : "";
-      return h`<div class="sch__day ${cls}"><p class="sch__dayname">${n}<b>${date.getDate()}</b></p>${items.filter((it) => it[0] === d).map((it) => {
-        const k = it[2] === "done" ? "sch__item--done" : it[2] === "insp" ? "sch__item--insp" : it[2] === "you" ? "sch__item--you" : it[2] === "up" ? "sch__item--up" : "";
-        return h`<p class="sch__item ${k}">${esc(it[1])}</p>`;
-      }).join("")}</div>`;
+      return h`<div class="sch__day ${cls}"><p class="sch__dayname">${n}<b>${date.getDate()}</b></p>${items.filter((it) => it[0] === d).map((it) => h`<p class="sch__item ${kind(it[2])}">${esc(it[1])}</p>`).join("")}</div>`;
     }).join("")}</div>`;
   }
 
