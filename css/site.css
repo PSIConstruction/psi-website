@@ -4330,3 +4330,41 @@ section[id],
   .sent__tick-ring, .sent__tick-mark { animation: none; stroke-dashoffset: 0; }
   .sent__burst { display: none; }
 }
+
+
+/* ---------------- "How that's possible": the client portal hand-off ----------------
+   Sits after How We Build on the home page and points at /portal.html. */
+.portal-plug__inner {
+  display: grid;
+  grid-template-columns: minmax(0, 5fr) minmax(0, 6fr);
+  gap: clamp(28px, 5vw, 64px);
+  align-items: center;
+}
+.portal-plug .section__title { max-width: 16ch; }
+.portal-plug__list {
+  list-style: none;
+  margin: 0 0 28px;
+  padding: 0;
+  display: grid;
+  gap: 10px;
+  font-size: 15.5px;
+  line-height: 1.55;
+  color: rgba(255, 255, 255, 0.82);
+}
+.portal-plug__list strong { color: #fff; }
+.portal-plug .btn--accent { background: var(--accent); border-color: var(--accent); }
+.portal-plug .btn--accent:hover { background: #b00000; border-color: #b00000; }
+.portal-plug__shot {
+  display: block;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 30px 70px rgba(0, 0, 0, 0.45);
+  transform: rotate(-1deg);
+  transition: transform 0.3s ease;
+}
+.portal-plug__shot:hover { transform: rotate(0) scale(1.01); }
+.portal-plug__shot img { display: block; width: 100%; height: auto; }
+@media (max-width: 900px) {
+  .portal-plug__inner { grid-template-columns: 1fr; }
+  .portal-plug__shot { transform: none; }
+}

@@ -165,9 +165,12 @@
   // ---------------- contract, change orders, allowances ----------------
   const CONTRACT = { total: 186400, signed: addDays(START, -12) };
   const CHANGES = [
-    { id: "CO-01", title: "Built-in bookcase, rear bedroom", amount: 3850, status: "approved", when: addDays(today, -20), text: "Solid poplar built-in, 8 ft wide, painted to match trim. Adds two days to week 15." },
-    { id: "CO-02", title: "Frameless glass shower, main bath", amount: 2400, status: "approved", when: addDays(today, -9), text: "In place of the framed door in the contract. No schedule change." },
-    { id: "CO-03", title: "Relocate laundry to the new floor", amount: 6900, status: "pending", when: addDays(today, -2), text: "Stacked washer-dryer in the hall closet: plumbing and drain run, dedicated circuit, dryer vent through the rear wall. Adds one day to week 8 and one to week 15. Needs your approval before the plumbing rough-in." },
+    { id: "CO-01", title: "Built-in bookcase, rear bedroom", amount: 3850, status: "approved", when: addDays(today, -20), text: "The Owner asked for a built-in bookcase on the rear bedroom's long wall in place of the plain painted wall in the contract.",
+      scope: ["Build: solid poplar built-in, 8 ft wide, floor to ceiling, adjustable shelves on the upper two-thirds and closed cabinets below.", "Finish: primed and painted to match the trim colour selected for the house.", "Install: scribed to the wall and ceiling, fixed to the framing, caulked and touched up."], schedule: "Adds two working days to week 15 (fixtures and cabinetry). No other dates move." },
+    { id: "CO-02", title: "Frameless glass shower, main bath", amount: 2400, status: "approved", when: addDays(today, -9), text: "The contract carries a framed sliding shower door. The Owner has chosen a frameless glass enclosure instead.",
+      scope: ["Supply: 3/8 in. clear tempered glass panel and door, brushed nickel hinges and handle to match the fixtures.", "Prepare: tile returns and curb finished square and plumb to take the glass.", "Install: templated after tiling, set and sealed; the framed door is deleted from the contract."], schedule: "No change. The glass is templated in week 13 and set in week 15." },
+    { id: "CO-03", title: "Relocate laundry to the new floor", amount: 6900, status: "pending", when: addDays(today, -2), text: "The Owner asked whether the laundry could move from the basement to the new floor. It can, in the hall closet, if the rough-in is done before the walls close.",
+      scope: ["Plumbing: hot and cold supply and a 2 in. drain with standpipe run to the hall closet, tied into the new bathroom stack.", "Electrical: one dedicated 30 A dryer circuit and one 20 A washer circuit from the panel.", "Venting: 4 in. rigid dryer vent through the rear wall with a hooded cap.", "Finish: closet floor pan, bifold doors deleted and replaced with a pair of louvered doors; washer and dryer supplied by the Owner."], schedule: "Adds one working day to week 8 (rough-ins) and one to week 15 (fixtures). Must be signed before the plumbing rough-in on Wednesday of week 8." },
   ];
   const ALLOWANCES = [
     { name: "Tile (material)", allow: 4200, spent: 0, note: "Pending your selection" },
@@ -194,6 +197,12 @@
     { id: "R-0407", vendor: "Kingston Borough", what: "Building permit", amount: 1385, when: addDays(START, 11), invoice: "INV-1002" },
   ];
 
+  // ---------------- who is on the paper ----------------
+  // Office address as published on the site. The homeowner is made up.
+  const PSI = { name: "PSI Construction, LLC", lines: ["190 Wyoming St.", "Wilkes-Barre, PA 18705", "(570) 338-8774", "PA HIC Reg. #213035"], phone: "(570) 338-8774", web: "www.psiconstructionpa.com", email: "info@psiconstructionpa.com" };
+  const OWNER = { name: "Sample Homeowner", lines: ["Sample project address", "Kingston, PA 18704"] };
+  const PROJECT = "Second-storey addition & first-floor renovation";
+
   // ---------------- messages ----------------
   const MESSAGES = [
     { who: "PSI", when: addDays(today, -3), text: "Framing inspection passed this morning, no notes. Roof sheathing starts tomorrow." },
@@ -206,10 +215,10 @@
   const KEY = "psiPortalSample.v1";
   let state;
   function freshState() {
-    return { done: Array.from(DONE_AT_START), decided: {}, changes: {}, paid: {}, messages: [], tab: "overview", week: CUR_WEEK };
+    return { done: Array.from(DONE_AT_START), decided: {}, changes: {}, signatures: {}, paid: {}, messages: [], tab: "overview", week: CUR_WEEK };
   }
   function load() {
-    try { const s = JSON.parse(localStorage.getItem(KEY)); if (s && s.done) return s; } catch (e) { /* fine */ }
+    try { const s = JSON.parse(localStorage.getItem(KEY)); if (s && s.done) { s.signatures = s.signatures || {}; return s; } } catch (e) { /* fine */ }
     return freshState();
   }
   function save() { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) { /* fine */ } }
@@ -261,7 +270,7 @@
           <p class="card__title">Needs you</p>
           <ul class="plain">
             ${due ? h`<li><div><strong>${esc(due.title)}</strong><br><small>${money(due.amount)} · <button type="button" class="linklike" data-tab-go="invoices">pay or view</button></small></div><span class="when"><strong>${esc(fmt(due.due))}</strong>${dueWord(due.due)}</span></li>` : ""}
-            ${co ? h`<li><div><strong>Approve ${esc(co.id)}: ${esc(co.title)}</strong><br><small>${money(co.amount)} · <button type="button" class="linklike" data-tab-go="documents">review</button></small></div><span class="when"><strong>Before week 8</strong>rough-ins</span></li>` : ""}
+            ${co ? h`<li><div><strong>Sign Change Order No. ${CHANGES.indexOf(co) + 1}: ${esc(co.title)}</strong><br><small>${money(co.amount)} · <button type="button" class="linklike" data-modal="co:${co.id}">review &amp; sign</button></small></div><span class="when"><strong>Before week 8</strong>rough-ins</span></li>` : ""}
             ${pendingDecisions().slice().sort((a, b) => a.due - b.due).map((d) => h`<li><div><strong>${esc(d.title)}</strong><br><small><button type="button" class="linklike" data-tab-go="decisions">decide</button></small></div><span class="when"><strong>${esc(fmt(d.due))}</strong>${dueWord(d.due)}</span></li>`).join("")}
             ${!due && !co && !pendingDecisions().length ? "<li>Nothing outstanding. Thank you.</li>" : ""}
           </ul>
@@ -281,7 +290,7 @@
           <p class="card__title">Money</p>
           <ul class="plain">
             <li><span>Contract</span><span class="doc__amt">${money(CONTRACT.total)}</span></li>
-            <li><span>Approved changes</span><span class="doc__amt">+${money(approvedChangesTotal())}</span></li>
+            <li><span>Signed change orders</span><span class="doc__amt">+${money(approvedChangesTotal())}</span></li>
             <li><span>Paid to date</span><span class="doc__amt">${money(paidTotal())}</span></li>
             <li><span><strong>Current contract value</strong></span><span class="doc__amt"><strong>${money(CONTRACT.total + approvedChangesTotal())}</strong></span></li>
           </ul>
@@ -397,7 +406,7 @@
       <div class="card card--12">
         <p class="card__title">Change orders</p>
         <div class="doc">
-          ${CHANGES.map((c) => { const st = state.changes[c.id] || c.status; return h`<div class="doc__row"><div><strong>${esc(c.id)} · ${esc(c.title)}</strong><small>${st === "pending" ? "Waiting on your approval" : st === "declined" ? "Declined" : "Approved " + esc(fmt(c.when))} · ${esc(c.text.split(". ")[0])}.</small></div><span class="doc__amt">${st === "declined" ? "—" : "+" + money(c.amount)}</span><div class="doc__actions"><button type="button" class="doc__btn" data-modal="co:${c.id}">View</button>${st === "pending" ? h`<button type="button" class="doc__btn doc__btn--go" data-co="${c.id}" data-set="approved">Approve</button><button type="button" class="doc__btn" data-co="${c.id}" data-set="declined">Decline</button>` : h`<span class="pill ${st === "approved" ? "pill--ok" : ""}">${st}</span>`}</div></div>`; }).join("")}
+          ${CHANGES.map((c, n) => { const st = state.changes[c.id] || c.status; return h`<div class="doc__row"><div><strong>No. ${n + 1} · ${esc(c.title)}</strong><small>${st === "pending" ? "Waiting on your signature" : st === "declined" ? "Declined" : "Signed " + esc(fmt(state.signatures[c.id] ? new Date(state.signatures[c.id].when) : c.when))} · ${money2(c.amount)}</small></div><span class="doc__amt">${st === "declined" ? "—" : "+" + money2(c.amount)}</span><div class="doc__actions">${st === "pending" ? h`<button type="button" class="doc__btn doc__btn--go" data-modal="co:${c.id}">Review &amp; sign</button>` : h`<span class="pill ${st === "approved" ? "pill--ok" : ""}">${st === "approved" ? "Signed" : "Declined"}</span><button type="button" class="doc__btn" data-modal="co:${c.id}">View</button>`}</div></div>`; }).join("")}
         </div>
       </div>
       <div class="card card--12">
@@ -409,25 +418,46 @@
       </div>
     </div>`;
 
-  VIEWS.invoices = () => h`
+  const money2 = (n) => "$" + n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const isPaid = (i) => i.status === "paid" || !!state.paid[i.id];
+  const paidDate = (i) => i.paidOn || new Date(state.paid[i.id]);
+  const contractValue = () => CONTRACT.total + approvedChangesTotal();
+
+  VIEWS.invoices = () => {
+    const total = contractValue(), paid = paidTotal(), pctPaid = Math.round(100 * paid / total);
+    return h`
     <div class="pp__head">
-      <div><h2 class="pp__title">Invoices &amp; receipts</h2><p class="pp__sub">Each invoice is tied to the milestone it covers. Receipts for materials bought for your job are linked to the invoice they fall under.</p></div>
+      <div><h2 class="pp__title">Invoices &amp; receipts</h2><p class="pp__sub">Each invoice is tied to the milestone it covers. Every payment gets a receipt. Open either, or print it.</p></div>
     </div>
-    <div class="pp__grid">
-      <div class="card card--12">
-        <p class="card__title">Payment schedule</p>
-        <table class="tbl"><thead><tr><th>Invoice</th><th>Milestone</th><th>Due</th><th class="num">Amount</th><th></th></tr></thead><tbody>
-          ${INVOICES.map((i) => { const st = state.paid[i.id] ? "paid" : i.status; return h`<tr><td>${esc(i.id)}</td><td>${esc(i.title)}</td><td>${esc(fmt(i.due, { month: "short", day: "numeric" }))}${st === "due" ? h` <small style="color:var(--accent)">${dueWord(i.due)}</small>` : ""}</td><td class="num">${money(i.amount)}</td><td style="text-align:right;white-space:nowrap">${st === "paid" ? h`<span class="pill pill--ok">Paid</span> <button type="button" class="doc__btn" data-modal="inv:${i.id}">Receipt</button>` : st === "due" ? h`<span class="pill pill--due">Due</span> <button type="button" class="doc__btn doc__btn--go" data-pay="${i.id}">Pay ${money(i.amount)}</button>` : h`<span class="pill">Scheduled</span>`}</td></tr>`; }).join("")}
-          <tr class="total"><td colspan="3">Paid to date</td><td class="num">${money(paidTotal())}</td><td></td></tr>
-        </tbody></table>
+    <div class="pay__summary">
+      <div class="pay__figs">
+        <div><span>Contract</span><strong>${money2(total)}</strong></div>
+        <div><span>Paid</span><strong class="is-paid">${money2(paid)}</strong></div>
+        <div><span>Balance</span><strong>${money2(total - paid)}</strong></div>
       </div>
-      <div class="card card--12">
-        <p class="card__title">Receipts on your job</p>
-        <table class="tbl"><thead><tr><th>Receipt</th><th>Vendor</th><th>What</th><th>Date</th><th class="num">Amount</th><th></th></tr></thead><tbody>
-          ${RECEIPTS.slice().sort((a, b) => b.when - a.when).map((r) => h`<tr><td>${esc(r.id)}</td><td>${esc(r.vendor)}</td><td>${esc(r.what)}<br><small style="color:var(--muted)">under ${esc(r.invoice)}</small></td><td>${esc(fmt(r.when, { month: "short", day: "numeric" }))}</td><td class="num">${money(r.amount)}</td><td style="text-align:right"><button type="button" class="doc__btn" data-modal="rcpt:${r.id}">View</button></td></tr>`).join("")}
-        </tbody></table>
-      </div>
+      <div class="pay__bar"><i style="width:${pctPaid}%"></i></div>
+      <p class="pay__pct">${pctPaid}% paid</p>
+    </div>
+    <div class="pay__list">
+      <p class="pay__list-head">Payment schedule</p>
+      ${INVOICES.map((i) => { const st = isPaid(i) ? "paid" : i.status; return h`<div class="pay__row">
+        <div class="pay__row-main">
+          <strong>${esc(i.title)}</strong>
+          <small>${st === "paid" ? "Paid " + esc(fmt(paidDate(i), { month: "short", day: "numeric" })) : st === "due" ? "Due " + esc(fmtLong(i.due)) + " · " + dueWord(i.due) : "Due " + esc(fmtLong(i.due))}</small>
+          <div class="pay__links">${st === "paid" ? h`<button type="button" class="linklike" data-modal="inv:${i.id}">Invoice</button><button type="button" class="linklike" data-modal="rcpt:${i.id}">Receipt</button>` : st === "due" ? h`<button type="button" class="linklike" data-modal="inv:${i.id}">Invoice</button><button type="button" class="doc__btn doc__btn--go" data-pay="${i.id}">Pay ${money2(i.amount)}</button>` : ""}</div>
+        </div>
+        <div class="pay__row-side"><strong>${money2(i.amount)}</strong>${st === "paid" ? '<span class="pill pill--ok">Paid</span>' : st === "due" ? '<span class="pill pill--due">Due</span>' : ""}</div>
+      </div>`; }).join("")}
+    </div>
+    <p class="pay__note">Payment may be made by ACH, wire transfer, Zelle, check (payable to PSI Construction, LLC) or cash with a written receipt. Questions? Call ${esc(PSI.phone)}.</p>
+    <div class="pay__list" style="margin-top:22px">
+      <p class="pay__list-head">Materials bought for your job</p>
+      ${RECEIPTS.slice().sort((a, b) => b.when - a.when).map((r) => h`<div class="pay__row">
+        <div class="pay__row-main"><strong>${esc(r.vendor)} — ${esc(r.what)}</strong><small>${esc(fmt(r.when, { month: "short", day: "numeric" }))} · filed under ${esc(r.invoice)}</small><div class="pay__links"><button type="button" class="linklike" data-modal="mat:${r.id}">Receipt</button></div></div>
+        <div class="pay__row-side"><strong>${money2(r.amount)}</strong></div>
+      </div>`).join("")}
     </div>`;
+  };
 
   VIEWS.photos = () => {
     const phases = [];
@@ -455,27 +485,120 @@
   modal.innerHTML = '<div class="pmodal__box" role="dialog" aria-modal="true"><button type="button" class="pmodal__close" aria-label="Close">&times;</button><div class="pmodal__body"></div></div>';
   document.body.appendChild(modal);
   const mbody = modal.querySelector(".pmodal__body");
-  function openModal(html) { mbody.innerHTML = html; modal.classList.add("is-open"); modal.querySelector(".pmodal__close").focus(); }
+  function openModal(html) { mbody.innerHTML = html; modal.querySelector(".pmodal__box").classList.toggle("pmodal__box--paper", html.indexOf('class="paper"') >= 0); modal.classList.add("is-open"); modal.scrollTop = 0; modal.querySelector(".pmodal__box").scrollTop = 0; modal.querySelector(".pmodal__close").focus(); armSigPad(); }
   function closeModal() { modal.classList.remove("is-open"); }
   modal.addEventListener("click", (e) => { if (e.target === modal || e.target.closest(".pmodal__close")) closeModal(); });
   document.addEventListener("keydown", (e) => { if (e.key === "Escape") { closeModal(); closeLightbox(); } });
 
+  // Paper documents, laid out like the ones PSI's own portal issues.
+  const docHead = () => h`<div class="paper__head"><img src="assets/logo/psi-logo.png" alt="PSI Construction" width="900" height="456"><div class="paper__co"><strong>${esc(PSI.name)}</strong><span>Pennsylvania</span><span>${esc(PSI.phone)}</span><span>${esc(PSI.web)}</span></div></div>`;
+  const docParties = (rightLabel) => h`<div class="paper__parties"><div><p class="paper__lbl">From</p><strong>${esc(PSI.name)}</strong>${PSI.lines.map((l) => h`<span>${esc(l)}</span>`).join("")}</div><div><p class="paper__lbl">${rightLabel}</p><strong>${esc(OWNER.name)}</strong>${OWNER.lines.map((l) => h`<span>${esc(l)}</span>`).join("")}</div></div>`;
+  const docFoot = (ref) => h`<p class="paper__thanks">Thank you for your business.</p><p class="paper__foot">${esc(PSI.name)} · PA HIC Reg. #213035 · ${esc(ref)} · ${esc(PROJECT)}</p>`;
+  const printBtn = () => '<button type="button" class="doc__btn doc__btn--dark" data-print>Print / Save PDF</button>';
+  const paidBefore = (i) => INVOICES.filter((x) => isPaid(x) && x.due < i.due).reduce((a, x) => a + x.amount, 0);
+  const schedNote = (i) => INVOICES.filter((x) => x.due > i.due).map((x) => esc(x.title) + " " + money2(x.amount)).join("; ");
+
   function modalFor(key) {
-    if (key === "contract") return h`<p class="pmodal__eyebrow">Contract</p><h3 class="pmodal__title">Construction agreement</h3>
-      <dl class="pmodal__kv"><dt>Project</dt><dd>Second-storey addition and first-floor renovation (sample)</dd><dt>Signed</dt><dd>${esc(fmt(CONTRACT.signed, { month: "long", day: "numeric", year: "numeric" }))}</dd><dt>Contract price</dt><dd>${money(CONTRACT.total)} fixed, with the allowances listed</dd><dt>Schedule</dt><dd>16 working weeks from permit</dd><dt>Payments</dt><dd>Deposit, five progress payments at milestones, final on completion</dd></dl>
-      <p><strong>Scope.</strong> Remove the existing roof; frame, sheathe, roof and side a full second storey with two bedrooms, a bathroom and a hall; extend electrical, plumbing and HVAC; insulate, drywall, tile, paint and floor the new level; renovate the first-floor bath and hall; all permits and inspections.</p>
-      <p><strong>Changes.</strong> Any change to scope is priced as a change order and approved by you in this portal before the work is done.</p>
-      <p><strong>Warranty.</strong> Two years on workmanship, manufacturers' warranties passed through.</p>`;
-    if (key.startsWith("co:")) { const c = CHANGES.find((x) => x.id === key.slice(3)); const st = state.changes[c.id] || c.status; return h`<p class="pmodal__eyebrow">Change order</p><h3 class="pmodal__title">${esc(c.id)} · ${esc(c.title)}</h3>
-      <dl class="pmodal__kv"><dt>Price</dt><dd>+${money(c.amount)}</dd><dt>Status</dt><dd><span class="pill ${st === "approved" ? "pill--ok" : st === "pending" ? "pill--due" : ""}">${st}</span></dd><dt>Raised</dt><dd>${esc(fmt(c.when))}</dd></dl><p>${esc(c.text)}</p>
-      ${st === "pending" ? h`<div class="pmodal__foot"><button type="button" class="doc__btn" data-co="${c.id}" data-set="declined">Decline</button><button type="button" class="doc__btn doc__btn--go" data-co="${c.id}" data-set="approved">Approve this change</button></div>` : ""}`; }
-    if (key.startsWith("inv:")) { const i = INVOICES.find((x) => x.id === key.slice(4)); const paidOn = i.paidOn || new Date(state.paid[i.id]); return h`<p class="pmodal__eyebrow">Receipt</p><h3 class="pmodal__title">${esc(i.id)} · ${esc(i.title)}</h3>
-      <dl class="pmodal__kv"><dt>Amount</dt><dd>${money(i.amount)}</dd><dt>Paid</dt><dd>${esc(fmt(paidOn, { month: "long", day: "numeric", year: "numeric" }))}</dd><dt>Method</dt><dd>${esc(i.method || "Card (sample)")}</dd><dt>Applied to</dt><dd>Contract ${money(CONTRACT.total)} — balance after this payment ${money(CONTRACT.total + approvedChangesTotal() - INVOICES.filter((x) => (x.status === "paid" || state.paid[x.id]) && x.due <= i.due).reduce((s, x) => s + x.amount, 0))}</dd></dl>
-      <p>Receipts for materials bought under this milestone are listed on the invoices page.</p>`; }
-    if (key.startsWith("rcpt:")) { const r = RECEIPTS.find((x) => x.id === key.slice(5)); return h`<p class="pmodal__eyebrow">Receipt</p><h3 class="pmodal__title">${esc(r.vendor)}</h3>
-      <dl class="pmodal__kv"><dt>Receipt</dt><dd>${esc(r.id)}</dd><dt>Date</dt><dd>${esc(fmt(r.when, { month: "long", day: "numeric", year: "numeric" }))}</dd><dt>Items</dt><dd>${esc(r.what)}</dd><dt>Amount</dt><dd>${money(r.amount)}</dd><dt>Filed under</dt><dd>${esc(r.invoice)}</dd></dl>
-      <p>The original is scanned and attached on the real portal; this is the sample.</p>`; }
+    if (key === "contract") return h`<div class="paper">${docHead()}<div class="paper__body"><h3 class="paper__title">Home Improvement Contract</h3>
+      <div class="paper__meta"><div><p class="paper__lbl">Contract date</p>${esc(fmt(CONTRACT.signed, { month: "numeric", day: "numeric", year: "numeric" }))}</div><div><p class="paper__lbl">Contract price</p>${money2(CONTRACT.total)}</div><div><p class="paper__lbl">Schedule</p>16 working weeks</div><div><p class="paper__lbl">Project</p>${esc(PROJECT)}</div></div>
+      ${docParties("Owner")}
+      <p class="paper__sec">Scope of work</p>
+      <p>Remove the existing roof; frame, sheathe, roof and side a full second storey with two bedrooms, a bathroom and a hall; extend electrical, plumbing and HVAC; insulate, drywall, tile, paint and floor the new level; renovate the first-floor bath and hall; all permits and inspections.</p>
+      <p class="paper__sec">Price and payment</p>
+      <p>Fixed price of ${money2(CONTRACT.total)} with the allowances listed in the portal. Deposit on signing, five progress payments at milestones, final on completion. Any change to scope is priced as a change order and signed by the Owner before the work is done.</p>
+      <p class="paper__sec">Warranty</p>
+      <p>Two years on workmanship; manufacturers' warranties passed through.</p>
+      <div class="paper__sign"><div><p class="paper__lbl">Owner</p><div class="paper__sigline paper__sigline--script">Sample Homeowner</div><span>${esc(OWNER.name)}</span><small>Signed · ${esc(fmt(CONTRACT.signed, { month: "long", day: "numeric", year: "numeric" }))}</small></div><div><p class="paper__lbl">PSI Construction, LLC</p><div class="paper__sigline paper__sigline--script">Sam Liberow</div><span>Sam Liberow, Co-Owner</span><small>${esc(fmt(CONTRACT.signed, { month: "long", day: "numeric", year: "numeric" }))}</small></div></div>
+      ${docFoot("Contract")}</div></div><div class="pmodal__foot">${printBtn()}</div>`;
+
+    if (key.startsWith("co:")) {
+      const c = CHANGES.find((x) => x.id === key.slice(3)); const n = CHANGES.indexOf(c) + 1; const st = state.changes[c.id] || c.status;
+      const sig = state.signatures[c.id]; const when = sig ? new Date(sig.when) : c.when;
+      const prev = CONTRACT.total + CHANGES.slice(0, n - 1).reduce((a, x) => a + ((x.status === "approved" || state.changes[x.id] === "approved") ? x.amount : 0), 0);
+      return h`<div class="paper">${docHead()}<div class="paper__body">
+      ${st === "approved" ? h`<div class="paper__banner">✓ <strong>Signed — thank you.</strong> This is your signed change order. You can come back to it any time, or print a copy.</div>` : ""}
+      <h3 class="paper__title paper__title--c">Change Order No. ${n}</h3><p class="paper__subtitle">${esc(c.title)}</p><p class="paper__dateline">${esc(PROJECT)} | ${esc(fmt(c.when, { month: "long", day: "numeric", year: "numeric" }))}</p>
+      <div class="paper__box"><p class="paper__box-head">Parties to the Agreement</p><div class="paper__cols"><div><p class="paper__colhead">Owner</p>Name: ${esc(OWNER.name)}<br>Project address: ${esc(OWNER.lines[0])}<br>City, State, ZIP: ${esc(OWNER.lines[1])}</div><div><p class="paper__colhead">Contractor</p>Company: ${esc(PSI.name)}<br>PA HIC Reg. #: PA-213035<br>Address: ${esc(PSI.lines[0])}, ${esc(PSI.lines[1])}<br>Phone: ${esc(PSI.phone)}<br>Email: ${esc(PSI.email)}</div></div></div>
+      <p>This change order adds to the Home Improvement Contract dated ${esc(fmt(CONTRACT.signed, { month: "long", day: "numeric", year: "numeric" }))}. ${esc(c.text)}</p>
+      <div class="paper__box"><p class="paper__box-head">Scope of Work</p><div class="paper__box-body"><div class="paper__item"><strong>1. ${esc(c.title)}</strong><strong>${money2(c.amount)}</strong></div><ul class="paper__ul">${c.scope.map((x) => h`<li>${esc(x)}</li>`).join("")}</ul></div></div>
+      <div class="paper__box"><p class="paper__box-head">Price and Payment</p><div class="paper__box-body"><p>Change Order No. ${n} — ${esc(c.title.toLowerCase())}: ${money2(c.amount)}<br>Previous contract price: ${money2(prev)}<br>Revised contract price: ${money2(prev + c.amount)}</p><p>The ${money2(c.amount)} is a fixed price and is invoiced with the next progress payment. Payment may be made by ACH, wire transfer, Zelle, check (payable to PSI Construction, LLC) or cash with a written receipt.</p></div></div>
+      <div class="paper__box"><p class="paper__box-head">Terms</p><div class="paper__box-body"><p>1. Agreement. This change order is part of the Home Improvement Contract dated ${esc(fmt(CONTRACT.signed, { month: "long", day: "numeric", year: "numeric" }))}. All terms and conditions of that contract, including the Owner's right of rescission, apply to this change order. Nothing else in that contract changes.</p><p>2. Schedule. ${esc(c.schedule)}</p></div></div>
+      <div class="paper__box"><p class="paper__box-head">Price</p><div class="paper__box-body"><div class="paper__item"><span>Item 1 (fixed)</span><span>${money2(c.amount)}</span></div><div class="paper__item paper__item--total"><strong>Change Order No. ${n} total</strong><strong>${money2(c.amount)}</strong></div></div></div>
+      <div class="paper__box"><p class="paper__box-head">Acceptance and Signatures</p><div class="paper__box-body"><p>By signing below, the Owner approves Change Order No. ${n} and the scope above.</p>
+        <div class="paper__sign">
+          <div><p class="paper__lbl">Owner</p>${st === "approved" ? (sig ? h`<div class="paper__sigline"><img src="${sig.data}" alt="Owner signature"></div>` : h`<div class="paper__sigline paper__sigline--script">Sample Homeowner</div>`) : st === "declined" ? h`<div class="paper__sigline"><em>Declined</em></div>` : h`<div class="sigpad"><canvas id="sigPad" width="520" height="150" aria-label="Sign here"></canvas><p class="sigpad__hint">Sign here with your mouse or finger</p></div>`}<span>${esc(OWNER.name)}</span><small>${st === "approved" ? "Signed in the portal · " + esc(fmt(when, { month: "long", day: "numeric", year: "numeric" })) : ""}</small></div>
+          <div><p class="paper__lbl">PSI Construction, LLC</p><div class="paper__sigline paper__sigline--script">Sam Liberow</div><span>Sam Liberow, Co-Owner</span><small>${esc(fmt(c.when, { month: "long", day: "numeric", year: "numeric" }))}</small></div>
+        </div>
+        ${st === "pending" ? h`<div class="pmodal__foot pmodal__foot--left"><button type="button" class="doc__btn" data-sig-clear>Clear</button><button type="button" class="doc__btn" data-co="${c.id}" data-set="declined">Decline</button><button type="button" class="doc__btn doc__btn--go" data-sign="${c.id}">Sign and approve</button></div>` : ""}
+      </div></div>
+      ${docFoot("Change Order No. " + n)}</div></div><div class="pmodal__foot">${printBtn()}</div>`;
+    }
+
+    if (key.startsWith("inv:")) {
+      const i = INVOICES.find((x) => x.id === key.slice(4)); const paid = isPaid(i); const num = INVOICES.indexOf(i) + 1;
+      const invDate = addDays(i.due, -7), total = contractValue();
+      return h`<div class="paper">${docHead()}<div class="paper__body"><div class="paper__titlerow"><h3 class="paper__title">Invoice</h3>${paid ? '<span class="paper__stamp">✓ Paid</span>' : ""}</div>
+      <div class="paper__meta"><div><p class="paper__lbl">Invoice number</p>INV-2026-${String(num).padStart(3, "0")}</div><div><p class="paper__lbl">Invoice date</p>${esc(fmt(invDate, { month: "numeric", day: "numeric", year: "numeric" }))}</div><div><p class="paper__lbl">Due date</p>${esc(fmt(i.due, { month: "numeric", day: "numeric", year: "numeric" }))}</div><div><p class="paper__lbl">Project</p>${esc(PROJECT)}</div></div>
+      ${docParties("Bill to")}
+      <p class="paper__sec">Charges</p>
+      <table class="paper__tbl"><thead><tr><th>#</th><th>Description</th><th class="num">Amount</th></tr></thead><tbody><tr><td>1</td><td>${esc(PROJECT)} – ${esc(i.title)}<br><em>Total contract price: ${money2(total)} | Paid to date: ${money2(paidBefore(i))}</em></td><td class="num">${money2(i.amount)}</td></tr></tbody></table>
+      <div class="paper__totals"><div><span>Subtotal</span><span>${money2(i.amount)}</span></div><div class="paper__due"><span>Total due</span><span>${money2(i.amount)}</span></div></div>
+      <p class="paper__sec">Notes</p>
+      <p class="paper__small">This payment is due ${i.status === "paid" || i.id === "INV-1001" ? "upon receipt" : "by " + esc(fmt(i.due, { month: "numeric", day: "numeric", year: "numeric" }))}. ${schedNote(i) ? "The remaining balance of " + money2(total - paidBefore(i) - i.amount) + " will be invoiced per the contract payment schedule: " + schedNote(i) + "." : "This is the final payment under the contract."}</p>
+      <p class="paper__sec">How to pay</p>
+      <p><strong>Payment methods:</strong> ACH, wire transfer, Zelle, check, or cash.</p>
+      <div class="paper__pay"><div><p class="paper__colhead">ACH &amp; wire transfer</p><p class="paper__lbl">Bank</p>Sample Bank, N.A.<p class="paper__lbl">Account name</p>${esc(PSI.name)}<p class="paper__lbl">Routing / account</p>Shown on your real invoice</div><div><p class="paper__colhead">Zelle</p><p class="paper__lbl">Recipient</p>${esc(PSI.name)}<p class="paper__lbl">Zelle tag</p>Shown on your real invoice</div><div><p class="paper__colhead">Check &amp; cash</p><p class="paper__lbl">Checks payable to</p>${esc(PSI.name)}<p class="paper__lbl">Mail / deliver to</p>${esc(PSI.lines[0])}, ${esc(PSI.lines[1])}<p class="paper__lbl">Cash</p>Accepted in person — a written receipt is provided</div></div>
+      <p><strong>All payments payable to PSI Construction, LLC.</strong></p>
+      <p class="paper__small">Please reference Invoice #INV-2026-${String(num).padStart(3, "0")} with your payment. Questions about payment? Call ${esc(PSI.phone)}.</p>
+      ${docFoot("Invoice #INV-2026-" + String(num).padStart(3, "0"))}</div></div><div class="pmodal__foot">${paid ? h`<button type="button" class="doc__btn" data-modal="rcpt:${i.id}">View receipt</button>` : h`<button type="button" class="doc__btn doc__btn--go" data-pay="${i.id}">Pay ${money2(i.amount)}</button>`}${printBtn()}</div>`;
+    }
+
+    if (key.startsWith("rcpt:")) {
+      const i = INVOICES.find((x) => x.id === key.slice(5)); const num = INVOICES.indexOf(i) + 1; const total = contractValue();
+      const paidAll = paidTotal(), when = paidDate(i);
+      return h`<div class="paper">${docHead()}<div class="paper__body"><div class="paper__titlerow"><h3 class="paper__title">Receipt</h3><span class="paper__stamp">✓ Paid</span></div>
+      <div class="paper__meta"><div><p class="paper__lbl">Receipt number</p>REC-2026-${String(num).padStart(3, "0")}</div><div><p class="paper__lbl">Payment date</p>${esc(fmt(when, { month: "numeric", day: "numeric", year: "numeric" }))}</div><div><p class="paper__lbl">Payment method</p>${esc(i.method || "Card (sample)")}</div><div><p class="paper__lbl">Project</p>${esc(PROJECT)}</div></div>
+      ${docParties("Received from")}
+      <p class="paper__sec">Payment</p>
+      <table class="paper__tbl"><thead><tr><th>#</th><th>Description</th><th class="num">Amount</th></tr></thead><tbody><tr><td>1</td><td>Payment – ${esc(PROJECT)} – ${esc(i.title)}<br><em>Total contract price: ${money2(total)} | Paid to date: ${money2(paidBefore(i))}</em></td><td class="num">${money2(i.amount)}</td></tr></tbody></table>
+      <div class="paper__totals"><div><span>Subtotal</span><span>${money2(i.amount)}</span></div><div class="paper__paid"><span>Amount paid</span><span>${money2(i.amount)}</span></div><div class="paper__rem"><span>Remaining balance</span><span>${money2(total - paidAll)}</span></div></div>
+      <p class="paper__sec">Notes</p>
+      <p class="paper__small">Payment received for ${esc(i.title)} (Invoice #INV-2026-${String(num).padStart(3, "0")}). Contract total ${money2(total)}; paid to date ${money2(paidAll)}; remaining balance ${money2(total - paidAll)}.</p>
+      <p class="paper__sec">Payment summary</p>
+      <table class="paper__tbl paper__tbl--sum"><thead><tr><th>Payment</th><th>Status</th><th class="num">Amount</th></tr></thead><tbody>
+        ${INVOICES.map((x) => h`<tr class="${x.id === i.id ? "is-this" : ""}"><td>${esc(x.title)}</td><td>${isPaid(x) ? "Paid " + esc(fmt(paidDate(x), { month: "numeric", day: "numeric", year: "numeric" })) + (x.id === i.id ? " — this receipt" : "") : "Upcoming"}</td><td class="num">${money2(x.amount)}</td></tr>`).join("")}
+        <tr class="is-total"><td>Contract total</td><td>Paid to date ${money2(paidAll)}</td><td class="num">${money2(total)}</td></tr>
+      </tbody></table>
+      <p><strong>Paid by:</strong> ${esc(i.method || "Card (sample)")}</p>
+      <p class="paper__small">This receipt confirms payment received by PSI Construction, LLC for Invoice #INV-2026-${String(num).padStart(3, "0")}.</p>
+      ${docFoot("Receipt #REC-2026-" + String(num).padStart(3, "0"))}</div></div><div class="pmodal__foot"><button type="button" class="doc__btn" data-modal="inv:${i.id}">View invoice</button>${printBtn()}</div>`;
+    }
+
+    if (key.startsWith("mat:")) {
+      const r = RECEIPTS.find((x) => x.id === key.slice(4));
+      return h`<div class="paper">${docHead()}<div class="paper__body"><div class="paper__titlerow"><h3 class="paper__title">Materials receipt</h3><span class="paper__stamp">✓ Paid by PSI</span></div>
+      <div class="paper__meta"><div><p class="paper__lbl">Receipt</p>${esc(r.id)}</div><div><p class="paper__lbl">Date</p>${esc(fmt(r.when, { month: "numeric", day: "numeric", year: "numeric" }))}</div><div><p class="paper__lbl">Vendor</p>${esc(r.vendor)}</div><div><p class="paper__lbl">Filed under</p>${esc(r.invoice)}</div></div>
+      <p class="paper__sec">Items</p>
+      <table class="paper__tbl"><thead><tr><th>#</th><th>Description</th><th class="num">Amount</th></tr></thead><tbody><tr><td>1</td><td>${esc(r.what)}<br><em>Bought by PSI for ${esc(PROJECT)}; covered by the contract price</em></td><td class="num">${money2(r.amount)}</td></tr></tbody></table>
+      <div class="paper__totals"><div class="paper__paid"><span>Amount paid</span><span>${money2(r.amount)}</span></div></div>
+      <p class="paper__small">On the real portal the vendor's original receipt is attached here as a scan.</p>
+      ${docFoot("Receipt " + r.id)}</div></div><div class="pmodal__foot">${printBtn()}</div>`;
+    }
     return "";
+  }
+
+  // ---------------- signature pad ----------------
+  function armSigPad() {
+    const c = document.getElementById("sigPad"); if (!c) return;
+    const ctx = c.getContext("2d"); ctx.lineWidth = 2.4; ctx.lineCap = "round"; ctx.lineJoin = "round"; ctx.strokeStyle = "#c00000";
+    let drawing = false, drew = false;
+    const pos = (e) => { const r = c.getBoundingClientRect(); const p = e.touches ? e.touches[0] : e; return [(p.clientX - r.left) * c.width / r.width, (p.clientY - r.top) * c.height / r.height]; };
+    const start = (e) => { drawing = true; const [x, y] = pos(e); ctx.beginPath(); ctx.moveTo(x, y); e.preventDefault(); };
+    const move = (e) => { if (!drawing) return; const [x, y] = pos(e); ctx.lineTo(x, y); ctx.stroke(); drew = true; c.dataset.drawn = "1"; e.preventDefault(); };
+    const end = () => { drawing = false; };
+    c.addEventListener("mousedown", start); c.addEventListener("mousemove", move); window.addEventListener("mouseup", end);
+    c.addEventListener("touchstart", start, { passive: false }); c.addEventListener("touchmove", move, { passive: false }); c.addEventListener("touchend", end);
+    c.clearPad = () => { ctx.clearRect(0, 0, c.width, c.height); drew = false; c.dataset.drawn = ""; };
   }
 
   // ---------------- lightbox (same chrome as the site's viewer) ----------------
@@ -524,6 +647,14 @@
     const wk = t.closest("[data-week]"); if (wk) { state.week = +wk.dataset.week; return render(); }
     const dec = t.closest("[data-decide]"); if (dec) { state.decided[dec.dataset.decide] = { k: dec.dataset.opt, when: Date.now() }; return render(); }
     const co = t.closest("[data-co]"); if (co) { state.changes[co.dataset.co] = co.dataset.set; closeModal(); return render(); }
+    const sn = t.closest("[data-sign]"); if (sn) {
+      const pad = document.getElementById("sigPad");
+      if (!pad || !pad.dataset.drawn) { const hint = document.querySelector(".sigpad__hint"); if (hint) { hint.textContent = "Please sign in the box first."; hint.classList.add("is-warn"); } return; }
+      state.signatures[sn.dataset.sign] = { data: pad.toDataURL("image/png"), when: Date.now() };
+      state.changes[sn.dataset.sign] = "approved"; render(); return openModal(modalFor("co:" + sn.dataset.sign));
+    }
+    if (t.closest("[data-sig-clear]")) { const pad = document.getElementById("sigPad"); if (pad && pad.clearPad) pad.clearPad(); return; }
+    if (t.closest("[data-print]")) return window.print();
     const pay = t.closest("[data-pay]"); if (pay) { state.paid[pay.dataset.pay] = Date.now(); render(); return openModal(modalFor("inv:" + pay.dataset.pay)); }
     const md = t.closest("[data-modal]"); if (md) return openModal(modalFor(md.dataset.modal));
   });
