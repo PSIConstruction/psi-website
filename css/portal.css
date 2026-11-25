@@ -4,6 +4,11 @@
    Loaded after site.css: tokens, nav, footer and buttons come from there.
    ============================================================ */
 
+/* The bar starts transparent over the navy header, so the white mark shows
+   until main.js makes the bar solid on scroll; then the full-colour mark. */
+.nav--overdark:not(.nav--solid) .nav__logo--onhero { opacity: 1; }
+.nav--overdark:not(.nav--solid) .nav__logo--onsolid { opacity: 0; }
+
 .btn--accent { background: var(--accent); border-color: var(--accent); }
 .btn--accent:hover { background: #b00000; border-color: #b00000; }
 
