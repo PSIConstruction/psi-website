@@ -4359,8 +4359,14 @@ section[id],
   border-radius: 10px;
   overflow: hidden;
   background: #fff;
-  border: 3px solid rgba(255, 255, 255, 0.92);
-  box-shadow: 0 30px 70px rgba(0, 0, 0, 0.45);
+  /* a hairline of light on the top and left edges, a hairline of dark
+     outside it, and a deep drop shadow: the card lifts off the navy
+     without a visible frame */
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  box-shadow:
+    inset 1px 1px 0 rgba(255, 255, 255, 0.35),
+    0 0 0 1px rgba(0, 0, 0, 0.35),
+    0 34px 80px rgba(0, 0, 0, 0.55);
   transform: rotate(-1deg);
   transition: transform 0.3s ease;
 }
