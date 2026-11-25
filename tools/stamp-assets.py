@@ -20,7 +20,7 @@ import sys
 import glob
 
 # The three top-level pages plus every generated service landing page.
-PAGES = ("index.html", "contact.html", "pin-editor.html") + tuple(
+PAGES = ("index.html", "contact.html", "portal.html", "pin-editor.html") + tuple(
     sorted(glob.glob(os.path.join(os.path.dirname(__file__), "..", "services", "*", "index.html")))
 )
 # The stamp may be anything a person typed by hand, so match any query value

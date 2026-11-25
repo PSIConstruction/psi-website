@@ -329,6 +329,7 @@ NAV = """    <nav class="nav nav--solid" id="topNav" aria-label="Primary">
         <a href="{R}index.html#process">Our Process</a>
         <a href="{R}index.html#capabilities">Services</a>
         <a href="{R}index.html#projects">Previous Projects</a>
+        <a href="{R}portal.html">Client Portal</a>
         <a href="{R}index.html#reviews">Reviews</a>
         <a href="tel:5703388774">570-338-8<span class="tel-psi">PSI</span> (774)</a>
         <a class="nav__cta" href="#quote">Get a Quote</a>
