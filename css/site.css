@@ -4358,8 +4358,8 @@ section[id],
   display: block;
   border-radius: 10px;
   overflow: hidden;
-  background: #0f1620;
-  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: #fff;
+  border: 3px solid rgba(255, 255, 255, 0.92);
   box-shadow: 0 30px 70px rgba(0, 0, 0, 0.45);
   transform: rotate(-1deg);
   transition: transform 0.3s ease;
