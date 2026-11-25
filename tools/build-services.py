@@ -354,6 +354,11 @@ FOOTER = """    <footer class="footer" id="contact">
           <a href="mailto:info@psiconstructionpa.com">info@psiconstructionpa.com</a><br />
           <a href="#quote">Get a Quote &rarr;</a>
         </div>
+        <div class="footer__col">
+          <p class="eyebrow">Follow</p>
+          <a class="footer__social" href="https://www.instagram.com/psiconstructionpa/" target="_blank" rel="noopener"><svg class="footer__icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="12" r="4.2" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="17.3" cy="6.7" r="1.2" fill="currentColor"/></svg>Instagram</a><br />
+          <a class="footer__social" href="https://www.facebook.com/profile.php?id=61597011236305" target="_blank" rel="noopener"><svg class="footer__icon" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M13.5 21v-7.5h2.6l.4-3h-3V8.6c0-.9.3-1.5 1.6-1.5h1.6V4.4c-.3 0-1.2-.1-2.3-.1-2.3 0-3.9 1.4-3.9 4v2.2H7.9v3h2.6V21h3z"/></svg>Facebook</a>
+        </div>
       </div>
     </footer>
 """

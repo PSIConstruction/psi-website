@@ -1178,6 +1178,16 @@ body.viewer-lock {
 .footer__col a:hover {
   color: var(--accent);
 }
+.footer__social {
+  display: inline-flex !important;
+  align-items: center;
+  gap: 10px;
+}
+.footer__icon {
+  width: 20px;
+  height: 20px;
+  flex: none;
+}
 .footer__col .eyebrow {
   color: rgba(255, 255, 255, 0.55);
   font-size: 14px;
