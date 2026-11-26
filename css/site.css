@@ -4376,3 +4376,35 @@ section[id],
   .portal-plug__inner { grid-template-columns: 1fr; }
   .portal-plug__shot { transform: none; }
 }
+
+/* Footer services column: nine links, set tighter than the other columns. */
+.footer__col--services {
+  line-height: 1.5;
+}
+.footer__col--services a {
+  padding: 3px 0;
+}
+.footer__col--services a[aria-current="page"] {
+  opacity: 0.55;
+}
+
+/* The line under "Welcome to PSI": what PSI is and where, inside the H1 so
+   search engines read it as the page's subject. Set small so the hero reads
+   the same as before. */
+.hero__title-sub {
+  display: block;
+  margin-top: 0.55em;
+  font-size: clamp(15px, 1.5vw, 20px);
+  line-height: 1.3;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  opacity: 0.92;
+}
+
+/* Footer: Follow sits under the logo, Where we work under the office. */
+.footer__sub {
+  margin-top: 26px;
+}
+.footer__col.footer__col--services > .eyebrow {
+  padding-top: 4px;
+}

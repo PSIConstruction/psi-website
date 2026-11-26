@@ -23,6 +23,8 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from service_details import DETAILS  # the long form of every step
+from service_seo import TOWNS, FAR, TRAVELS, faqs  # local-search content
+import json
 
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 PH = "assets/photos"
@@ -326,11 +328,11 @@ NAV = """    <nav class="nav nav--solid" id="topNav" aria-label="Primary">
         <span class="nav__bars" aria-hidden="true"><i></i><i></i><i></i></span>
       </button>
       <div class="nav__links" id="navLinks">
-        <a href="{R}index.html#process">Our Process</a>
         <a href="{R}index.html#capabilities">Services</a>
         <a href="{R}index.html#projects">Previous Projects</a>
-        <a href="{R}portal.html">Client Portal</a>
         <a href="{R}index.html#reviews">Reviews</a>
+        <a href="{R}service-area/">Where We Work</a>
+        <a href="{R}portal.html">Client Portal</a>
         <a href="tel:5703388774">570-338-8<span class="tel-psi">PSI</span> (774)</a>
         <a class="nav__cta" href="#quote">Get a Quote</a>
       </div>
@@ -343,11 +345,24 @@ FOOTER = """    <footer class="footer" id="contact">
         <div>
           <img class="footer__logo" src="{R}assets/logo/psi-logo-white.png" alt="PSI Construction" width="900" height="456" />
           <p class="footer__tagline">Built With Attention. Managed With Precision.</p>
+          <div class="footer__sub footer__col">
+          <p class="eyebrow">Follow</p>
+          <a class="footer__social" href="https://www.instagram.com/psiconstructionpa/" target="_blank" rel="noopener"><svg class="footer__icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="12" r="4.2" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="17.3" cy="6.7" r="1.2" fill="currentColor"/></svg>Instagram</a><br />
+          <a class="footer__social" href="https://www.facebook.com/profile.php?id=61597011236305" target="_blank" rel="noopener"><svg class="footer__icon" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M13.5 21v-7.5h2.6l.4-3h-3V8.6c0-.9.3-1.5 1.6-1.5h1.6V4.4c-.3 0-1.2-.1-2.3-.1-2.3 0-3.9 1.4-3.9 4v2.2H7.9v3h2.6V21h3z"/></svg>Facebook</a>
+          </div>
         </div>
         <div class="footer__col">
           <p class="eyebrow">Office</p>
           190 Wyoming St, Wilkes-Barre, PA 18705<br />
           Visits available upon request
+          <div class="footer__sub footer__col--services">
+          <p class="eyebrow">Where we work</p>
+{footer_areas}
+          </div>
+        </div>
+        <div class="footer__col footer__col--services">
+          <p class="eyebrow">Services</p>
+{footer_services}
         </div>
         <div class="footer__col">
           <p class="eyebrow">Contact</p>
@@ -355,11 +370,7 @@ FOOTER = """    <footer class="footer" id="contact">
           <a href="mailto:info@psiconstructionpa.com">info@psiconstructionpa.com</a><br />
           <a href="#quote">Get a Quote &rarr;</a>
         </div>
-        <div class="footer__col">
-          <p class="eyebrow">Follow</p>
-          <a class="footer__social" href="https://www.instagram.com/psiconstructionpa/" target="_blank" rel="noopener"><svg class="footer__icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="12" r="4.2" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="17.3" cy="6.7" r="1.2" fill="currentColor"/></svg>Instagram</a><br />
-          <a class="footer__social" href="https://www.facebook.com/profile.php?id=61597011236305" target="_blank" rel="noopener"><svg class="footer__icon" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M13.5 21v-7.5h2.6l.4-3h-3V8.6c0-.9.3-1.5 1.6-1.5h1.6V4.4c-.3 0-1.2-.1-2.3-.1-2.3 0-3.9 1.4-3.9 4v2.2H7.9v3h2.6V21h3z"/></svg>Facebook</a>
-        </div>
+      
       </div>
     </footer>
 """
@@ -393,11 +404,7 @@ PAGE = """<!doctype html>
       "description": "{description}",
       "url": "{canonical}",
       "image": "{DOMAIN}/{hero_src}",
-      "areaServed": [
-        {{ "@type": "City", "name": "Kingston, PA" }},
-        {{ "@type": "City", "name": "Wilkes-Barre, PA" }},
-        {{ "@type": "AdministrativeArea", "name": "Luzerne County, PA" }}
-      ],
+      "areaServed": {area_served},
       "provider": {{
         "@type": "GeneralContractor",
         "@id": "{DOMAIN}/#business",
@@ -406,6 +413,9 @@ PAGE = """<!doctype html>
         "url": "{DOMAIN}/"
       }}
     }}
+    </script>
+    <script type="application/ld+json">
+{faq_schema}
     </script>
   </head>
   <body class="svc-page">
@@ -435,6 +445,34 @@ PAGE = """<!doctype html>
         </div>
         <div id="workReel" data-lead="{reel_lead}"></div>
       </section>
+
+      <!-- Questions and the towns we work in: what someone searching for this
+           trade nearby wants answered. Same markup as the home-page FAQ. -->
+      <section class="section section--white faq" id="faq" aria-labelledby="svcFaqTitle">
+        <div class="section__inner">
+          <div class="faq__grid">
+            <div class="faq__lead">
+              <h2 class="section__title" id="svcFaqTitle">{faq_title}</h2>
+              <p class="faq__note">{area_note}</p>
+              <a class="faq__phone" href="tel:5703388774">570-338-8<span class="tel-psi">PSI</span> (774)</a>
+            </div>
+            <div class="faq__list">
+{faq_items}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Every other trade, linked: each landing page points at the rest. -->
+      <nav class="section svc-more" aria-labelledby="svcMoreTitle">
+        <div class="section__inner">
+          <p class="eyebrow">Also from PSI</p>
+          <h2 class="section__title" id="svcMoreTitle">Other work we do</h2>
+          <ul class="svc-more__list">
+{more_links}
+          </ul>
+        </div>
+      </nav>
 
       <!-- The quote form, opened straight onto this trade. -->
       <section class="section svc-quote" id="quote" aria-labelledby="svcQuoteTitle">
@@ -644,12 +682,85 @@ REEL_LEAD = {
 }
 
 
+# Each FAQ heading names the trade and the place, the way people search.
+FAQ_TITLES = {
+    "new-home-construction": "Building a new home in Luzerne County",
+    "home-additions": "Home additions in Kingston & Wilkes-Barre",
+    "whole-home-renovation": "Whole-house renovation questions",
+    "basement-finishing": "Basement finishing in Luzerne County",
+    "concrete-foundation": "Concrete & foundation questions",
+    "design-build": "Design-build & general contracting",
+    "kitchen-remodeling": "Kitchen remodeling in Kingston & Wilkes-Barre",
+    "bathroom-remodeling": "Bathroom remodeling in Kingston & Wilkes-Barre",
+    "roofing": "Roof replacement questions",
+}
+
+
+FAQ_ITEM = """              <details class="faq__item">
+                <summary class="faq__q">
+                  <span>{q}</span>
+                  <span class="faq__mark" aria-hidden="true"></span>
+                </summary>
+                <div class="faq__a">
+                  <p>{a}</p>
+                </div>
+              </details>"""
+
+
+def footer_services(R, current=None):
+    """One link per service page. Shared by every service page and the home
+    page footer, so every page on the site links to every service."""
+    links = []
+    for s in SERVICES:
+        cur = ' aria-current="page"' if s["slug"] == current else ""
+        links.append('          <a href="%sservices/%s/"%s>%s</a><br />' % (R, s["slug"], cur, esc(s["short"])))
+    return "\n".join(links)
+
+
+AREA_PAGES = [("areas/kingston-pa", "Kingston, PA"), ("areas/wilkes-barre-pa", "Wilkes-Barre, PA"),
+              ("service-area", "All of NEPA")]
+
+
+def footer_areas(R, current=None):
+    return "\n".join('          <a href="%s%s/"%s>%s</a><br />'
+                     % (R, p, ' aria-current="page"' if p == current else "", esc(label))
+                     for p, label in AREA_PAGES)
+
+
+def area_served_json(slug):
+    places = [{"@type": "City", "name": t + ", PA"} for t in TOWNS]
+    places += [{"@type": "AdministrativeArea", "name": "Luzerne County, PA"},
+               {"@type": "AdministrativeArea", "name": "Lackawanna County, PA"}]
+    if slug in TRAVELS:
+        places.append({"@type": "Place", "name": "Lake Wallenpaupack, PA"})
+    return json.dumps(places, ensure_ascii=False)
+
+
+def area_note(s):
+    towns = ", ".join(TOWNS[:-1]) + " and " + TOWNS[-1]
+    note = "We work in %s." % towns
+    if s["slug"] in TRAVELS:
+        note += " Larger jobs, up to about an hour away: %s." % FAR
+    return note
+
+
 def build_pages():
     R = "../../"
     for i, s in enumerate(SERVICES, 1):
         hero_src, hero_alt = s["hero"]
         more = DETAILS[s["slug"]]
         assert len(more) == len(s["steps"]), s["slug"]
+        qa = faqs(s["slug"], s["noun"])
+        faq_items = "\n".join(FAQ_ITEM.format(q=esc(q), a=esc(a)) for q, a in qa)
+        faq_schema = json.dumps({
+            "@context": "https://schema.org", "@type": "FAQPage",
+            "mainEntity": [{"@type": "Question", "name": q,
+                            "acceptedAnswer": {"@type": "Answer", "text": a}} for q, a in qa],
+        }, ensure_ascii=False, indent=2)
+        faq_schema = "\n".join("    " + l for l in faq_schema.splitlines())
+        more_links = "\n".join(
+            '            <li><a href="%sservices/%s/">%s&nbsp;<span aria-hidden="true">&rarr;</span></a></li>' % (R, o["slug"], esc(o["short"]))
+            for o in SERVICES if o["slug"] != s["slug"])
         steps = "\n".join(STEP.format(n=n, t=esc(t), d=esc(d), more=esc(m))
                           for n, ((t, d), m) in enumerate(zip(s["steps"], more), 1))
         html = PAGE.format(
@@ -661,7 +772,12 @@ def build_pages():
             short=esc(s["short"]), short_lc=esc(s["short"].lower()), noun=esc(s["noun"]), process_title=esc(s["process_title"]),
             h1=esc(s["h1"]), intro=esc(s["intro"]), flow=s["flow"],
             steps=steps, reel_lead=",".join(REEL_LEAD[s["slug"]]),
-            nav=NAV.format(R=R), footer=FOOTER.format(R=R),
+            nav=NAV.format(R=R), footer=FOOTER.format(R=R, footer_services=footer_services(R, s["slug"]), footer_areas=footer_areas(R)),
+            area_served=area_served_json(s["slug"]),
+            faq_schema=faq_schema, faq_items=faq_items,
+            faq_title=esc(FAQ_TITLES[s["slug"]]),
+            area_note=esc(area_note(s)),
+            more_links=more_links,
         )
         out = os.path.join(ROOT, "services", s["slug"])
         os.makedirs(out, exist_ok=True)
@@ -720,7 +836,8 @@ def build_home_grid(images):
 
 
 def build_sitemap():
-    today = "2026-10-29"
+    import datetime
+    today = datetime.date.today().isoformat()
     urls = [f"""  <url>
     <loc>{DOMAIN}/</loc>
     <lastmod>{today}</lastmod>
@@ -733,6 +850,13 @@ def build_sitemap():
     <changefreq>yearly</changefreq>
     <priority>0.8</priority>
   </url>"""]
+    for path, _ in AREA_PAGES:
+        urls.append(f"""  <url>
+    <loc>{DOMAIN}/{path}/</loc>
+    <lastmod>{today}</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>""")
     for s in SERVICES:
         urls.append(f"""  <url>
     <loc>{DOMAIN}/services/{s['slug']}/</loc>
@@ -747,7 +871,7 @@ def build_sitemap():
            '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
            + "\n".join(urls) + "\n</urlset>\n")
     open(os.path.join(ROOT, "sitemap.xml"), "w").write(xml)
-    print("sitemap %d urls" % (len(SERVICES) + 2))
+    print("sitemap %d urls" % (len(SERVICES) + len(AREA_PAGES) + 2))
 
 
 if __name__ == "__main__":

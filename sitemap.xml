@@ -5,67 +5,85 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
     <loc>https://psiconstructionpa.com/</loc>
-    <lastmod>2026-10-29</lastmod>
+    <lastmod>2026-11-26</lastmod>
     <changefreq>monthly</changefreq>
     <priority>1.0</priority>
   </url>
   <url>
     <loc>https://psiconstructionpa.com/contact.html</loc>
-    <lastmod>2026-10-29</lastmod>
+    <lastmod>2026-11-26</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
+    <loc>https://psiconstructionpa.com/areas/kingston-pa/</loc>
+    <lastmod>2026-11-26</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://psiconstructionpa.com/areas/wilkes-barre-pa/</loc>
+    <lastmod>2026-11-26</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://psiconstructionpa.com/service-area/</loc>
+    <lastmod>2026-11-26</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
     <loc>https://psiconstructionpa.com/services/new-home-construction/</loc>
-    <lastmod>2026-10-29</lastmod>
+    <lastmod>2026-11-26</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
     <loc>https://psiconstructionpa.com/services/home-additions/</loc>
-    <lastmod>2026-10-29</lastmod>
+    <lastmod>2026-11-26</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
     <loc>https://psiconstructionpa.com/services/whole-home-renovation/</loc>
-    <lastmod>2026-10-29</lastmod>
+    <lastmod>2026-11-26</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
     <loc>https://psiconstructionpa.com/services/basement-finishing/</loc>
-    <lastmod>2026-10-29</lastmod>
+    <lastmod>2026-11-26</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
     <loc>https://psiconstructionpa.com/services/concrete-foundation/</loc>
-    <lastmod>2026-10-29</lastmod>
+    <lastmod>2026-11-26</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
     <loc>https://psiconstructionpa.com/services/design-build/</loc>
-    <lastmod>2026-10-29</lastmod>
+    <lastmod>2026-11-26</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
     <loc>https://psiconstructionpa.com/services/kitchen-remodeling/</loc>
-    <lastmod>2026-10-29</lastmod>
+    <lastmod>2026-11-26</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
     <loc>https://psiconstructionpa.com/services/bathroom-remodeling/</loc>
-    <lastmod>2026-10-29</lastmod>
+    <lastmod>2026-11-26</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
     <loc>https://psiconstructionpa.com/services/roofing/</loc>
-    <lastmod>2026-10-29</lastmod>
+    <lastmod>2026-11-26</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.9</priority>
   </url>

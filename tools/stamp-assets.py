@@ -22,6 +22,8 @@ import glob
 # The three top-level pages plus every generated service landing page.
 PAGES = ("index.html", "contact.html", "portal.html", "pin-editor.html") + tuple(
     sorted(glob.glob(os.path.join(os.path.dirname(__file__), "..", "services", "*", "index.html")))
+    + glob.glob(os.path.join(os.path.dirname(__file__), "..", "areas", "*", "index.html"))
+    + glob.glob(os.path.join(os.path.dirname(__file__), "..", "service-area", "index.html"))
 )
 # The stamp may be anything a person typed by hand, so match any query value
 # rather than hex only. Matching hex alone made this pattern fail on

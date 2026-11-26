@@ -482,3 +482,85 @@
   .svc-hero--pan .svc-hero__img { height: 100%; transform: none; }
   .svc-hero--reveal .svc-hero__cue { display: none; }
 }
+
+/* ---------------------------------------------------------------
+   Other work we do — every service page links to the rest.
+   --------------------------------------------------------------- */
+.svc-more {
+  display: block;
+  background: #f4f5f6;
+}
+.svc-more__list {
+  list-style: none;
+  margin: 24px 0 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 12px;
+}
+.svc-more__list a {
+  display: block;
+  padding: 16px 18px;
+  background: #fff;
+  border: 1px solid rgba(29, 39, 51, 0.12);
+  border-radius: 6px;
+  color: var(--navy);
+  font-weight: 600;
+  text-decoration: none;
+}
+.svc-more__list a:hover,
+.svc-more__list a:focus-visible {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+/* ---------------------------------------------------------------
+   Location pages (areas/*, service-area): body copy, town zones,
+   and the job cards — each card names the town it was built in.
+   --------------------------------------------------------------- */
+.visually-hidden {
+  position: absolute !important;
+  width: 1px; height: 1px;
+  overflow: hidden; clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+.area-body__inner { max-width: 760px; }
+.area-body .lede { margin-top: 18px; }
+.area-zones .section__inner { max-width: 960px; }
+.area-zone { padding: 28px 0; border-bottom: 1px solid rgba(29, 39, 51, 0.12); }
+.area-zone h3 { margin: 0 0 8px; font-size: clamp(22px, 2.4vw, 30px); color: var(--navy); }
+.area-zone__group { margin-top: 16px; }
+.area-zone__group p:last-child { margin: 6px 0 0; line-height: 1.7; }
+.area-note {
+  margin-top: 28px;
+  padding: 18px 20px;
+  background: #f4f5f6;
+  border-left: 3px solid var(--accent);
+}
+.area-jobs__grid {
+  list-style: none;
+  margin: 28px 0 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 20px;
+}
+.area-job {
+  background: #fff;
+  border: 1px solid rgba(29, 39, 51, 0.12);
+  border-radius: 6px;
+  overflow: hidden;
+}
+.area-job__img { display: block; width: 100%; aspect-ratio: 4 / 3; object-fit: cover; }
+.area-job__body { padding: 16px 18px 20px; }
+.area-job__town {
+  margin: 0;
+  font-size: 12px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+.area-job__title { margin: 6px 0 8px; font-size: 18px; color: var(--navy); }
+.area-job__desc { margin: 0; font-size: 15px; line-height: 1.55; opacity: 0.85; }
+.area-also { margin-top: 22px; }
+.area-also a { color: var(--navy); font-weight: 600; }
